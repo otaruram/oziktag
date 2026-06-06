@@ -33,18 +33,6 @@ function Landing() {
           Oziktag
         </div>
         <div className="flex items-center gap-4">
-          <Link
-            to="/docs"
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Cara Kerja
-          </Link>
-          <Link
-            to="/auth"
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Log In
-          </Link>
         </div>
       </header>
 
@@ -78,11 +66,7 @@ function Landing() {
             </Link>
           </div>
           
-          <div className="mt-16 pt-8 border-t border-border/50 flex flex-wrap justify-center gap-8 text-muted-foreground opacity-70 grayscale">
-            <div className="flex items-center gap-2 font-semibold"><Store className="h-5 w-5"/> 1.000+ Toko</div>
-            <div className="flex items-center gap-2 font-semibold"><QrCode className="h-5 w-5"/> 50k+ QR Terbuat</div>
-            <div className="flex items-center gap-2 font-semibold"><ShieldCheck className="h-5 w-5"/> 99.9% Uptime</div>
-          </div>
+
         </section>
 
         {/* HOW IT WORKS */}
