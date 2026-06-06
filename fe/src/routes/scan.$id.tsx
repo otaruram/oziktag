@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ShieldCheck, CheckCircle2, AlertCircle, Sparkles, Loader2 } from "lucide-react";
 import { getTag, type Qrtag } from "@/lib/oziktag-store";
+import { apiFetch } from "@/lib/api";
 
 export const Route = createFileRoute("/scan/$id")({
   head: () => ({
@@ -19,8 +20,16 @@ function Scan() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    setTag(getTag(id) || null);
-    setLoaded(true);
+    apiFetch(`/qc/scan/${id}`)
+      .then((data) => {
+        setTag(data);
+        setLoaded(true);
+      })
+      .catch((err) => {
+        console.error("Failed to load tag", err);
+        setTag(null);
+        setLoaded(true);
+      });
   }, [id]);
 
   if (!loaded) return null;

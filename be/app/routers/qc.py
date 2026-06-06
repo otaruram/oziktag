@@ -190,6 +190,55 @@ async def delete_qc(product_id: str, current_user: dict = Depends(get_current_us
     return {"message": "Product deleted successfully"}
 
 
+@router.get("/scan/{product_id}")
+async def scan_qc_public(product_id: str):
+    """Public endpoint to view a QC product from a QR scan."""
+    product = await db.qcproduct.find_unique(
+        where={"id": product_id},
+        include={"user": {"include": {"kyc": True}}, "images": True}
+    )
+    
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    # Record the scan for the dashboard
+    try:
+        await db.productscan.create(
+            data={
+                "productId": product.id,
+                "userId": product.userId
+            }
+        )
+    except Exception as e:
+        print(f"Failed to record scan: {e}")
+
+    checklist_val = product.checklist
+    if isinstance(checklist_val, str):
+        checklist_val = json.loads(checklist_val)
+
+    brand_name = "Brand UMKM"
+    if product.user:
+        brand_name = product.user.nama
+        if product.user.kyc and product.user.kyc.namaToko:
+            brand_name = product.user.kyc.namaToko
+
+    photos = [img.imagekitUrl for img in product.images] if product.images else []
+
+    return {
+        "id": product.id,
+        "productName": product.namaProduk,
+        "category": product.kategori,
+        "batch": product.batch,
+        "qc": checklist_val,
+        "notes": product.catatanPenjual,
+        "createdAt": product.createdAt.isoformat(),
+        "brand": brand_name,
+        "photos": photos,
+        "aiInsight": product.aiInsight,
+        "aiSolution": product.aiSolution
+    }
+
+
 @router.get("/stats")
 async def get_stats(current_user: dict = Depends(get_current_user)):
     """Get total products and scans for current user."""
