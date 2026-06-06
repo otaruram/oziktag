@@ -169,15 +169,6 @@ function Generator() {
               Isi form, klik generate, lalu cetak QR untuk ditempel di produk.
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Link
-              to="/pricing"
-              className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-sm hover:bg-secondary"
-            >
-              <Coins className="h-4 w-4 text-primary" />
-              <span className="font-semibold text-primary">{credits}</span>
-            </Link>
-          </div>
         </div>
       </div>
 
