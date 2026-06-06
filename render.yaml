@@ -3,8 +3,8 @@ services:
     name: oziktag-backend
     env: python
     region: singapore
-    buildCommand: "cd be && pip install -r requirements.txt && prisma generate && prisma py fetch"
-    startCommand: "cd be && prisma py fetch && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    buildCommand: "cd be && pip install -r requirements.txt && prisma generate && prisma py fetch && find /opt/render/.cache/prisma-python -name 'prisma-query-engine-*' -type f -exec cp {} . \\; && chmod +x prisma-query-engine-* 2>/dev/null; true"
+    startCommand: "cd be && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.0
