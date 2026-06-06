@@ -76,6 +76,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         _frontend_url,
+        "https://oziktag.vercel.app",
         "http://localhost:5173",
         "http://localhost:3000",
         "http://localhost:4173",
