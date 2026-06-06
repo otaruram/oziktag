@@ -42,10 +42,18 @@ function DocsPage() {
       </header>
 
       <div className="flex-1 flex px-4 sm:px-6 lg:px-8 mx-auto w-full max-w-7xl">
+        {/* Mobile menu overlay */}
+        {mobileMenuOpen && (
+          <div
+            className="fixed inset-0 z-20 bg-background/80 backdrop-blur-sm md:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+        )}
+
         {/* Sidebar */}
         <aside
-          className={`fixed inset-y-0 left-0 z-30 w-64 border-r border-border bg-background pt-14 md:sticky md:block shrink-0 overflow-y-auto ${
-            mobileMenuOpen ? "block" : "hidden"
+          className={`fixed inset-y-0 left-0 z-30 w-64 border-r border-border bg-background pt-14 md:sticky md:block shrink-0 overflow-y-auto transition-transform duration-300 ease-in-out ${
+            mobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
           }`}
         >
           <div className="px-4 py-6 md:px-2 md:py-8 space-y-6">
@@ -53,13 +61,13 @@ function DocsPage() {
               <h4 className="font-semibold mb-3 text-sm px-2">Getting Started</h4>
               <ul className="space-y-1">
                 <li>
-                  <a href="#cara-kerja" className="block px-2 py-1.5 text-sm rounded-md bg-primary/10 text-primary font-medium">Cara Kerja</a>
+                  <a onClick={() => setMobileMenuOpen(false)} href="#cara-kerja" className="block px-2 py-1.5 text-sm rounded-md bg-primary/10 text-primary font-medium">Cara Kerja</a>
                 </li>
                 <li>
-                  <a href="#arsitektur" className="block px-2 py-1.5 text-sm rounded-md text-muted-foreground hover:bg-muted hover:text-foreground">Arsitektur</a>
+                  <a onClick={() => setMobileMenuOpen(false)} href="#arsitektur" className="block px-2 py-1.5 text-sm rounded-md text-muted-foreground hover:bg-muted hover:text-foreground">Arsitektur</a>
                 </li>
                 <li>
-                  <a href="#teknologi" className="block px-2 py-1.5 text-sm rounded-md text-muted-foreground hover:bg-muted hover:text-foreground">Teknologi</a>
+                  <a onClick={() => setMobileMenuOpen(false)} href="#teknologi" className="block px-2 py-1.5 text-sm rounded-md text-muted-foreground hover:bg-muted hover:text-foreground">Teknologi</a>
                 </li>
               </ul>
             </div>
@@ -67,17 +75,17 @@ function DocsPage() {
               <h4 className="font-semibold mb-3 text-sm px-2">Features</h4>
               <ul className="space-y-1">
                 <li>
-                  <a href="#ai-qc" className="block px-2 py-1.5 text-sm rounded-md text-muted-foreground hover:bg-muted hover:text-foreground flex items-center gap-2">
+                  <a onClick={() => setMobileMenuOpen(false)} href="#ai-qc" className="block px-2 py-1.5 text-sm rounded-md text-muted-foreground hover:bg-muted hover:text-foreground flex items-center gap-2">
                     <Zap className="h-3.5 w-3.5" /> AI Quality Control
                   </a>
                 </li>
                 <li>
-                  <a href="#kyc" className="block px-2 py-1.5 text-sm rounded-md text-muted-foreground hover:bg-muted hover:text-foreground flex items-center gap-2">
+                  <a onClick={() => setMobileMenuOpen(false)} href="#kyc" className="block px-2 py-1.5 text-sm rounded-md text-muted-foreground hover:bg-muted hover:text-foreground flex items-center gap-2">
                     <BookOpen className="h-3.5 w-3.5" /> Sistem KYC
                   </a>
                 </li>
                 <li>
-                  <a href="#api" className="block px-2 py-1.5 text-sm rounded-md text-muted-foreground hover:bg-muted hover:text-foreground flex items-center justify-between">
+                  <a onClick={() => setMobileMenuOpen(false)} href="#api" className="block px-2 py-1.5 text-sm rounded-md text-muted-foreground hover:bg-muted hover:text-foreground flex items-center justify-between">
                     <span className="flex items-center gap-2"><Settings className="h-3.5 w-3.5" /> API Reference</span>
                     <span className="text-[10px] bg-secondary px-1.5 py-0.5 rounded text-muted-foreground">TBA</span>
                   </a>

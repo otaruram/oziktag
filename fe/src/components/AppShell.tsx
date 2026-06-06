@@ -98,20 +98,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </Link>
               );
             })}
-            {isAdmin && (
-              <Link
-                to="/admin"
-                className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors ${
-                  path === "/admin"
-                    ? "bg-secondary text-foreground"
-                    : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
-                }`}
-              >
-                <ShieldCheck className="h-4 w-4" />
-                Admin Panel
-              </Link>
-            )}
-          </nav>
+            </nav>
           <div className="flex items-center gap-4">
             <Link
               to="/pricing"
@@ -150,6 +137,16 @@ export function AppShell({ children }: { children: ReactNode }) {
                       <User className="h-4 w-4" />
                       Profil
                     </Link>
+                    {isAdmin && (
+                      <Link
+                        to="/admin"
+                        onClick={() => setIsDropdownOpen(false)}
+                        className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                      >
+                        <ShieldCheck className="h-4 w-4" />
+                        Admin Panel
+                      </Link>
+                    )}
                     <Link
                       to="/settings"
                       onClick={() => setIsDropdownOpen(false)}
