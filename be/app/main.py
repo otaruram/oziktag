@@ -77,6 +77,7 @@ app.add_middleware(
     allow_origins=[
         _frontend_url,
         "https://oziktag.vercel.app",
+        "https://oziktag.my.id",
         "http://localhost:5173",
         "http://localhost:3000",
         "http://localhost:4173",
