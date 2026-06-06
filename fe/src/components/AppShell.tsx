@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, QrCode, User, ShieldCheck, LogOut, Coins } from "lucide-react";
+import { LayoutDashboard, QrCode, User, ShieldCheck, LogOut, Coins, Code2 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { getCredits } from "@/lib/oziktag-store";
 import { supabase } from "@/lib/supabase";
@@ -8,6 +8,7 @@ import { apiFetch } from "@/lib/api";
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/generator", label: "Generate QR", icon: QrCode },
+  { to: "/api-keys", label: "API (Beta)", icon: Code2 },
   { to: "/pricing", label: "Top-Up", icon: Coins },
   { to: "/profile", label: "Profil", icon: User },
 ];

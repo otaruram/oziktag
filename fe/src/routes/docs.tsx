@@ -77,8 +77,9 @@ function DocsPage() {
                   </a>
                 </li>
                 <li>
-                  <a href="#api" className="block px-2 py-1.5 text-sm rounded-md text-muted-foreground hover:bg-muted hover:text-foreground flex items-center gap-2">
-                    <Settings className="h-3.5 w-3.5" /> API Reference
+                  <a href="#api" className="block px-2 py-1.5 text-sm rounded-md text-muted-foreground hover:bg-muted hover:text-foreground flex items-center justify-between">
+                    <span className="flex items-center gap-2"><Settings className="h-3.5 w-3.5" /> API Reference</span>
+                    <span className="text-[10px] bg-secondary px-1.5 py-0.5 rounded text-muted-foreground">TBA</span>
                   </a>
                 </li>
               </ul>
@@ -201,6 +202,33 @@ function DocsPage() {
               </div>
             </div>
 
+            <div className="border-t border-border pt-8 mt-12">
+              <h2 id="ai-qc" className="text-2xl font-bold tracking-tight mb-4 flex items-center gap-2">
+                <Zap className="h-6 w-6 text-primary" /> AI Quality Control
+              </h2>
+              <p className="text-muted-foreground text-sm leading-relaxed mb-4">
+                Sistem QC (Quality Control) di Oziktag tidak sekadar menyimpan data. Kami menggunakan <strong>Google Gemini 2.5 Flash</strong> untuk menganalisis checklist dan catatan penjual secara otomatis. AI bertugas memberikan <em>insight</em> kepada pembeli mengenai kondisi barang secara lebih ramah dan profesional, serta memberikan tips perawatan produk.
+              </p>
+            </div>
+
+            <div className="border-t border-border pt-8 mt-12">
+              <h2 id="kyc" className="text-2xl font-bold tracking-tight mb-4 flex items-center gap-2">
+                <BookOpen className="h-6 w-6 text-primary" /> Sistem KYC (Know Your Customer)
+              </h2>
+              <p className="text-muted-foreground text-sm leading-relaxed mb-4">
+                Untuk mencegah penyalahgunaan label QC (pemalsuan identitas toko), setiap brand UMKM diwajibkan untuk mengisi form KYC yang berisi NIK KTP dan/atau NPWP. Data ini bersifat konfidensial dan hanya digunakan untuk validasi bahwa QR Code yang di-scan pembeli benar-benar berasal dari penjual asli, bukan pihak ketiga yang mencetak ulang QR.
+              </p>
+            </div>
+
+            <div className="border-t border-border pt-8 mt-12">
+              <h2 id="api" className="text-2xl font-bold tracking-tight mb-4 flex items-center gap-2 text-muted-foreground">
+                <Settings className="h-6 w-6" /> API Reference <span className="text-xs bg-secondary px-2 py-1 rounded ml-2">TBA</span>
+              </h2>
+              <p className="text-muted-foreground text-sm leading-relaxed mb-4">
+                Fitur API Publik Oziktag sedang dalam pengembangan (To Be Announced). Ke depannya, developer dapat mengintegrasikan pembuatan QR Code langsung dari sistem POS atau aplikasi kasir mereka. Saat ini fitur ini masih dikunci (locked).
+              </p>
+            </div>
+
             <div className="flex justify-between items-center mt-12 pt-6 border-t border-border">
               <span className="text-sm text-muted-foreground">Oziktag Documentation v1.0</span>
               <a href="#cara-kerja" className="text-sm font-medium text-primary hover:underline flex items-center gap-1">
@@ -217,6 +245,9 @@ function DocsPage() {
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><a href="#cara-kerja" className="hover:text-foreground">Cara Kerja</a></li>
               <li><a href="#arsitektur" className="hover:text-foreground">Arsitektur</a></li>
+              <li><a href="#ai-qc" className="hover:text-foreground">AI QC</a></li>
+              <li><a href="#kyc" className="hover:text-foreground">Sistem KYC</a></li>
+              <li><a href="#api" className="hover:text-foreground">API Reference</a></li>
             </ul>
           </div>
         </aside>
