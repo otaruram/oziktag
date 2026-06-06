@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { AppShell } from "@/components/AppShell";
-import { Lock, Code2, Copy, RefreshCw, KeyRound, Server, Webhook, Coins, Play, X } from "lucide-react";
+import { Lock, Code2, Copy, RefreshCw, KeyRound, Server, Webhook, Coins, Play, X, Check } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { toast } from "sonner";
 import QRCode from "qrcode";
@@ -158,13 +158,36 @@ function ApiKeys() {
         </aside>
       </div>
 
-      {showPlayground && <PlaygroundModal credits={credits} onClose={() => setShowPlayground(false)} />}
+      {showPlayground && <PlaygroundModal credits={credits} onSimulateSuccess={() => setCreditsState(p => Math.max(0, p - 1))} onClose={() => setShowPlayground(false)} />}
       {showPricing && <PricingModal onClose={() => setShowPricing(false)} />}
     </AppShell>
   );
 }
 
-function PlaygroundModal({ onClose, credits }: { onClose: () => void; credits: number }) {
+function PlaygroundModal({ onClose, credits, onSimulateSuccess }: { onClose: () => void; credits: number; onSimulateSuccess: () => void }) {
+  const [running, setRunning] = useState(false);
+  const [resultQr, setResultQr] = useState<string | null>(null);
+
+  const handleRun = async () => {
+    if (credits <= 0) {
+      toast.error("Kredit Anda habis! Tidak dapat menjalankan simulasi.");
+      return;
+    }
+    setRunning(true);
+    setResultQr(null);
+    try {
+      await new Promise(r => setTimeout(r, 1200));
+      const url = await QRCode.toDataURL("https://oziktag.com/scan/simulasi-uuid-1234", { width: 200 });
+      setResultQr(url);
+      onSimulateSuccess();
+      toast.success("Berhasil! 1 Kredit terpotong.");
+    } catch (e) {
+      toast.error("Gagal menjalankan simulasi.");
+    } finally {
+      setRunning(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 px-4 backdrop-blur-sm" onClick={onClose}>
       <div className="w-full max-w-2xl rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-elegant)] overflow-y-auto max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
@@ -178,7 +201,7 @@ function PlaygroundModal({ onClose, credits }: { onClose: () => void; credits: n
           </button>
         </div>
 
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-gradient-to-br from-card to-secondary/40 p-4">
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-gradient-to-br from-card to-secondary/40 p-4 transition-all">
           <div>
             <p className="text-xs font-medium text-muted-foreground">Saldo Anda</p>
             <p className="text-2xl font-bold tracking-tight">{credits} <span className="text-sm font-normal text-muted-foreground">kredit</span></p>
@@ -200,9 +223,20 @@ function PlaygroundModal({ onClose, credits }: { onClose: () => void; credits: n
           </div>
         </div>
 
+        {resultQr && (
+          <div className="mt-6 p-4 rounded-lg border border-primary/40 bg-primary/5 flex flex-col items-center animate-in fade-in zoom-in duration-300">
+            <p className="text-sm font-semibold mb-3 text-primary flex items-center gap-2"><Check className="h-4 w-4" /> Response (201 Created)</p>
+            <img src={resultQr} alt="Result QR" className="h-32 w-32 rounded-md bg-white p-2 shadow-sm" />
+            <p className="text-xs text-muted-foreground mt-3 font-mono bg-background px-3 py-1 rounded border border-border">https://oziktag.com/scan/simulasi-uuid-1234</p>
+          </div>
+        )}
+
         <div className="mt-6 flex justify-end gap-3">
-          <button onClick={onClose} className="rounded-md px-4 py-2 text-sm font-medium border border-border bg-background hover:bg-secondary transition-colors">Batal</button>
-          <button className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-colors shadow-[var(--shadow-elegant)]"><Play className="h-4 w-4" /> Run Request</button>
+          <button onClick={onClose} className="rounded-md px-4 py-2 text-sm font-medium border border-border bg-background hover:bg-secondary transition-colors">Tutup</button>
+          <button onClick={handleRun} disabled={running} className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-colors shadow-[var(--shadow-elegant)] disabled:opacity-60">
+            {running ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />} 
+            {running ? "Memproses..." : "Run Request"}
+          </button>
         </div>
       </div>
     </div>
