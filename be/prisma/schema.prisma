@@ -6,6 +6,8 @@ generator client {
   provider             = "prisma-client-py"
   interface            = "asyncio"
   recursive_type_depth = 5
+  engineType           = "binary"
+  binaryTargets        = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
