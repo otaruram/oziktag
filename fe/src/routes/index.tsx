@@ -216,7 +216,7 @@ function Landing() {
             {/* Oki */}
             <div className="group relative rounded-2xl border border-border bg-card p-8 text-center transition-all hover:shadow-lg hover:border-foreground/20">
               <div className="mx-auto mb-6 h-28 w-28 overflow-hidden rounded-full border-2 border-border shadow-md transition-transform group-hover:scale-105">
-                <img src="/oki.png" alt="Oki Taruna Ramadhan" className="h-full w-full object-cover" />
+                <img src="/oki.png" alt="Oki Taruna Ramadhan" className="h-full w-full object-cover object-top" />
               </div>
               <h3 className="text-lg font-bold">Oki Taruna Ramadhan</h3>
               <p className="mt-1 text-sm font-medium text-primary">Backend Developer</p>
