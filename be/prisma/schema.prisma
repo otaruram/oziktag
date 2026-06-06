@@ -1,0 +1,115 @@
+// ============================================================
+// Oziktag Database Schema (Prisma + Supabase PostgreSQL)
+// ============================================================
+
+generator client {
+  provider             = "prisma-client-py"
+  interface            = "asyncio"
+  recursive_type_depth = 5
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ──────────────────────── Users ────────────────────────
+model User {
+  id         String    @id @default(uuid())
+  nama       String    @default("")
+  email      String    @unique
+  sisaKredit Int       @default(0) @map("sisa_kredit")
+  isAdmin    Boolean   @default(false) @map("is_admin")
+  isBanned   Boolean   @default(false) @map("is_banned")
+  lastSeenAt DateTime? @default(now()) @map("last_seen_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  kyc                Kyc?
+  qcProducts         QcProduct[]
+  topupTransactions  TopupTransaction[]
+  productScans       ProductScan[]
+
+  @@map("users")
+}
+
+// ──────────────────────── KYC ────────────────────────
+model Kyc {
+  id        String   @id @default(uuid())
+  userId    String   @unique @map("user_id")
+  namaToko  String   @default("") @map("nama_toko")
+  nik       String   @unique
+  npwp      String?  @unique
+  status    String   @default("verified")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("kyc")
+}
+
+// ──────────────────────── QC Products ────────────────────────
+model QcProduct {
+  id             String   @id @default(uuid())
+  userId         String   @map("user_id")
+  namaProduk     String   @map("nama_produk")
+  kategori       String   @default("Lainnya")
+  batch          String?
+  checklist      Json     @default("[]")
+  catatanPenjual String?  @map("catatan_penjual")
+  aiInsight      String?  @map("ai_insight")
+  aiSolution     String?  @map("ai_solution")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  images ProductImage[]
+  scans  ProductScan[]
+
+  @@map("qc_products")
+}
+
+// ──────────────────────── Product Images ────────────────────────
+model ProductImage {
+  id          String   @id @default(uuid())
+  productId   String   @map("product_id")
+  imagekitUrl String   @map("imagekit_url")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  product QcProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("product_images")
+}
+
+// ──────────────────────── Top-Up Transactions ────────────────────────
+model TopupTransaction {
+  id                  String   @id @default(uuid())
+  userId              String   @map("user_id")
+  paket               String
+  amount              Int
+  credits             Int      @default(0)
+  status              String   @default("pending")
+  louvinRef           String?  @map("louvin_ref")
+  louvinTransactionId String?  @map("louvin_transaction_id")
+  paymentType         String?  @map("payment_type")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("topup_transactions")
+}
+
+// ──────────────────────── Product Scans ────────────────────────
+model ProductScan {
+  id        String   @id @default(uuid())
+  productId String   @map("product_id")
+  userId    String   @map("user_id")
+  scannedAt DateTime @default(now()) @map("scanned_at")
+
+  product QcProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("product_scans")
+}

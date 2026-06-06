@@ -1,0 +1,186 @@
+"""Authentication and KYC router."""
+
+import uuid
+import time
+from datetime import datetime, timezone
+from fastapi import APIRouter, Depends, HTTPException, status
+from app.database import db, get_supabase_auth
+from app.dependencies import get_current_user
+from app.config import get_settings
+from app.models.schemas import (
+    GoogleAuthRequest,
+    KYCRequest,
+    KYCResponse,
+    UserProfile,
+)
+
+router = APIRouter(prefix="/api/auth", tags=["Authentication"])
+
+
+@router.post("/google")
+async def google_auth(request: GoogleAuthRequest):
+    """
+    Authenticate with Google via Supabase.
+    Frontend sends the access_token from Supabase Auth (Google Provider).
+    Backend verifies it and ensures user exists in our users table.
+    """
+    sb = get_supabase_auth()
+    settings = get_settings()
+
+    try:
+        # Verify the token with Supabase
+        user_response = sb.auth.get_user(request.access_token)
+        if not user_response or not user_response.user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid Google token",
+            )
+
+        user = user_response.user
+        user_id = str(user.id)
+        email = user.email or ""
+        name = ""
+        if user.user_metadata:
+            name = user.user_metadata.get("full_name", user.user_metadata.get("name", ""))
+
+        # Check if user already exists in our users table (Prisma)
+        db_user = await db.user.find_unique(where={"id": user_id})
+
+        # Support multiple comma-separated admin emails
+        admin_emails = [e.strip().lower() for e in settings.admin_email.split(",") if e.strip()]
+        is_admin = email.lower() in admin_emails
+
+        if not db_user:
+            # Create new user record
+            await db.user.create(
+                data={
+                    "id": user_id,
+                    "nama": name,
+                    "email": email,
+                    "sisaKredit": 999999 if is_admin else 5,
+                    "isAdmin": is_admin,
+                }
+            )
+        else:
+            # Update lastSeenAt and ensure admin status if email matches
+            update_data = {
+                "nama": name,
+                "lastSeenAt": datetime.now(timezone.utc),
+            }
+            if is_admin:
+                update_data["isAdmin"] = True
+                update_data["sisaKredit"] = 999999
+            await db.user.update(
+                where={"id": user_id},
+                data=update_data,
+            )
+
+        # Check KYC status
+        kyc = await db.kyc.find_unique(where={"userId": user_id})
+
+        return {
+            "message": "Login berhasil",
+            "user_id": user_id,
+            "email": email,
+            "nama": name,
+            "is_admin": is_admin,
+            "kyc_completed": kyc is not None,
+            "kyc_status": kyc.status if kyc else None,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Authentication error: {str(e)}",
+        )
+
+
+@router.get("/me")
+async def get_me(current_user: dict = Depends(get_current_user)):
+    """Get current user profile with KYC status."""
+    user_id = current_user["id"]
+
+    # Get user and KYC data in one query using include
+    db_user = await db.user.find_unique(
+        where={"id": user_id},
+        include={"kyc": True}
+    )
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return UserProfile(
+        id=db_user.id,
+        nama=db_user.nama,
+        email=db_user.email,
+        sisa_kredit=db_user.sisaKredit,
+        is_admin=db_user.isAdmin,
+        is_banned=db_user.isBanned,
+        kyc_status=db_user.kyc.status if db_user.kyc else None,
+        nama_toko=db_user.kyc.namaToko if db_user.kyc else None,
+    )
+
+
+@router.post("/kyc", response_model=KYCResponse)
+async def submit_kyc(request: KYCRequest, current_user: dict = Depends(get_current_user)):
+    """
+    Submit KYC data. If NIK/NPWP already exists, auto-append random suffix
+    to keep it unique (dummy mode).
+    """
+    user_id = current_user["id"]
+
+    # Check if user already has KYC
+    existing_kyc = await db.kyc.find_unique(where={"userId": user_id})
+    if existing_kyc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="KYC sudah pernah diisi. Hubungi admin untuk mengubah data.",
+        )
+
+    nik = request.nik.strip()
+    npwp = request.npwp.strip() if request.npwp else None
+
+    # Ensure NIK uniqueness — append random suffix if duplicate
+    nik = await _ensure_unique_field("nik", nik)
+
+    # Ensure NPWP uniqueness if provided
+    if npwp:
+        npwp = await _ensure_unique_field("npwp", npwp)
+
+    async with db.tx() as tx:
+        # Insert KYC record
+        await tx.kyc.create(
+            data={
+                "userId": user_id,
+                "namaToko": request.nama_toko.strip(),
+                "nik": nik,
+                "npwp": npwp,
+                "status": "verified",
+            }
+        )
+
+        # Update user's brand name
+        await tx.user.update(
+            where={"id": user_id},
+            data={"nama": request.nama_toko.strip()}
+        )
+
+    return KYCResponse(
+        message="Form telah terverifikasi. (Catatan: Ini masih dummy, di proses asli nanti akan dicek secara realtime oleh admin).",
+        status="verified",
+    )
+
+
+async def _ensure_unique_field(field: str, value: str) -> str:
+    """
+    Check if a value already exists in a table field.
+    If it does, append a random suffix to make it unique.
+    """
+    kwargs = {field: value}
+    existing = await db.kyc.find_unique(where=kwargs)
+    if existing:
+        # Append random suffix
+        suffix = f"_{uuid.uuid4().hex[:6]}_{int(time.time()) % 10000}"
+        value = f"{value}{suffix}"
+    return value

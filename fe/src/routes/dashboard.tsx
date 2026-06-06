@@ -1,0 +1,215 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { Plus, Package, ScanLine, ArrowRight, CalendarDays, Loader2, Trash2 } from "lucide-react";
+import { AppShell } from "@/components/AppShell";
+import { getBrand } from "@/lib/oziktag-store";
+import { apiFetch } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
+
+export const Route = createFileRoute("/dashboard")({
+  head: () => ({ meta: [{ title: "Dashboard — Oziktag" }] }),
+  component: Dashboard,
+});
+
+function Dashboard() {
+  const [tags, setTags] = useState<any[]>([]);
+  const [brand, setBrandName] = useState("Brand UMKM");
+  const [totalScans, setTotalScans] = useState(0);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  const fetchAll = async () => {
+    try {
+      const [prodData, statsData] = await Promise.all([
+        apiFetch("/qc/products"),
+        apiFetch("/qc/stats")
+      ]);
+      setTags(prodData);
+      setTotalProducts(statsData.total_products);
+      setTotalScans(statsData.total_scans);
+      setLoading(false);
+    } catch (err) {
+      console.error(err);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    setBrandName(getBrand());
+    fetchAll();
+
+    let sub1: any;
+    let sub2: any;
+
+    supabase.auth.getUser().then(({ data }) => {
+      const uid = data.user?.id;
+      if (!uid) return;
+
+      sub1 = supabase
+        .channel('dashboard-products')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'qc_products', filter: `user_id=eq.${uid}` }, () => {
+          fetchAll();
+        })
+        .subscribe();
+
+      sub2 = supabase
+        .channel('dashboard-scans')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'product_scans', filter: `user_id=eq.${uid}` }, () => {
+          fetchAll();
+        })
+        .subscribe();
+    });
+
+    return () => {
+      if (sub1) supabase.removeChannel(sub1);
+      if (sub2) supabase.removeChannel(sub2);
+    };
+  }, []);
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Hapus QR Code ini?")) return;
+    try {
+      await apiFetch(`/qc/${id}`, { method: "DELETE" });
+      toast.success("Produk berhasil dihapus");
+      setTags(tags.filter(t => t.id !== id));
+      setTotalProducts(prev => prev - 1);
+    } catch (e) {
+      toast.error("Gagal menghapus produk");
+    }
+  };
+
+  return (
+    <AppShell>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-sm text-muted-foreground">Selamat datang,</p>
+          <h1 className="text-3xl font-semibold tracking-tight">{brand}</h1>
+        </div>
+        <Link
+          to="/generator"
+          className="inline-flex items-center gap-2 rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-[var(--shadow-elegant)] hover:opacity-90"
+        >
+          <Plus className="h-4 w-4" /> Buat QR Code Kualitas
+        </Link>
+      </div>
+
+      <div className="mt-8 grid gap-4 sm:grid-cols-2">
+        <StatCard
+          icon={Package}
+          label="Produk Terverifikasi"
+          value={totalProducts.toString()}
+          hint="Total label QC aktif"
+        />
+        <StatCard
+          icon={ScanLine}
+          label="Scan oleh Pembeli (bulan ini)"
+          value={totalScans.toString()}
+          hint="Diperbarui realtime"
+        />
+      </div>
+
+      <section className="mt-10">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
+            Aktivitas Hari Ini
+          </h2>
+          <p className="text-xs text-muted-foreground hidden sm:block">Geser ←/→ untuk lihat lainnya</p>
+        </div>
+        {loading ? (
+          <div className="flex h-40 items-center justify-center rounded-xl border border-border bg-card">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          </div>
+        ) : tags.length === 0 ? (
+          <div className="overflow-hidden rounded-xl border border-border bg-card">
+            <div className="px-6 py-16 text-center">
+              <p className="text-sm text-muted-foreground">
+                Belum ada QR Code. Mulai dengan membuat label kualitas pertama Anda.
+              </p>
+              <Link
+                to="/generator"
+                className="mt-4 inline-flex items-center gap-2 rounded-md border border-border px-4 py-2 text-sm hover:bg-secondary"
+              >
+                <Plus className="h-4 w-4" /> Buat QR pertama
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <div className="-mx-4 px-4 sm:mx-0 sm:px-0">
+            <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-3 [scrollbar-width:thin]">
+              {tags.map((t) => (
+                <div
+                  key={t.id}
+                  className="snap-start shrink-0 w-[80%] sm:w-[300px] rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-elegant)]"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-medium text-primary">
+                      <Package className="h-3 w-3" /> {t.category}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground inline-flex items-center gap-1">
+                      <CalendarDays className="h-3 w-3" />
+                      {new Date(t.createdAt).toLocaleDateString("id-ID")}
+                    </span>
+                  </div>
+                  <p className="mt-3 line-clamp-2 text-sm font-semibold">{t.nama_produk}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Batch: {t.batch || "—"}</p>
+                  <div className="mt-3 flex flex-wrap gap-1">
+                    {t.checklist.slice(0, 2).map((q: string) => (
+                      <span key={q} className="rounded-md bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                        ✓ {q}
+                      </span>
+                    ))}
+                    {t.checklist.length > 2 && (
+                      <span className="rounded-md bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                        +{t.checklist.length - 2}
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-4 flex items-center justify-between">
+                    <Link
+                      to="/scan/$id"
+                      params={{ id: t.id }}
+                      className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+                    >
+                      Lihat QR <ArrowRight className="h-3 w-3" />
+                    </Link>
+                    <button
+                      onClick={() => handleDelete(t.id)}
+                      className="text-muted-foreground hover:text-destructive p-1 rounded-md hover:bg-destructive/10 transition-colors"
+                      title="Hapus"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </section>
+    </AppShell>
+  );
+}
+
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  hint,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: string;
+  hint: string;
+}) {
+  return (
+    <div className="rounded-xl border border-border bg-card p-5">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">{label}</p>
+        <Icon className="h-4 w-4 text-primary" />
+      </div>
+      <p className="mt-3 text-3xl font-semibold tracking-tight">{value}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
+    </div>
+  );
+}
