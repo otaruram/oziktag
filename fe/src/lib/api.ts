@@ -1,6 +1,9 @@
 import { supabase } from "./supabase";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+// Automatically use Render backend in Production, and localhost in Development
+const API_BASE = import.meta.env.PROD 
+  ? "https://oziktag-backend.onrender.com/api" 
+  : "http://localhost:8000/api";
 
 export async function apiFetch(endpoint: string, options: RequestInit = {}) {
   const { data } = await supabase.auth.getSession();
