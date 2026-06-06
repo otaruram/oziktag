@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, QrCode, User, ShieldCheck, LogOut, Coins, Code2 } from "lucide-react";
+import { LayoutDashboard, QrCode, User, ShieldCheck, LogOut, Coins, Code2, Settings } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { getCredits } from "@/lib/oziktag-store";
 import { supabase } from "@/lib/supabase";
@@ -75,55 +75,10 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-4">
-            {/* Profile Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-border bg-secondary hover:ring-2 hover:ring-primary/50 transition-all"
-              >
-                {avatar ? (
-                  <img src={avatar} alt="Profile" className="h-full w-full object-cover" />
-                ) : (
-                  <User className="h-4 w-4 text-muted-foreground" />
-                )}
-              </button>
-
-              {isDropdownOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setIsDropdownOpen(false)}
-                  />
-                  <div className="absolute left-0 top-full z-50 mt-2 w-48 rounded-md border border-border bg-card p-1 shadow-[var(--shadow-elegant)]">
-                    <Link
-                      to="/profile"
-                      onClick={() => setIsDropdownOpen(false)}
-                      className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-                    >
-                      <User className="h-4 w-4" />
-                      Profil
-                    </Link>
-                    <button
-                      onClick={(e) => {
-                        setIsDropdownOpen(false);
-                        handleLogout(e);
-                      }}
-                      className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      Keluar
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-
-            <Link to="/dashboard" className="flex items-center gap-2 font-semibold tracking-tight">
-              <ShieldCheck className="h-5 w-5 text-primary" />
-              <span className="hidden sm:inline">Oziktag</span>
-            </Link>
-          </div>
+          <Link to="/dashboard" className="flex items-center gap-2 font-semibold tracking-tight">
+            <ShieldCheck className="h-5 w-5 text-primary" />
+            <span className="hidden sm:inline">Oziktag</span>
+          </Link>
           <nav className="hidden items-center gap-1 md:flex">
             {nav.map((item) => {
               const active = path === item.to;
@@ -166,6 +121,58 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Coins className="h-3.5 w-3.5 text-primary" />
               <span className="font-semibold text-primary">{credits}</span>
             </Link>
+
+            {/* Profile Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-border bg-secondary hover:ring-2 hover:ring-primary/50 transition-all"
+              >
+                {avatar ? (
+                  <img src={avatar} alt="Profile" className="h-full w-full object-cover" />
+                ) : (
+                  <User className="h-4 w-4 text-muted-foreground" />
+                )}
+              </button>
+
+              {isDropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsDropdownOpen(false)}
+                  />
+                  <div className="absolute right-0 top-full z-50 mt-2 w-48 rounded-md border border-border bg-card p-1 shadow-[var(--shadow-elegant)]">
+                    <Link
+                      to="/profile"
+                      onClick={() => setIsDropdownOpen(false)}
+                      className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                    >
+                      <User className="h-4 w-4" />
+                      Profil
+                    </Link>
+                    <Link
+                      to="/settings"
+                      onClick={() => setIsDropdownOpen(false)}
+                      className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                    >
+                      <Settings className="h-4 w-4" />
+                      Pengaturan
+                    </Link>
+                    <div className="my-1 h-px bg-border" />
+                    <button
+                      onClick={(e) => {
+                        setIsDropdownOpen(false);
+                        handleLogout(e);
+                      }}
+                      className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Keluar
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
         <div className="flex gap-1 border-t border-border px-4 py-2 md:hidden">
