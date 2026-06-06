@@ -4,6 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { Lock, Code2, Copy, RefreshCw, KeyRound, Server, Webhook, Coins, Play, X } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { toast } from "sonner";
+import QRCode from "qrcode";
 
 export const Route = createFileRoute("/api-keys")({
   head: () => ({ meta: [{ title: "Developer API — Oziktag" }] }),
@@ -209,6 +210,12 @@ function PlaygroundModal({ onClose, credits }: { onClose: () => void; credits: n
 }
 
 function PricingModal({ onClose }: { onClose: () => void }) {
+  const [selectedPkg, setSelectedPkg] = useState<any>(null);
+
+  if (selectedPkg) {
+    return <SimulationCheckoutModal pkg={selectedPkg} onClose={() => setSelectedPkg(null)} />;
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 px-4 backdrop-blur-sm" onClick={onClose}>
       <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-elegant)] overflow-y-auto max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
@@ -232,27 +239,100 @@ function PricingModal({ onClose }: { onClose: () => void }) {
           </div>
 
           <div className="space-y-3">
-            <h5 className="text-sm font-semibold">Harga Kredit (Top-up Reguler)</h5>
+            <h5 className="text-sm font-semibold">Pilih Paket Kredit API (Simulasi)</h5>
             <ul className="space-y-2">
-              <li className="flex items-center justify-between text-sm rounded-md border border-border bg-card p-3">
+              <button onClick={() => setSelectedPkg({ id: "starter", name: "Starter", price: 20000, credits: 50 })} className="w-full flex items-center justify-between text-sm rounded-md border border-border bg-card p-3 hover:bg-secondary transition-colors text-left">
                 <span><span className="font-medium">Starter</span> (50 kredit)</span>
                 <span className="font-mono text-muted-foreground">Rp 400 / req</span>
-              </li>
-              <li className="flex items-center justify-between text-sm rounded-md border border-primary/40 bg-primary/5 p-3">
+              </button>
+              <button onClick={() => setSelectedPkg({ id: "growth", name: "Growth", price: 50000, credits: 150 })} className="w-full flex items-center justify-between text-sm rounded-md border border-primary/40 bg-primary/5 p-3 hover:bg-primary/10 transition-colors text-left">
                 <span><span className="font-medium text-primary">Growth</span> (150 kredit)</span>
                 <span className="font-mono text-muted-foreground">Rp 333 / req</span>
-              </li>
-              <li className="flex items-center justify-between text-sm rounded-md border border-border bg-card p-3">
+              </button>
+              <button onClick={() => setSelectedPkg({ id: "pro", name: "Pro", price: 100000, credits: 400 })} className="w-full flex items-center justify-between text-sm rounded-md border border-border bg-card p-3 hover:bg-secondary transition-colors text-left">
                 <span><span className="font-medium">Pro</span> (400 kredit)</span>
                 <span className="font-mono text-muted-foreground">Rp 250 / req</span>
-              </li>
+              </button>
             </ul>
           </div>
           
           <div className="rounded-lg bg-muted p-4 text-xs text-muted-foreground">
-            <span className="font-medium text-foreground">Catatan:</span> Tidak ada biaya bulanan. Anda hanya membayar sesuai jumlah request (QR) yang berhasil di-generate.
+            <span className="font-medium text-foreground">Catatan:</span> Klik salah satu paket di atas untuk mencoba simulasi pembayaran. Tidak ada biaya bulanan, murni pay-as-you-go.
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function SimulationCheckoutModal({ pkg, onClose }: { pkg: any, onClose: () => void }) {
+  const [method, setMethod] = useState<"QRIS" | "GoPay">("QRIS");
+  const [processing, setProcessing] = useState(false);
+  const [qrImage, setQrImage] = useState<string | null>(null);
+
+  const createTransaction = async () => {
+    setProcessing(true);
+    try {
+      await new Promise(r => setTimeout(r, 1000));
+      const dummyQrData = "00020101021126670016COM.NOBUBANK.WWW01189360050300000879140214436531182312010303UMI51440014ID.CO.QRIS.WWW0215ID10200212002010303UMI5204549953033605405200005802ID5910Oziktag API6006JAKARTA61051219062330115P20111129528250708021111296304EE88";
+      const url = await QRCode.toDataURL(dummyQrData, { width: 300 });
+      setQrImage(url);
+      toast.success("Tagihan simulasi berhasil dibuat!");
+    } catch (e: any) {
+      toast.error("Gagal membuat transaksi");
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const idr = (n: number) => "Rp " + n.toLocaleString("id-ID");
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 px-4 backdrop-blur-sm" onClick={onClose}>
+      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-elegant)] overflow-y-auto max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Checkout (Simulasi)</p>
+            <h3 className="mt-1 text-lg font-semibold">Paket {pkg.name} API</h3>
+          </div>
+          <button onClick={onClose} className="rounded-md p-1 text-muted-foreground hover:bg-secondary hover:text-foreground">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="mt-4 flex items-center justify-between rounded-lg border border-border bg-background/40 px-4 py-3 text-sm">
+          <span className="text-muted-foreground">Total bayar</span>
+          <span className="text-lg font-semibold">{idr(pkg.price)}</span>
+        </div>
+
+        {qrImage ? (
+          <div className="mt-5 flex flex-col items-center rounded-lg border border-dashed border-border bg-background/40 p-4 text-center">
+            <img src={qrImage} alt="QRIS" className="h-48 w-48 rounded-md bg-white p-2 shadow-sm" />
+            <p className="mt-3 text-xs font-semibold text-primary">Scan dengan e-Wallet atau m-Banking</p>
+            <div className="mt-6 flex flex-col items-center gap-1.5">
+              <span className="relative flex h-3 w-3">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
+                <span className="relative inline-flex h-3 w-3 rounded-full bg-primary"></span>
+              </span>
+              <p className="text-sm font-medium">Menunggu Pembayaran...</p>
+              <p className="text-[11px] text-muted-foreground">Ini adalah QR simulasi percobaan.</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            <p className="mt-5 text-xs font-medium uppercase tracking-wide text-muted-foreground">Metode pembayaran</p>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              {(["QRIS", "GoPay"] as const).map((m) => (
+                <button key={m} onClick={() => setMethod(m)} className={`rounded-md border px-3 py-2 text-sm font-medium transition-colors ${method === m ? "border-primary/60 bg-primary/10 text-foreground" : "border-border bg-background text-muted-foreground hover:text-foreground"}`}>
+                  {m}
+                </button>
+              ))}
+            </div>
+            <button onClick={createTransaction} disabled={processing} className="mt-6 w-full rounded-md bg-primary py-2.5 text-sm font-medium text-primary-foreground shadow-[var(--shadow-elegant)] hover:opacity-90 disabled:opacity-60">
+              {processing ? "Memproses..." : "Buat Tagihan Simulasi"}
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

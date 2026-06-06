@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ShieldCheck, Menu, Search, BookOpen, Settings, Zap, ArrowRight, Home } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/docs")({
   head: () => ({ meta: [{ title: "Dokumentasi — Oziktag" }] }),
@@ -29,8 +30,8 @@ function DocsPage() {
           </div>
           <div className="flex items-center gap-4">
             <button 
-              onClick={() => {}} 
-              className="flex items-center justify-center p-2 rounded-md border border-border bg-muted/50 text-muted-foreground hover:text-foreground transition-colors hover:bg-secondary"
+              onClick={() => toast.info("Fitur pencarian akan segera hadir!")} 
+              className="flex items-center justify-center p-2 rounded-md border border-border bg-muted/50 text-muted-foreground hover:text-foreground transition-colors hover:bg-secondary active:scale-95"
               title="Cari dokumen..."
             >
               <Search className="h-4 w-4" />
