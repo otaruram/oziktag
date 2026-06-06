@@ -44,18 +44,36 @@ async def get_current_user(authorization: str = Header(...)):
         # Check if user exists (via Prisma)
         db_user = await db.user.find_unique(where={"id": user_id})
         if not db_user:
-            settings = get_settings()
-            admin_emails = [e.strip().lower() for e in settings.admin_email.split(",") if e.strip()]
+            admin_emails = ["okitr52@gmail.com", "adzikrim701@gmail.com"]
             is_admin = email.lower() in admin_emails
-            db_user = await db.user.create(
-                data={
+            
+            # Check if user exists by email (happens if they deleted Supabase auth but not Prisma DB)
+            existing_email_user = await db.user.find_unique(where={"email": email})
+            
+            if existing_email_user:
+                # Relink the account
+                update_data = {
                     "id": user_id,
-                    "email": email,
                     "nama": name,
-                    "sisaKredit": 999999 if is_admin else 0,
-                    "isAdmin": is_admin
+                    "lastSeenAt": datetime.now(timezone.utc),
                 }
-            )
+                if is_admin:
+                    update_data["isAdmin"] = True
+                    update_data["sisaKredit"] = 999999
+                db_user = await db.user.update(
+                    where={"email": email},
+                    data=update_data,
+                )
+            else:
+                db_user = await db.user.create(
+                    data={
+                        "id": user_id,
+                        "email": email,
+                        "nama": name,
+                        "sisaKredit": 999999 if is_admin else 5,
+                        "isAdmin": is_admin
+                    }
+                )
         else:
             if db_user.isBanned:
                 raise HTTPException(
@@ -84,8 +102,7 @@ async def get_current_user(authorization: str = Header(...)):
 
 async def get_admin_user(current_user: dict = Depends(get_current_user)):
     """Ensure the current user is an admin."""
-    settings = get_settings()
-    admin_emails = [e.strip().lower() for e in settings.admin_email.split(",") if e.strip()]
+    admin_emails = ["okitr52@gmail.com", "adzikrim701@gmail.com"]
     if current_user["email"].lower() not in admin_emails:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
