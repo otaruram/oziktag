@@ -51,16 +51,35 @@ async def google_auth(request: GoogleAuthRequest):
         is_admin = email.lower() in admin_emails
 
         if not db_user:
-            # Create new user record
-            await db.user.create(
-                data={
+            # Check if user exists by email (happens if they deleted Supabase auth but not Prisma DB)
+            existing_email_user = await db.user.find_unique(where={"email": email})
+            
+            if existing_email_user:
+                # Relink the account by updating the Prisma ID to the new Supabase ID
+                update_data = {
                     "id": user_id,
                     "nama": name,
-                    "email": email,
-                    "sisaKredit": 999999 if is_admin else 5,
-                    "isAdmin": is_admin,
+                    "lastSeenAt": datetime.now(timezone.utc),
                 }
-            )
+                if is_admin:
+                    update_data["isAdmin"] = True
+                    update_data["sisaKredit"] = 999999
+                    
+                await db.user.update(
+                    where={"email": email},
+                    data=update_data,
+                )
+            else:
+                # Create new user record
+                await db.user.create(
+                    data={
+                        "id": user_id,
+                        "nama": name,
+                        "email": email,
+                        "sisaKredit": 999999 if is_admin else 5,
+                        "isAdmin": is_admin,
+                    }
+                )
         else:
             # Update lastSeenAt and ensure admin status if email matches
             update_data = {
