@@ -156,19 +156,8 @@ function PhotoGallery({ photos }: { photos: string[] }) {
 
 function AiSummaryInner({ tag }: { tag: Qrtag }) {
   const [status, setStatus] = useState<"idle" | "loading" | "ready">("idle");
-  const hasNotes = !!tag.notes && tag.notes.trim().length > 0;
-  const insight = hasNotes
-    ? `Produk ini dalam kondisi sangat baik dan original. Berdasarkan catatan QC dari ${tag.brand}: "${tag.notes}" — hal ini tidak mempengaruhi kualitas isi produk.`
-    : `Produk ini telah lolos seluruh checklist Quality Control oleh ${tag.brand} dan berada dalam kondisi prima serta original.`;
-
-  const careTips: Record<string, string> = {
-    "Makanan & Minuman": "Simpan di tempat sejuk dan kering, hindari sinar matahari langsung untuk menjaga rasa & aroma.",
-    Fashion: "Cuci dengan air dingin dan jemur di tempat teduh agar warna & serat tetap awet.",
-    Kerajinan: "Bersihkan dengan kain kering, hindari kelembapan tinggi agar tidak berjamur.",
-    Kecantikan: "Tutup rapat setelah dipakai dan simpan di suhu ruang, hindari paparan matahari.",
-    Lainnya: "Simpan di tempat aman, kering, dan jauh dari jangkauan anak-anak.",
-  };
-  const tip = careTips[tag.category] ?? careTips.Lainnya;
+  const insight = tag.aiInsight || `Produk ini telah lolos seluruh checklist Quality Control oleh ${tag.brand} dan berada dalam kondisi prima serta original.`;
+  const tip = tag.aiSolution || "Simpan di tempat aman, kering, dan ikuti petunjuk penggunaan.";
 
   const generate = () => {
     setStatus("loading");
