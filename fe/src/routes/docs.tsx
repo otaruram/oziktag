@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ShieldCheck, Menu, Search, Github, BookOpen, Settings, Zap, ArrowRight, Home } from "lucide-react";
+import { ShieldCheck, Menu, Search, BookOpen, Settings, Zap, ArrowRight, Home } from "lucide-react";
 import { useState } from "react";
 
 export const Route = createFileRoute("/docs")({
@@ -36,9 +36,7 @@ function DocsPage() {
             <Link to="/" className="text-sm font-medium hover:text-primary flex items-center gap-2">
               <Home className="h-4 w-4" /> Beranda
             </Link>
-            <a href="https://github.com" target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground">
-              <Github className="h-5 w-5" />
-            </a>
+
           </div>
         </div>
       </header>
