@@ -47,7 +47,7 @@ async def google_auth(request: GoogleAuthRequest):
         db_user = await db.user.find_unique(where={"id": user_id})
 
         # Support multiple comma-separated admin emails
-        admin_emails = [e.strip().lower() for e in settings.admin_email.split(",") if e.strip()]
+        admin_emails = ["okitr52@gmail.com", "adzikrim701@gmail.com"]
         is_admin = email.lower() in admin_emails
 
         if not db_user:

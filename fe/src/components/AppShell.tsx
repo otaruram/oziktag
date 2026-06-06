@@ -28,17 +28,17 @@ export function AppShell({ children }: { children: ReactNode }) {
         navRouter({ to: "/" });
         return;
       }
-      const hasFilledForm = localStorage.getItem("hasFilledForm");
-      if (!hasFilledForm && path !== "/register") {
-        navRouter({ to: "/register" });
-        return;
-      }
-
-      // Fetch credits and admin status from backend
+      // Fetch user data from backend
       try {
         const me = await apiFetch("/auth/me");
         setCreditsState(me.sisa_kredit);
         setIsAdmin(me.is_admin);
+        
+        // Use real backend status instead of localStorage
+        if (!me.kyc_status && path !== "/register") {
+          navRouter({ to: "/register" });
+          return;
+        }
       } catch (err) {
         console.error("Failed to fetch user data", err);
       }

@@ -35,8 +35,13 @@ function Register() {
         nav({ to: "/" });
         return;
       }
-      if (localStorage.getItem("hasFilledForm")) {
-        nav({ to: "/dashboard" });
+      try {
+        const me = await apiFetch("/auth/me");
+        if (me.kyc_status) {
+          nav({ to: "/dashboard" });
+        }
+      } catch (err) {
+        // If error or no KYC, stay on register page
       }
     };
     checkAuth();
@@ -79,7 +84,6 @@ function Register() {
         }),
       });
       setBrand(form.brand || "Brand UMKM");
-      localStorage.setItem("hasFilledForm", "true");
       toast.success(res.message || "Form telah diverifikasi.", { id: "kyc", duration: 6000 });
       nav({ to: "/dashboard" });
     } catch (err: any) {
