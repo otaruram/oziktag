@@ -90,7 +90,7 @@ function DocsPage() {
         {/* Main Content */}
         <main className="flex-1 py-8 md:pl-10 lg:pl-12 w-full max-w-4xl">
           <div className="space-y-8">
-            <section id="cara-kerja">
+            <section id="cara-kerja" className="scroll-mt-20">
               <p className="text-primary font-semibold text-sm mb-2">Getting Started</p>
               <h1 className="text-4xl font-bold tracking-tight mb-4">Cara Kerja Oziktag</h1>
               <p className="text-muted-foreground text-lg mb-6 leading-relaxed">
@@ -166,7 +166,7 @@ function DocsPage() {
             </section>
 
             <div className="border-t border-border pt-8 mt-12">
-              <h2 id="arsitektur" className="text-2xl font-bold tracking-tight mb-4">Arsitektur End-to-End</h2>
+              <h2 id="arsitektur" className="text-2xl font-bold tracking-tight mb-4 scroll-mt-20">Arsitektur End-to-End</h2>
               <div className="overflow-x-auto rounded-lg border border-border bg-card">
                 <table className="w-full text-sm text-left text-muted-foreground">
                   <thead className="text-xs uppercase bg-muted text-foreground border-b border-border">
@@ -203,7 +203,7 @@ function DocsPage() {
             </div>
 
             <div className="border-t border-border pt-8 mt-12">
-              <h2 id="ai-qc" className="text-2xl font-bold tracking-tight mb-4 flex items-center gap-2">
+              <h2 id="ai-qc" className="text-2xl font-bold tracking-tight mb-4 flex items-center gap-2 scroll-mt-20">
                 <Zap className="h-6 w-6 text-primary" /> AI Quality Control
               </h2>
               <p className="text-muted-foreground text-sm leading-relaxed mb-4">
@@ -212,7 +212,7 @@ function DocsPage() {
             </div>
 
             <div className="border-t border-border pt-8 mt-12">
-              <h2 id="kyc" className="text-2xl font-bold tracking-tight mb-4 flex items-center gap-2">
+              <h2 id="kyc" className="text-2xl font-bold tracking-tight mb-4 flex items-center gap-2 scroll-mt-20">
                 <BookOpen className="h-6 w-6 text-primary" /> Sistem KYC (Know Your Customer)
               </h2>
               <p className="text-muted-foreground text-sm leading-relaxed mb-4">
@@ -221,7 +221,7 @@ function DocsPage() {
             </div>
 
             <div className="border-t border-border pt-8 mt-12">
-              <h2 id="api" className="text-2xl font-bold tracking-tight mb-4 flex items-center gap-2 text-muted-foreground">
+              <h2 id="api" className="text-2xl font-bold tracking-tight mb-4 flex items-center gap-2 text-muted-foreground scroll-mt-20">
                 <Settings className="h-6 w-6" /> API Reference <span className="text-xs bg-secondary px-2 py-1 rounded ml-2">TBA</span>
               </h2>
               <p className="text-muted-foreground text-sm leading-relaxed mb-4">

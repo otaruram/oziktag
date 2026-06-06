@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
-import { Settings as SettingsIcon, HelpCircle, MessageCircle, Bell, Shield, PaintBucket } from "lucide-react";
+import { Settings as SettingsIcon, HelpCircle, MessageCircle, Bell, Shield, Globe } from "lucide-react";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "Pengaturan — Oziktag" }] }),
@@ -26,18 +26,19 @@ function SettingsPage() {
         <div className="md:col-span-2 space-y-6">
           <section className="rounded-xl border border-border bg-card p-6">
             <div className="flex items-center gap-2 mb-4">
-              <PaintBucket className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-semibold">Tampilan</h2>
+              <Globe className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold">Preferensi Bahasa</h2>
             </div>
             <div className="space-y-4">
               <div className="flex items-center justify-between border-b border-border pb-4">
                 <div>
-                  <p className="text-sm font-medium">Tema Gelap (Dark Mode)</p>
-                  <p className="text-xs text-muted-foreground">Oziktag secara otomatis mengikuti tema perangkat Anda.</p>
+                  <p className="text-sm font-medium">Bahasa Sistem</p>
+                  <p className="text-xs text-muted-foreground">Pilih bahasa utama untuk antarmuka aplikasi.</p>
                 </div>
-                <div className="h-5 w-10 rounded-full bg-primary/20 p-0.5">
-                  <div className="h-4 w-4 rounded-full bg-primary translate-x-5" />
-                </div>
+                <select className="rounded-md border border-border bg-input/40 px-3 py-1.5 text-sm focus:outline-none">
+                  <option value="id">Bahasa Indonesia</option>
+                  <option value="en">English (US)</option>
+                </select>
               </div>
             </div>
           </section>
