@@ -1,283 +1,308 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { AppShell } from "@/components/AppShell";
-import { apiFetch } from "@/lib/api";
-import { toast } from "sonner";
-import { Users, Activity, Ban, Package, Search, PlusCircle, MinusCircle, ShieldAlert, CheckCircle2 } from "lucide-react";
-import { format } from "date-fns";
+import { createFileRoute } from '@tanstack/react-router';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api';
+import { Users, Activity, ShieldAlert, CreditCard } from 'lucide-react';
 
-export const Route = createFileRoute("/admin")({
-  head: () => ({ meta: [{ title: "Admin Panel — Oziktag" }] }),
-  component: AdminPage,
+export const Route = createFileRoute('/admin')({
+  component: AdminDashboard,
 });
 
-type AdminStats = {
-  total_users: number;
-  total_products: number;
-  total_transactions: number;
-  online_users: number;
-  banned_users: number;
-};
+function AdminDashboard() {
+  const queryClient = useQueryClient();
 
-type UserItem = {
-  id: string;
-  nama: string;
-  email: string;
-  sisa_kredit: number;
-  is_banned: boolean;
-  is_admin: boolean;
-  last_seen_at: string | null;
-  created_at: string;
-};
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [creditAmount, setCreditAmount] = useState<number>(0);
+  const [isCreditModalOpen, setIsCreditModalOpen] = useState(false);
 
-function AdminPage() {
-  const [stats, setStats] = useState<AdminStats | null>(null);
-  const [users, setUsers] = useState<UserItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const nav = useNavigate();
+  // Queries
+  const { data: user, isLoading: userLoading } = useQuery({
+    queryKey: ['auth-me'],
+    queryFn: async () => {
+      const data = await apiFetch('/auth/me');
+      return data;
+    },
+  });
 
-  const fetchData = async () => {
-    try {
-      // Parallel fetch
-      const [statsRes, usersRes] = await Promise.all([
-        apiFetch("/admin/stats"),
-        apiFetch("/admin/users"),
-      ]);
-      setStats(statsRes);
-      setUsers(usersRes);
-    } catch (e: any) {
-      if (e.message?.includes("403")) {
-        toast.error("Akses ditolak. Hanya admin yang bisa mengakses halaman ini.");
-        nav({ to: "/dashboard" });
-      } else {
-        toast.error("Gagal memuat data admin");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: stats, isLoading: statsLoading } = useQuery({
+    queryKey: ['admin-stats'],
+    queryFn: async () => {
+      const data = await apiFetch('/admin/stats');
+      return data;
+    },
+    enabled: !!user?.is_admin,
+  });
 
-  useEffect(() => {
-    fetchData();
-    // Optional: Refresh every 30s for online status
-    const interval = setInterval(fetchData, 30000);
-    return () => clearInterval(interval);
-  }, []);
+  const { data: users, isLoading: usersLoading } = useQuery({
+    queryKey: ['admin-users'],
+    queryFn: async () => {
+      const data = await apiFetch('/admin/users');
+      return data;
+    },
+    enabled: !!user?.is_admin,
+  });
 
-  const handleAddCredit = async (user: UserItem) => {
-    const amountStr = prompt(`Berapa kredit yang ingin ditambahkan untuk ${user.email}?`);
-    if (!amountStr) return;
-    const amount = parseInt(amountStr, 10);
-    if (isNaN(amount) || amount <= 0) return toast.error("Nominal tidak valid");
-
-    try {
-      await apiFetch(`/admin/credits/add`, {
-        method: "POST",
-        body: JSON.stringify({ user_id: user.id, amount }),
+  // Mutations
+  const addCreditsMutation = useMutation({
+    mutationFn: async ({ userId, amount }: { userId: string; amount: number }) => {
+      const data = await apiFetch('/admin/credits/add', {
+        method: 'POST',
+        body: JSON.stringify({ user_id: userId, amount: amount }),
       });
-      toast.success(`Berhasil menambahkan ${amount} kredit ke ${user.email}`);
-      fetchData();
-    } catch (e) {
-      toast.error("Gagal menambahkan kredit");
-    }
-  };
+      return data;
+    },
+    onSuccess: (data) => {
+      toast.success(data.message);
+      setIsCreditModalOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.detail || 'Gagal menambahkan kredit');
+    },
+  });
 
-  const handleReduceCredit = async (user: UserItem) => {
-    const amountStr = prompt(`Berapa kredit yang ingin dikurangi dari ${user.email}? (Sisa: ${user.sisa_kredit})`);
-    if (!amountStr) return;
-    const amount = parseInt(amountStr, 10);
-    if (isNaN(amount) || amount <= 0) return toast.error("Nominal tidak valid");
-
-    try {
-      // Use negative amount in our system if you implemented a reduce endpoint,
-      // but if we only have /credits/add, we can send negative amount.
-      // Wait, let's check what the backend supports. The backend /admin/credits/add accepts amount.
-      await apiFetch(`/admin/credits/add`, {
-        method: "POST",
-        body: JSON.stringify({ user_id: user.id, amount: -amount }),
+  const banUserMutation = useMutation({
+    mutationFn: async ({ userId, banned }: { userId: string; banned: boolean }) => {
+      const data = await apiFetch('/admin/users/ban', {
+        method: 'POST',
+        body: JSON.stringify({ user_id: userId, banned: banned }),
       });
-      toast.success(`Berhasil mengurangi ${amount} kredit dari ${user.email}`);
-      fetchData();
-    } catch (e) {
-      toast.error("Gagal mengurangi kredit");
-    }
-  };
+      return data;
+    },
+    onSuccess: (data) => {
+      toast.success(data.message);
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.detail || 'Gagal mengubah status ban');
+    },
+  });
 
-  const handleToggleBan = async (user: UserItem) => {
-    if (user.is_admin) return toast.error("Tidak bisa mem-ban admin");
-    const action = user.is_banned ? "membuka blokir" : "memblokir";
-    if (!confirm(`Yakin ingin ${action} user ${user.email}?`)) return;
-
-    try {
-      await apiFetch(`/admin/users/ban`, {
-        method: "POST",
-        body: JSON.stringify({ user_id: user.id, banned: !user.is_banned }),
-      });
-      toast.success(`Berhasil ${action} user`);
-      fetchData();
-    } catch (e) {
-      toast.error(`Gagal ${action} user`);
-    }
-  };
-
-  const filteredUsers = users.filter(
-    (u) =>
-      u.email.toLowerCase().includes(search.toLowerCase()) ||
-      u.nama.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const isOnline = (lastSeen: string | null) => {
-    if (!lastSeen) return false;
-    const diff = Date.now() - new Date(lastSeen).getTime();
-    return diff < 15 * 60 * 1000; // 15 minutes threshold as defined in backend
-  };
-
-  if (loading) {
+  if (!user?.is_admin) {
     return (
-      <AppShell>
-        <div className="flex h-64 items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+      <div className="flex h-[50vh] items-center justify-center">
+        <div className="text-center">
+          <ShieldAlert className="mx-auto h-12 w-12 text-red-500 mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900">Akses Ditolak</h2>
+          <p className="text-gray-500 mt-2">Halaman ini khusus untuk Administrator.</p>
         </div>
-      </AppShell>
+      </div>
     );
   }
 
+  const handleAddCredits = () => {
+    if (!selectedUser || creditAmount === 0) return;
+    addCreditsMutation.mutate({ userId: selectedUser.id, amount: creditAmount });
+  };
+
+  const handleBanToggle = (usr: any) => {
+    banUserMutation.mutate({ userId: usr.id, banned: !usr.is_banned });
+  };
+
   return (
-    <AppShell>
-      <div className="mb-8">
-        <h1 className="text-3xl font-semibold tracking-tight">Admin Dashboard</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Kelola pengguna, kredit, dan sistem.</p>
+    <div className="container mx-auto py-8">
+      <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
+
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {statsLoading ? '-' : stats?.total_users || 0}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Users Online (15m)</CardTitle>
+            <Activity className="h-4 w-4 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {statsLoading ? '-' : stats?.online_users || 0}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Products</CardTitle>
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {statsLoading ? '-' : stats?.total_products || 0}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Banned Users</CardTitle>
+            <ShieldAlert className="h-4 w-4 text-red-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {statsLoading ? '-' : stats?.banned_users || 0}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {stats && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard title="Total Pengguna" value={stats.total_users} icon={Users} />
-          <StatCard title="Pengguna Aktif (15m)" value={stats.online_users} icon={Activity} highlight />
-          <StatCard title="Total Produk Di-scan" value={stats.total_products} icon={Package} />
-          <StatCard title="Pengguna Diblokir" value={stats.banned_users} icon={Ban} />
-        </div>
-      )}
-
-      <div className="mt-10 rounded-xl border border-border bg-card shadow-sm">
-        <div className="flex flex-col gap-4 border-b border-border p-6 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-lg font-semibold">Daftar Pengguna</h2>
-          <div className="relative w-full sm:w-72">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Cari email atau nama..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-md border border-border bg-background py-2 pl-9 pr-4 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-            />
-          </div>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-secondary/50 text-muted-foreground">
-              <tr>
-                <th className="px-6 py-3 font-medium">Pengguna</th>
-                <th className="px-6 py-3 font-medium">Status</th>
-                <th className="px-6 py-3 font-medium">Kredit</th>
-                <th className="px-6 py-3 font-medium">Bergabung</th>
-                <th className="px-6 py-3 text-right font-medium">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {filteredUsers.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="p-8 text-center text-muted-foreground">
-                    Tidak ada pengguna ditemukan.
-                  </td>
-                </tr>
+      {/* Users Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Manajemen User</CardTitle>
+          <CardDescription>
+            Kelola data user, kredit, dan status akun.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nama</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Kredit</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Terakhir Aktif</TableHead>
+                <TableHead className="text-right">Aksi</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {usersLoading ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-4">
+                    Memuat data...
+                  </TableCell>
+                </TableRow>
+              ) : users?.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-4">
+                    Belum ada user terdaftar.
+                  </TableCell>
+                </TableRow>
               ) : (
-                filteredUsers.map((u) => (
-                  <tr key={u.id} className="transition-colors hover:bg-muted/50">
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-foreground">{u.nama || "Tanpa Nama"}</div>
-                      <div className="text-xs text-muted-foreground">{u.email}</div>
-                      {u.is_admin && (
-                        <span className="mt-1 inline-block rounded bg-primary/20 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
-                          ADMIN
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      {u.is_banned ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2 py-1 text-xs font-medium text-destructive">
-                          <Ban className="h-3 w-3" /> Banned
-                        </span>
-                      ) : isOnline(u.last_seen_at) ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-green-500/10 px-2 py-1 text-xs font-medium text-green-600 dark:text-green-400">
-                          <span className="h-1.5 w-1.5 rounded-full bg-green-600 dark:bg-green-400" /> Online
-                        </span>
+                users?.map((usr: any) => (
+                  <TableRow key={usr.id}>
+                    <TableCell className="font-medium">{usr.nama}</TableCell>
+                    <TableCell>{usr.email}</TableCell>
+                    <TableCell>{usr.sisa_kredit}</TableCell>
+                    <TableCell>
+                      {usr.is_banned ? (
+                        <Badge variant="destructive">Banned</Badge>
+                      ) : usr.is_admin ? (
+                        <Badge className="bg-purple-500">Admin</Badge>
                       ) : (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-1 text-xs font-medium text-muted-foreground">
-                          Offline
-                        </span>
+                        <Badge variant="outline" className="border-green-500 text-green-500">Active</Badge>
                       )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="font-semibold">{u.sisa_kredit} 🪙</div>
-                    </td>
-                    <td className="px-6 py-4 text-xs text-muted-foreground">
-                      {format(new Date(u.created_at), "dd MMM yyyy")}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => handleReduceCredit(u)}
-                          title="Kurangi Kredit"
-                          className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    </TableCell>
+                    <TableCell>
+                      {usr.last_seen_at
+                        ? new Date(usr.last_seen_at).toLocaleString('id-ID')
+                        : '-'}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedUser(usr);
+                            setCreditAmount(0);
+                            setIsCreditModalOpen(true);
+                          }}
                         >
-                          <MinusCircle className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleAddCredit(u)}
-                          title="Tambah Kredit"
-                          className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
+                          Atur Kredit
+                        </Button>
+                        <Button
+                          variant={usr.is_banned ? 'outline' : 'destructive'}
+                          size="sm"
+                          onClick={() => handleBanToggle(usr)}
+                          disabled={usr.is_admin} // Don't ban admins
                         >
-                          <PlusCircle className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleToggleBan(u)}
-                          title={u.is_banned ? "Unban User" : "Ban User"}
-                          className={`rounded-md p-1.5 ${
-                            u.is_banned
-                              ? "text-green-600 hover:bg-green-50"
-                              : "text-destructive hover:bg-destructive/10"
-                          } ${u.is_admin ? "cursor-not-allowed opacity-50" : ""}`}
-                          disabled={u.is_admin}
-                        >
-                          {u.is_banned ? <CheckCircle2 className="h-4 w-4" /> : <ShieldAlert className="h-4 w-4" />}
-                        </button>
+                          {usr.is_banned ? 'Unban' : 'Ban'}
+                        </Button>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))
               )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </AppShell>
-  );
-}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
-function StatCard({ title, value, icon: Icon, highlight = false }: any) {
-  return (
-    <div
-      className={`rounded-xl border bg-card p-6 shadow-sm transition-all ${
-        highlight ? "border-primary/50 shadow-[var(--shadow-elegant)]" : "border-border"
-      }`}
-    >
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
-        <Icon className={`h-5 w-5 ${highlight ? "text-primary" : "text-muted-foreground/50"}`} />
-      </div>
-      <p className="mt-4 text-3xl font-semibold tracking-tight">{value}</p>
+      {/* Credit Modal */}
+      <Dialog open={isCreditModalOpen} onOpenChange={setIsCreditModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Atur Kredit User</DialogTitle>
+            <DialogDescription>
+              Tambahkan atau kurangi (gunakan angka minus) kredit untuk {selectedUser?.email}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="amount" className="text-right">
+                Jumlah
+              </Label>
+              <Input
+                id="amount"
+                type="number"
+                value={creditAmount}
+                onChange={(e) => setCreditAmount(parseInt(e.target.value) || 0)}
+                className="col-span-3"
+              />
+            </div>
+            <div className="text-sm text-gray-500 text-right">
+              Saldo saat ini: <span className="font-bold">{selectedUser?.sisa_kredit}</span>
+              <br />
+              Saldo setelah diubah: <span className="font-bold">{selectedUser?.sisa_kredit + creditAmount}</span>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="submit"
+              onClick={handleAddCredits}
+              disabled={addCreditsMutation.isPending || creditAmount === 0}
+            >
+              {addCreditsMutation.isPending ? 'Menyimpan...' : 'Simpan Perubahan'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
