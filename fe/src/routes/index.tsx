@@ -43,7 +43,7 @@ function Landing() {
             <CheckCircle2 className="h-3.5 w-3.5" />
             Digital Trust Seal untuk UMKM
           </span>
-          <h1 className="mt-8 text-balance text-5xl font-extrabold tracking-tight md:text-7xl leading-tight">
+          <h1 className="mt-8 text-balance text-4xl sm:text-5xl font-extrabold tracking-tight md:text-7xl leading-tight">
             Bangun kepercayaan pembeli, <br className="hidden md:block"/>
             <span className="text-muted-foreground">satu QR sekali tempel.</span>
           </h1>
@@ -73,12 +73,12 @@ function Landing() {
         <section className="border-y border-border bg-muted/30">
           <div className="mx-auto max-w-6xl px-6 py-24">
             <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold tracking-tight md:text-4xl">Cara Kerja yang Transparan</h2>
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight md:text-4xl">Cara Kerja yang Transparan</h2>
               <p className="mt-4 text-muted-foreground">Dari gudang Anda langsung ke tangan pembeli dengan jaminan AI.</p>
             </div>
             
             <div className="grid md:grid-cols-3 gap-8 relative">
-              <div className="hidden md:block absolute top-8 left-1/6 right-1/6 h-[2px] bg-border z-0"></div>
+              <div className="hidden md:block absolute top-8 left-[16.66%] right-[16.66%] h-[2px] bg-border z-0"></div>
               
               <div className="relative z-10 bg-card border border-border p-8 rounded-2xl shadow-sm text-center">
                 <div className="mx-auto w-16 h-16 bg-background border border-border rounded-full flex items-center justify-center mb-6">
@@ -111,8 +111,8 @@ function Landing() {
         <section className="mx-auto max-w-6xl px-6 py-24">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-3xl font-bold tracking-tight md:text-4xl leading-tight">
-                Teknologi Enterprise<br/>untuk Skala UMKM
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight md:text-4xl leading-tight">
+                Teknologi Enterprise<br className="hidden sm:block"/>untuk Skala UMKM
               </h2>
               <p className="mt-4 text-muted-foreground text-lg mb-8">
                 Kami membangun sistem dengan arsitektur mutakhir untuk memastikan 
@@ -154,7 +154,7 @@ function Landing() {
         {/* CTA */}
         <section className="border-t border-border bg-foreground text-background py-24">
           <div className="mx-auto max-w-3xl px-6 text-center">
-            <h2 className="text-3xl font-bold tracking-tight md:text-5xl">Siap Meningkatkan Penjualan?</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight md:text-5xl">Siap Meningkatkan Penjualan?</h2>
             <p className="mt-6 text-background/80 text-lg">
               Bergabung dengan ribuan UMKM lain yang sudah membuktikan peningkatan 
               kepercayaan pelanggan mereka bersama Oziktag.
@@ -176,7 +176,7 @@ function Landing() {
             <span className="inline-flex items-center gap-1.5 rounded-full border border-foreground/20 bg-foreground/5 px-4 py-1.5 text-xs font-semibold tracking-wide text-foreground uppercase">
               Meet The Team
             </span>
-            <h2 className="mt-6 text-3xl font-bold tracking-tight md:text-4xl">Tim di Balik Oziktag</h2>
+            <h2 className="mt-6 text-2xl sm:text-3xl font-bold tracking-tight md:text-4xl">Tim di Balik Oziktag</h2>
             <p className="mt-4 text-muted-foreground max-w-xl mx-auto">
               Dibangun oleh mahasiswa yang bersemangat membantu UMKM Indonesia naik kelas melalui teknologi.
             </p>

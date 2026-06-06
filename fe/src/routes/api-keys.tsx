@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { AppShell } from "@/components/AppShell";
-import { Lock, Code2, Copy, RefreshCw, KeyRound, Server, Webhook } from "lucide-react";
+import { Lock, Code2, Copy, RefreshCw, KeyRound, Server, Webhook, Coins, Play, X } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -14,10 +14,15 @@ function ApiKeys() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const [showPlayground, setShowPlayground] = useState(false);
+  const [showPricing, setShowPricing] = useState(false);
+  const [credits, setCreditsState] = useState(0);
+
   useEffect(() => {
     apiFetch("/auth/me")
       .then((me) => {
         setIsAdmin(me.is_admin);
+        setCreditsState(me.sisa_kredit);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -43,11 +48,21 @@ function ApiKeys() {
 
   return (
     <AppShell>
-      <div className="mb-8">
-        <h1 className="text-3xl font-semibold tracking-tight">Developer API</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Integrasikan sistem POS atau ERP Anda langsung dengan Oziktag menggunakan REST API.
-        </p>
+      <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight">Developer API</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Integrasikan sistem POS atau ERP Anda langsung dengan Oziktag menggunakan REST API.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={() => setShowPlayground(true)} className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-sm hover:bg-secondary">
+            <Play className="h-4 w-4" /> Playground
+          </button>
+          <button onClick={() => setShowPricing(true)} className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-sm hover:bg-secondary">
+            <Coins className="h-4 w-4" /> Pricing API
+          </button>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-[1fr_300px]">
@@ -141,6 +156,104 @@ function ApiKeys() {
           </div>
         </aside>
       </div>
+
+      {showPlayground && <PlaygroundModal credits={credits} onClose={() => setShowPlayground(false)} />}
+      {showPricing && <PricingModal onClose={() => setShowPricing(false)} />}
     </AppShell>
+  );
+}
+
+function PlaygroundModal({ onClose, credits }: { onClose: () => void; credits: number }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 px-4 backdrop-blur-sm" onClick={onClose}>
+      <div className="w-full max-w-2xl rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-elegant)] overflow-y-auto max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Test API</p>
+            <h3 className="mt-1 text-lg font-semibold flex items-center gap-2">API Playground</h3>
+          </div>
+          <button onClick={onClose} className="rounded-md p-1 text-muted-foreground hover:bg-secondary hover:text-foreground">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-gradient-to-br from-card to-secondary/40 p-4">
+          <div>
+            <p className="text-xs font-medium text-muted-foreground">Saldo Anda</p>
+            <p className="text-2xl font-bold tracking-tight">{credits} <span className="text-sm font-normal text-muted-foreground">kredit</span></p>
+          </div>
+          <Coins className="h-8 w-8 text-primary/70" />
+        </div>
+
+        <div className="mt-6 space-y-4">
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Endpoint</label>
+            <div className="flex items-center gap-0">
+              <span className="bg-secondary px-3 py-2 text-sm font-mono rounded-l-md border border-border border-r-0">POST</span>
+              <input type="text" readOnly value="https://api.oziktag.com/v1/qc" className="flex-1 w-full rounded-r-md border border-border bg-input/40 px-3 py-2 text-sm font-mono focus:outline-none" />
+            </div>
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Request Body (JSON)</label>
+            <textarea readOnly rows={5} className="w-full rounded-md border border-border bg-black/5 p-3 text-sm font-mono focus:outline-none dark:bg-black/40" defaultValue={'{\n  "nama_produk": "Produk Test",\n  "kategori": "Makanan",\n  "batch": "B-TEST-01"\n}'} />
+          </div>
+        </div>
+
+        <div className="mt-6 flex justify-end gap-3">
+          <button onClick={onClose} className="rounded-md px-4 py-2 text-sm font-medium border border-border bg-background hover:bg-secondary transition-colors">Batal</button>
+          <button className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-colors shadow-[var(--shadow-elegant)]"><Play className="h-4 w-4" /> Run Request</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PricingModal({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 px-4 backdrop-blur-sm" onClick={onClose}>
+      <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-elegant)] overflow-y-auto max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Biaya Pemakaian</p>
+            <h3 className="mt-1 text-lg font-semibold">Pricing API (Pay-as-you-go)</h3>
+          </div>
+          <button onClick={onClose} className="rounded-md p-1 text-muted-foreground hover:bg-secondary hover:text-foreground">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="mt-6 space-y-6">
+          <div className="rounded-xl border border-border bg-secondary/30 p-5 text-center">
+            <Coins className="h-10 w-10 text-primary mx-auto mb-3" />
+            <h4 className="text-xl font-bold">1 Request = 1 Kredit</h4>
+            <p className="text-sm text-muted-foreground mt-2">
+              Setiap kali Anda menembak API untuk membuat QR Code QC, sistem akan otomatis memotong 1 kredit dari saldo akun Anda.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <h5 className="text-sm font-semibold">Harga Kredit (Top-up Reguler)</h5>
+            <ul className="space-y-2">
+              <li className="flex items-center justify-between text-sm rounded-md border border-border bg-card p-3">
+                <span><span className="font-medium">Starter</span> (50 kredit)</span>
+                <span className="font-mono text-muted-foreground">Rp 400 / req</span>
+              </li>
+              <li className="flex items-center justify-between text-sm rounded-md border border-primary/40 bg-primary/5 p-3">
+                <span><span className="font-medium text-primary">Growth</span> (150 kredit)</span>
+                <span className="font-mono text-muted-foreground">Rp 333 / req</span>
+              </li>
+              <li className="flex items-center justify-between text-sm rounded-md border border-border bg-card p-3">
+                <span><span className="font-medium">Pro</span> (400 kredit)</span>
+                <span className="font-mono text-muted-foreground">Rp 250 / req</span>
+              </li>
+            </ul>
+          </div>
+          
+          <div className="rounded-lg bg-muted p-4 text-xs text-muted-foreground">
+            <span className="font-medium text-foreground">Catatan:</span> Tidak ada biaya bulanan. Anda hanya membayar sesuai jumlah request (QR) yang berhasil di-generate.
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

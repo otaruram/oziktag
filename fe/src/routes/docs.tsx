@@ -28,11 +28,13 @@ function DocsPage() {
             </Link>
           </div>
           <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center px-3 py-1.5 rounded-md border border-border bg-muted/50 text-muted-foreground text-sm gap-2">
+            <button 
+              onClick={() => {}} 
+              className="flex items-center justify-center p-2 rounded-md border border-border bg-muted/50 text-muted-foreground hover:text-foreground transition-colors hover:bg-secondary"
+              title="Cari dokumen..."
+            >
               <Search className="h-4 w-4" />
-              <span>Cari dokumen...</span>
-              <kbd className="ml-4 font-mono text-[10px] opacity-50">Ctrl K</kbd>
-            </div>
+            </button>
             <Link to="/" className="text-sm font-medium hover:text-primary flex items-center gap-2">
               <Home className="h-4 w-4" /> Beranda
             </Link>
