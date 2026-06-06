@@ -18,21 +18,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Landing() {
-  const handleLogin = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/register`,
-        },
-      });
-      if (error) {
-        toast.error(`Login gagal: ${error.message}`);
-      }
-    } catch (err: any) {
-      toast.error(`Sistem error: ${err.message}`);
-    }
-  };
+
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans selection:bg-foreground selection:text-background overflow-hidden relative">
@@ -53,12 +39,12 @@ function Landing() {
           >
             Cara Kerja
           </Link>
-          <button
-            onClick={handleLogin}
+          <Link
+            to="/auth"
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
             Log In
-          </button>
+          </Link>
         </div>
       </header>
 
@@ -78,12 +64,12 @@ function Landing() {
             dianalisis oleh AI. Simpel, cepat, dan 100% kredibel di mata pelanggan Anda.
           </p>
           <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4">
-            <button
-              onClick={handleLogin}
+            <Link
+              to="/auth"
               className="inline-flex items-center justify-center gap-2 rounded-lg bg-foreground px-8 py-3.5 text-sm font-bold text-background transition-transform active:scale-95 hover:bg-foreground/90"
             >
               Mulai gratis sekarang <ArrowRight className="h-4 w-4" />
-            </button>
+            </Link>
             <Link
               to="/docs"
               className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-border bg-background px-8 py-3.5 text-sm font-bold transition-colors hover:bg-muted"
@@ -190,12 +176,12 @@ function Landing() {
               kepercayaan pelanggan mereka bersama Oziktag.
             </p>
             <div className="mt-10">
-              <button
-                onClick={handleLogin}
+              <Link
+                to="/auth"
                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-background px-8 py-4 text-base font-bold text-foreground transition-transform active:scale-95 hover:bg-background/90"
               >
                 Mulai Uji Coba Gratis
-              </button>
+              </Link>
             </div>
           </div>
         </section>
