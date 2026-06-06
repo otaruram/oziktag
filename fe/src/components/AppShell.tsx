@@ -16,6 +16,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const navRouter = useNavigate();
   const [credits, setCreditsState] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     // Auth Guard
@@ -33,12 +34,13 @@ export function AppShell({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Fetch credits from backend
+      // Fetch credits and admin status from backend
       try {
         const me = await apiFetch("/auth/me");
         setCreditsState(me.sisa_kredit);
+        setIsAdmin(me.is_admin);
       } catch (err) {
-        console.error("Failed to fetch user credits", err);
+        console.error("Failed to fetch user data", err);
       }
 
       // Subscribe to user changes
@@ -93,6 +95,19 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </Link>
               );
             })}
+            {isAdmin && (
+              <Link
+                to="/admin"
+                className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors ${
+                  path === "/admin"
+                    ? "bg-secondary text-foreground"
+                    : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+                }`}
+              >
+                <ShieldCheck className="h-4 w-4" />
+                Admin Panel
+              </Link>
+            )}
           </nav>
           <div className="flex items-center gap-2">
             <Link
