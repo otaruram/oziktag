@@ -111,7 +111,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               title={isApiRoute ? "Top-Up Kredit API" : "Top-Up Kredit QR"}
             >
               {isApiRoute ? <Code2 className="h-3.5 w-3.5 text-primary" /> : <Coins className="h-3.5 w-3.5 text-primary" />}
-              <span className="font-semibold text-primary">{isApiRoute ? apiCredits : credits}</span>
+              <span className="font-semibold text-primary">{isApiRoute ? (isAdmin ? "∞" : apiCredits) : (isAdmin ? "∞" : credits)}</span>
               <span className="text-[10px] uppercase text-muted-foreground ml-1 hidden lg:inline">{isApiRoute ? "API" : "QR"}</span>
             </Link>
 

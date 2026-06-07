@@ -125,6 +125,7 @@ class AdminUserItem(BaseModel):
     nama: str
     email: str
     sisa_kredit: int
+    api_kredit: int
     is_banned: bool
     is_admin: bool
     last_seen_at: Optional[str] = None
@@ -134,6 +135,7 @@ class AdminUserItem(BaseModel):
 class AdminAddCreditsRequest(BaseModel):
     user_id: str
     amount: int = Field(..., gt=0, description="Number of credits to add")
+    tipe_kredit: str = Field("QR", description="QR or API")
 
 
 class AdminBanRequest(BaseModel):

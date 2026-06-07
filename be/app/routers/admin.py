@@ -22,6 +22,7 @@ async def list_all_users(admin: dict = Depends(get_admin_user)):
             nama=u.nama,
             email=u.email,
             sisa_kredit=u.sisaKredit,
+            api_kredit=u.apiKredit,
             is_banned=u.isBanned,
             is_admin=u.isAdmin,
             last_seen_at=u.lastSeenAt.isoformat() if u.lastSeenAt else None,
@@ -70,15 +71,23 @@ async def add_credits(request: AdminAddCreditsRequest, admin: dict = Depends(get
     if not user:
         raise HTTPException(status_code=404, detail="User tidak ditemukan")
 
-    new_credits = user.sisaKredit + request.amount
-
-    await db.user.update(
-        where={"id": request.user_id},
-        data={"sisaKredit": new_credits}
-    )
+    if request.tipe_kredit == "API":
+        new_credits = user.apiKredit + request.amount
+        await db.user.update(
+            where={"id": request.user_id},
+            data={"apiKredit": new_credits}
+        )
+        msg_kredit = "kredit API"
+    else:
+        new_credits = user.sisaKredit + request.amount
+        await db.user.update(
+            where={"id": request.user_id},
+            data={"sisaKredit": new_credits}
+        )
+        msg_kredit = "kredit QR"
 
     return {
-        "message": f"Berhasil menambahkan {request.amount} kredit ke {user.email}",
+        "message": f"Berhasil menambahkan {request.amount} {msg_kredit} ke {user.email}",
         "new_balance": new_credits,
     }
 

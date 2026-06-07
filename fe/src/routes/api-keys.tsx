@@ -20,6 +20,7 @@ function ApiKeys() {
   const [showPricing, setShowPricing] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [credits, setCreditsState] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [apiKeys, setApiKeys] = useState<any[]>([]);
 
   const fetchData = async () => {
@@ -218,7 +219,7 @@ function ApiKeys() {
         </aside>
       </div>
 
-      {showPlayground && <PlaygroundModal apiKeys={apiKeys} credits={credits} onClose={() => setShowPlayground(false)} />}
+      {showPlayground && <PlaygroundModal apiKeys={apiKeys} credits={credits} isAdmin={isAdmin} onClose={() => setShowPlayground(false)} />}
       {showPricing && <PricingModal onClose={() => setShowPricing(false)} />}
       {showHistory && <ApiHistoryModal onClose={() => setShowHistory(false)} />}
     </AppShell>
@@ -277,14 +278,14 @@ function ApiHistoryModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-function PlaygroundModal({ onClose, credits, apiKeys }: { onClose: () => void; credits: number; apiKeys: any[] }) {
+function PlaygroundModal({ onClose, credits, isAdmin, apiKeys }: { onClose: () => void; credits: number; isAdmin: boolean; apiKeys: any[] }) {
   const [running, setRunning] = useState(false);
   const [resultQr, setResultQr] = useState<string | null>(null);
   const [qrUrlString, setQrUrlString] = useState("");
   const defaultKey = apiKeys.length > 0 ? apiKeys[0].key : "";
 
   const handleRun = async () => {
-    if (credits <= 0) {
+    if (!isAdmin && credits <= 0) {
       toast.error("Kredit Anda habis! Tidak dapat menjalankan request.");
       return;
     }
@@ -337,7 +338,7 @@ function PlaygroundModal({ onClose, credits, apiKeys }: { onClose: () => void; c
         <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-gradient-to-br from-card to-secondary/40 p-4 transition-all">
           <div>
             <p className="text-xs font-medium text-muted-foreground">Saldo Anda</p>
-            <p className="text-2xl font-bold tracking-tight">{credits} <span className="text-sm font-normal text-muted-foreground">kredit</span></p>
+            <p className="text-2xl font-bold tracking-tight">{isAdmin ? "∞" : credits} <span className="text-sm font-normal text-muted-foreground">kredit</span></p>
           </div>
           <Coins className="h-8 w-8 text-primary/70" />
         </div>

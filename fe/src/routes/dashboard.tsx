@@ -112,13 +112,11 @@ function Dashboard() {
         />
       </div>
 
-      <div className="mt-8 grid gap-6 md:grid-cols-3">
-        <div className="md:col-span-2 space-y-6">
-          <section>
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-                Aktivitas QR Hari Ini
-              </h2>
+      <section className="mt-10">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
+            Aktivitas QR Hari Ini
+          </h2>
               <p className="text-xs text-muted-foreground hidden sm:block">Geser ←/→ untuk lihat lainnya</p>
             </div>
             {loading ? (
@@ -191,41 +189,37 @@ function Dashboard() {
                 </div>
               </div>
             )}
-          </section>
-        </div>
+      </section>
 
-        <div>
-          <section className="rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-elegant)]">
-            <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground mb-4">
-              Riwayat Penggunaan Kredit
-            </h2>
-            {loading ? (
-              <div className="animate-pulse space-y-3">
-                {[1,2,3].map(i => <div key={i} className="h-12 bg-secondary/50 rounded-lg"></div>)}
+      <section className="mt-10 mb-10 rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-elegant)]">
+        <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground mb-4">
+          Riwayat Penggunaan Kredit
+        </h2>
+        {loading ? (
+          <div className="animate-pulse space-y-3">
+            {[1,2,3].map(i => <div key={i} className="h-12 bg-secondary/50 rounded-lg"></div>)}
+          </div>
+        ) : logs.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-4">Belum ada aktivitas kredit</p>
+        ) : (
+          <div className="space-y-3">
+            {logs.map(log => (
+              <div key={log.id} className="flex items-center justify-between p-3 rounded-lg border border-border bg-background">
+                <div className="flex flex-col gap-1 overflow-hidden pr-2">
+                  <span className="text-xs font-medium truncate" title={log.description}>{log.description}</span>
+                  <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                    <span className={`px-1 py-0.5 rounded text-[8px] font-bold uppercase ${log.tipe_kredit === 'API' ? 'bg-primary/20 text-primary' : 'bg-orange-500/20 text-orange-600'}`}>{log.tipe_kredit}</span>
+                    {new Date(log.created_at).toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })}
+                  </span>
+                </div>
+                <div className={`font-mono font-bold text-xs shrink-0 ${log.amount > 0 ? "text-green-500" : "text-destructive"}`}>
+                  {log.amount > 0 ? "+" : ""}{log.amount}
+                </div>
               </div>
-            ) : logs.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">Belum ada aktivitas kredit</p>
-            ) : (
-              <div className="space-y-3">
-                {logs.map(log => (
-                  <div key={log.id} className="flex items-center justify-between p-3 rounded-lg border border-border bg-background">
-                    <div className="flex flex-col gap-1 overflow-hidden pr-2">
-                      <span className="text-xs font-medium truncate" title={log.description}>{log.description}</span>
-                      <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                        <span className={`px-1 py-0.5 rounded text-[8px] font-bold uppercase ${log.tipe_kredit === 'API' ? 'bg-primary/20 text-primary' : 'bg-orange-500/20 text-orange-600'}`}>{log.tipe_kredit}</span>
-                        {new Date(log.created_at).toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })}
-                      </span>
-                    </div>
-                    <div className={`font-mono font-bold text-xs shrink-0 ${log.amount > 0 ? "text-green-500" : "text-destructive"}`}>
-                      {log.amount > 0 ? "+" : ""}{log.amount}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-        </div>
-      </div>
+            ))}
+          </div>
+        )}
+      </section>
     </AppShell>
   );
 }
