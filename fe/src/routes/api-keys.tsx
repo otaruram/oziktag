@@ -14,6 +14,8 @@ export const Route = createFileRoute("/api-keys")({
 
 function ApiKeys() {
   const [isAdmin, setIsAdmin] = useState(false);
+  const [hasApiAccess, setHasApiAccess] = useState(false);
+  const [reqStatus, setReqStatus] = useState<string>("none");
   const [loading, setLoading] = useState(true);
 
   const [showPlayground, setShowPlayground] = useState(false);
@@ -27,13 +29,16 @@ function ApiKeys() {
 
   const fetchData = async () => {
     try {
-      const [me, keys] = await Promise.all([
+      const [me, keys, statusReq] = await Promise.all([
         apiFetch("/auth/me"),
-        apiFetch("/apikeys")
+        apiFetch("/apikeys").catch(() => []), // Might fail if no access
+        apiFetch("/apikeys/request-status").catch(() => ({ status: "none" }))
       ]);
       setIsAdmin(me.is_admin);
+      setHasApiAccess(me.has_api_access);
+      setReqStatus(statusReq.status);
       setCreditsState(me.api_kredit); // USE API KREDIT
-      setApiKeys(keys);
+      if (Array.isArray(keys)) setApiKeys(keys);
     } catch (e) {
       console.error(e);
     } finally {
@@ -85,10 +90,19 @@ function ApiKeys() {
       setConfirmDelete(null);
     }
   };
+  const handleRequestAccess = async () => {
+    try {
+      await apiFetch("/apikeys/request-access", { method: "POST" });
+      setReqStatus("pending");
+      toast.success("Permintaan akses berhasil dikirim. Menunggu persetujuan admin.");
+    } catch (e: any) {
+      toast.error(e.message || "Gagal mengirim permintaan.");
+    }
+  };
 
   if (loading) return <AppShell><div className="animate-pulse h-32 bg-card rounded-xl"></div></AppShell>;
 
-  if (!isAdmin) {
+  if (!isAdmin && !hasApiAccess) {
     return (
       <AppShell>
         <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -96,9 +110,23 @@ function ApiKeys() {
             <Lock className="h-8 w-8" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight">API Access Locked</h1>
-          <p className="mt-2 max-w-md text-sm text-muted-foreground">
-            Fitur Developer API saat ini sedang dalam masa pengujian (Beta) dan hanya tersedia untuk administrator sistem.
+          <p className="mt-2 max-w-md text-sm text-muted-foreground mb-8">
+            Fitur Developer API saat ini sedang dalam masa pengujian (Beta) dan hanya tersedia untuk administrator sistem atau pengguna yang telah disetujui.
           </p>
+          
+          {reqStatus === "pending" ? (
+            <button disabled className="px-4 py-2 bg-secondary text-muted-foreground rounded-md text-sm font-medium border border-border cursor-not-allowed">
+              Menunggu Persetujuan Admin...
+            </button>
+          ) : reqStatus === "rejected" ? (
+            <div className="text-sm text-destructive bg-destructive/10 px-4 py-2 rounded-md border border-destructive/20">
+              Maaf, permintaan akses API Anda ditolak.
+            </div>
+          ) : (
+            <button onClick={handleRequestAccess} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium shadow-sm hover:bg-primary/90 transition-colors">
+              Request API Access
+            </button>
+          )}
         </div>
       </AppShell>
     );

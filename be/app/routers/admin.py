@@ -25,6 +25,7 @@ async def list_all_users(admin: dict = Depends(get_admin_user)):
             api_kredit=u.apiKredit,
             is_banned=u.isBanned,
             is_admin=u.isAdmin,
+            has_api_access=u.hasApiAccess,
             last_seen_at=u.lastSeenAt.isoformat() if u.lastSeenAt else None,
             created_at=u.createdAt.isoformat(),
         )
@@ -146,3 +147,65 @@ async def get_admin_stats(admin: dict = Depends(get_admin_user)):
         "online_users": online_count,
         "banned_users": banned_count,
     }
+
+
+from app.models.schemas import ApiAccessRequestItem
+
+@router.get("/api-requests", response_model=list[ApiAccessRequestItem])
+async def get_api_requests(admin: dict = Depends(get_admin_user)):
+    """Get all API access requests."""
+    requests = await db.apiaccessrequest.find_many(
+        include={"user": True},
+        order={"createdAt": "desc"}
+    )
+    return [
+        ApiAccessRequestItem(
+            id=r.id,
+            user_id=r.userId,
+            nama=r.user.nama if r.user else "Unknown",
+            email=r.user.email if r.user else "Unknown",
+            status=r.status,
+            created_at=r.createdAt
+        )
+        for r in requests
+    ]
+
+@router.post("/api-requests/{request_id}/approve")
+async def approve_api_request(request_id: str, admin: dict = Depends(get_admin_user)):
+    """Approve an API access request and grant 2 API credits."""
+    req = await db.apiaccessrequest.find_unique(where={"id": request_id})
+    if not req:
+        raise HTTPException(status_code=404, detail="Request tidak ditemukan")
+    if req.status != "pending":
+        raise HTTPException(status_code=400, detail="Request sudah diproses")
+
+    # Update request status
+    await db.apiaccessrequest.update(
+        where={"id": request_id},
+        data={"status": "approved"}
+    )
+    # Update user access and give 2 credits
+    await db.user.update(
+        where={"id": req.userId},
+        data={
+            "hasApiAccess": True,
+            "apiKredit": {
+                "increment": 2
+            }
+        }
+    )
+    
+    return {"message": "Akses API disetujui, 2 kredit diberikan."}
+
+@router.post("/api-requests/{request_id}/reject")
+async def reject_api_request(request_id: str, admin: dict = Depends(get_admin_user)):
+    """Reject an API access request."""
+    req = await db.apiaccessrequest.find_unique(where={"id": request_id})
+    if not req:
+        raise HTTPException(status_code=404, detail="Request tidak ditemukan")
+
+    await db.apiaccessrequest.update(
+        where={"id": request_id},
+        data={"status": "rejected"}
+    )
+    return {"message": "Akses API ditolak."}

@@ -136,6 +136,7 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         sisa_kredit=db_user.sisaKredit,
         api_kredit=db_user.apiKredit,
         is_admin=db_user.isAdmin,
+        has_api_access=db_user.hasApiAccess,
         is_banned=db_user.isBanned,
         kyc_status=db_user.kyc.status if db_user.kyc else None,
         nama_toko=db_user.kyc.namaToko if db_user.kyc else None,

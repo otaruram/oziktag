@@ -109,3 +109,19 @@ async def get_admin_user(current_user: dict = Depends(get_current_user)):
             detail="Akses ditolak. Hanya admin yang bisa mengakses.",
         )
     return current_user
+
+async def get_api_user(current_user: dict = Depends(get_current_user)):
+    """Ensure user is either an admin or has API access."""
+    user = await db.user.find_unique(where={"id": current_user["id"]})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    admin_emails = ["okitr52@gmail.com", "adzikrim701@gmail.com"]
+    is_admin = current_user["email"].lower() in admin_emails
+    
+    if not (is_admin or user.hasApiAccess):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Akses API belum disetujui.",
+        )
+    return current_user

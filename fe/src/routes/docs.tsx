@@ -17,7 +17,7 @@ function DocsPage() {
     e.preventDefault();
     if (!searchQuery) return;
     // Simple in-page search
-    window.find(searchQuery);
+    (window as any).find(searchQuery);
   };
 
   return (
@@ -51,7 +51,7 @@ function DocsPage() {
             <button 
               onClick={() => {
                 const query = prompt("Masukkan kata kunci pencarian:");
-                if (query) window.find(query);
+                if (query) (window as any).find(query);
               }} 
               className="sm:hidden flex items-center justify-center p-2 rounded-md border border-border bg-muted/50 text-muted-foreground hover:text-foreground transition-colors hover:bg-secondary active:scale-95"
               title="Cari dokumen..."

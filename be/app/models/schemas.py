@@ -29,6 +29,7 @@ class UserProfile(BaseModel):
     sisa_kredit: int
     api_kredit: int
     is_admin: bool = False
+    has_api_access: bool = False
     is_banned: bool = False
     kyc_status: Optional[str] = None
     nama_toko: Optional[str] = None
@@ -128,6 +129,7 @@ class AdminUserItem(BaseModel):
     api_kredit: int
     is_banned: bool
     is_admin: bool
+    has_api_access: bool
     last_seen_at: Optional[str] = None
     created_at: str
 
@@ -141,3 +143,12 @@ class AdminAddCreditsRequest(BaseModel):
 class AdminBanRequest(BaseModel):
     user_id: str
     banned: bool
+
+
+class ApiAccessRequestItem(BaseModel):
+    id: str
+    user_id: str
+    nama: str
+    email: str
+    status: str
+    created_at: datetime

@@ -24,6 +24,7 @@ model User {
   sisaKredit Int       @default(0) @map("sisa_kredit")
   apiKredit  Int       @default(0) @map("api_kredit")
   isAdmin    Boolean   @default(false) @map("is_admin")
+  hasApiAccess Boolean @default(false) @map("has_api_access")
   isBanned   Boolean   @default(false) @map("is_banned")
   lastSeenAt DateTime? @default(now()) @map("last_seen_at")
   createdAt  DateTime  @default(now()) @map("created_at")
@@ -35,6 +36,7 @@ model User {
   productScans       ProductScan[]
   apiKeys            ApiKey[]
   creditLogs         CreditLog[]
+  apiAccessRequests  ApiAccessRequest[]
 
   @@map("users")
 }
@@ -50,6 +52,19 @@ model ApiKey {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("api_keys")
+}
+
+// "?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"? API Access Requests "?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?
+model ApiAccessRequest {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  status    String   @default("pending") // pending, approved, rejected
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("api_access_requests")
 }
 
 // ──────────────────────── KYC ────────────────────────
