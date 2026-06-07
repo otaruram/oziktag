@@ -62,21 +62,21 @@ async def submit_qc(
             detail="Kredit habis. Silakan top-up dulu.",
         )
 
-    if not is_admin:
-        async with db.tx() as tx:
+    async with db.tx() as tx:
+        if not is_admin:
             await tx.user.update(
                 where={"id": user_id},
                 data={"sisaKredit": credits - 1}
             )
-            await tx.creditlog.create(
-                data={
-                    "userId": user_id,
-                    "tipeKredit": "QR",
-                    "action": "USAGE",
-                    "amount": -1,
-                    "description": f"Generate QC Label: {nama_produk[:20]}"
-                }
-            )
+        await tx.creditlog.create(
+            data={
+                "userId": user_id,
+                "tipeKredit": "QR",
+                "action": "USAGE",
+                "amount": 0 if is_admin else -1,
+                "description": f"Generate QC Label: {nama_produk[:20]}"
+            }
+        )
 
     # 4. Upload images to ImageKit
     try:

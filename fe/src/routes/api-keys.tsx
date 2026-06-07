@@ -102,21 +102,21 @@ function ApiKeys() {
 
   return (
     <AppShell>
-      <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+      <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Developer API</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Integrasikan sistem POS atau ERP Anda langsung dengan Oziktag menggunakan REST API.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2 w-full md:w-auto">
-          <button onClick={() => setShowPlayground(true)} className="flex-1 sm:flex-none justify-center inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 sm:py-1.5 text-sm hover:bg-secondary">
+        <div className="grid grid-cols-2 gap-2 w-full md:flex md:w-auto">
+          <button onClick={() => setShowPlayground(true)} className="justify-center inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm hover:bg-secondary">
             <Play className="h-4 w-4" /> Playground
           </button>
-          <button onClick={() => setShowPricing(true)} className="flex-1 sm:flex-none justify-center inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 sm:py-1.5 text-sm hover:bg-secondary">
+          <button onClick={() => setShowPricing(true)} className="justify-center inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm hover:bg-secondary">
             <Coins className="h-4 w-4" /> Beli Kredit
           </button>
-          <button onClick={() => setShowHistory(true)} className="w-full sm:w-auto justify-center inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 sm:py-1.5 text-sm hover:bg-secondary">
+          <button onClick={() => setShowHistory(true)} className="col-span-2 md:col-auto justify-center inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm hover:bg-secondary">
             <RefreshCw className="h-4 w-4" /> Riwayat
           </button>
         </div>
@@ -145,7 +145,7 @@ function ApiKeys() {
                       type="password"
                       value={k.key}
                       readOnly
-                      className="flex-1 rounded-md border border-border bg-input/40 px-3 py-2 text-sm font-mono text-foreground focus:outline-none"
+                      className="min-w-0 flex-1 rounded-md border border-border bg-input/40 px-3 py-2 text-sm font-mono text-foreground focus:outline-none"
                     />
                     <button onClick={() => { navigator.clipboard.writeText(k.key); toast.success("Copied to clipboard"); }} className="p-2 rounded-md border border-border hover:bg-secondary">
                       <Copy className="h-4 w-4 text-muted-foreground" />
@@ -301,9 +301,9 @@ function PlaygroundModal({ onClose, defaultKey, isAdmin, credits }: { onClose: (
           </div>
           <div>
             <label className="text-sm font-medium mb-1.5 block">Endpoint</label>
-            <div className="flex items-center gap-0 w-full">
-              <span className="bg-secondary px-2 sm:px-3 py-2 text-sm font-mono rounded-l-md border border-border border-r-0">POST</span>
-              <input type="text" readOnly value={`${API_BASE}/v1/qc`} className="min-w-0 flex-1 w-full rounded-r-md border border-border bg-input/40 px-2 sm:px-3 py-2 text-xs sm:text-sm font-mono focus:outline-none" />
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center w-full rounded-md border border-border overflow-hidden">
+              <span className="bg-secondary px-3 py-2 text-sm font-mono border-b sm:border-b-0 sm:border-r border-border text-center sm:text-left">POST</span>
+              <input type="text" readOnly value={`${API_BASE}/v1/qc`} className="min-w-0 flex-1 bg-input/40 px-3 py-2 text-xs sm:text-sm font-mono focus:outline-none" />
             </div>
           </div>
           <div>

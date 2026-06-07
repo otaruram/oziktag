@@ -58,21 +58,21 @@ async def submit_qc_api(
     ai_insight = ai_result.get("ai_insight", "Lulus QC.")
     ai_solution = ai_result.get("ai_solution", "Simpan dengan baik.")
 
-    if not user.isAdmin:
-        async with db.tx() as tx:
+    async with db.tx() as tx:
+        if not user.isAdmin:
             await tx.user.update(
                 where={"id": user.id},
                 data={"apiKredit": user.apiKredit - 1}
             )
-            await tx.creditlog.create(
-                data={
-                    "userId": user.id,
-                    "tipeKredit": "API",
-                    "action": "USAGE",
-                    "amount": -1,
-                    "description": f"Generate QC via API: {req.nama_produk[:20]}"
-                }
-            )
+        await tx.creditlog.create(
+            data={
+                "userId": user.id,
+                "tipeKredit": "API",
+                "action": "USAGE",
+                "amount": 0 if user.isAdmin else -1,
+                "description": f"Generate QC via API: {req.nama_produk[:20]}"
+            }
+        )
 
     # 3. Create Product
     try:
