@@ -109,15 +109,15 @@ function ApiKeys() {
             Integrasikan sistem POS atau ERP Anda langsung dengan Oziktag menggunakan REST API.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <button onClick={() => setShowPlayground(true)} className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-sm hover:bg-secondary">
+        <div className="flex flex-wrap gap-2 w-full md:w-auto">
+          <button onClick={() => setShowPlayground(true)} className="flex-1 sm:flex-none justify-center inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 sm:py-1.5 text-sm hover:bg-secondary">
             <Play className="h-4 w-4" /> Playground
           </button>
-          <button onClick={() => setShowPricing(true)} className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-sm hover:bg-secondary">
-            <Coins className="h-4 w-4" /> Beli API Kredit
+          <button onClick={() => setShowPricing(true)} className="flex-1 sm:flex-none justify-center inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 sm:py-1.5 text-sm hover:bg-secondary">
+            <Coins className="h-4 w-4" /> Beli Kredit
           </button>
-          <button onClick={() => setShowHistory(true)} className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-sm hover:bg-secondary">
-            <RefreshCw className="h-4 w-4" /> Riwayat API
+          <button onClick={() => setShowHistory(true)} className="w-full sm:w-auto justify-center inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 sm:py-1.5 text-sm hover:bg-secondary">
+            <RefreshCw className="h-4 w-4" /> Riwayat
           </button>
         </div>
       </div>
@@ -222,7 +222,7 @@ function ApiKeys() {
         </aside>
       </div>
 
-      {showPlayground && <PlaygroundModal apiKeys={apiKeys} credits={credits} isAdmin={isAdmin} onClose={() => setShowPlayground(false)} />}
+      {showPlayground && <PlaygroundModal onClose={() => setShowPlayground(false)} defaultKey={apiKeys[0]?.key} isAdmin={isAdmin} credits={credits} />}
       {showPricing && <PricingModal onClose={() => setShowPricing(false)} />}
       {showHistory && <ApiHistoryModal onClose={() => setShowHistory(false)} />}
     </AppShell>
@@ -281,11 +281,10 @@ function ApiHistoryModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-function PlaygroundModal({ onClose, credits, isAdmin, apiKeys }: { onClose: () => void; credits: number; isAdmin: boolean; apiKeys: any[] }) {
+function PlaygroundModal({ onClose, defaultKey, isAdmin, credits }: { onClose: () => void, defaultKey?: string, isAdmin: boolean, credits: number }) {
   const [running, setRunning] = useState(false);
   const [resultQr, setResultQr] = useState<string | null>(null);
   const [qrUrlString, setQrUrlString] = useState("");
-  const defaultKey = apiKeys.length > 0 ? apiKeys[0].key : "";
 
   const handleRun = async () => {
     if (!isAdmin && credits <= 0) {
@@ -326,8 +325,8 @@ function PlaygroundModal({ onClose, credits, isAdmin, apiKeys }: { onClose: () =
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 px-4 backdrop-blur-sm" onClick={onClose}>
-      <div className="w-full max-w-2xl rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-elegant)] overflow-y-auto max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm" onClick={onClose}>
+      <div className="w-full max-w-2xl rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-[var(--shadow-elegant)] overflow-y-auto max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between">
           <div>
             <p className="text-xs uppercase tracking-wide text-muted-foreground">Test API</p>
@@ -353,9 +352,9 @@ function PlaygroundModal({ onClose, credits, isAdmin, apiKeys }: { onClose: () =
           </div>
           <div>
             <label className="text-sm font-medium mb-1.5 block">Endpoint</label>
-            <div className="flex items-center gap-0">
-              <span className="bg-secondary px-3 py-2 text-sm font-mono rounded-l-md border border-border border-r-0">POST</span>
-              <input type="text" readOnly value={`${import.meta.env.VITE_API_URL}/v1/qc`} className="flex-1 w-full rounded-r-md border border-border bg-input/40 px-3 py-2 text-sm font-mono focus:outline-none" />
+            <div className="flex items-center gap-0 w-full">
+              <span className="bg-secondary px-2 sm:px-3 py-2 text-sm font-mono rounded-l-md border border-border border-r-0">POST</span>
+              <input type="text" readOnly value={`${API_BASE}/v1/qc`} className="min-w-0 flex-1 w-full rounded-r-md border border-border bg-input/40 px-2 sm:px-3 py-2 text-xs sm:text-sm font-mono focus:outline-none" />
             </div>
           </div>
           <div>
@@ -392,8 +391,8 @@ function PricingModal({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 px-4 backdrop-blur-sm" onClick={onClose}>
-      <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-elegant)] overflow-y-auto max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm" onClick={onClose}>
+      <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-[var(--shadow-elegant)] overflow-y-auto max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between">
           <div>
             <p className="text-xs uppercase tracking-wide text-muted-foreground">Biaya Pemakaian</p>
@@ -478,8 +477,8 @@ function RealCheckoutModal({ pkg, onClose }: { pkg: any, onClose: () => void }) 
   const idr = (n: number) => "Rp " + n.toLocaleString("id-ID");
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 px-4 backdrop-blur-sm" onClick={onClose}>
-      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-elegant)] overflow-y-auto max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm" onClick={onClose}>
+      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-[var(--shadow-elegant)] overflow-y-auto max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between">
           <div>
             <p className="text-xs uppercase tracking-wide text-muted-foreground">Checkout</p>
@@ -531,6 +530,58 @@ function RealCheckoutModal({ pkg, onClose }: { pkg: any, onClose: () => void }) 
               {processing ? "Memproses..." : "Buat Tagihan (Bayar Asli)"}
             </button>
           </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ApiHistoryModal({ onClose }: { onClose: () => void }) {
+  const [logs, setLogs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    apiFetch("/auth/credit-logs").then(data => {
+      setLogs(data.filter((l: any) => l.tipe_kredit === 'API'));
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, []);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm" onClick={onClose}>
+      <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-[var(--shadow-elegant)] overflow-y-auto max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Log Aktivitas</p>
+            <h3 className="mt-1 text-lg font-semibold flex items-center gap-2">Riwayat Kredit API</h3>
+          </div>
+          <button onClick={onClose} className="rounded-md p-1 text-muted-foreground hover:bg-secondary hover:text-foreground">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="animate-pulse space-y-3">
+            {[1,2,3,4].map(i => <div key={i} className="h-12 bg-secondary/50 rounded-lg"></div>)}
+          </div>
+        ) : logs.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-8">Belum ada riwayat pemakaian API.</p>
+        ) : (
+          <div className="space-y-3">
+            {logs.map(log => (
+              <div key={log.id} className="flex items-center justify-between p-3 rounded-lg border border-border bg-background">
+                <div className="flex flex-col gap-1 overflow-hidden pr-2">
+                  <span className="text-sm font-medium truncate">{log.description}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(log.created_at).toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })}
+                  </span>
+                </div>
+                <div className={`font-mono font-bold text-sm shrink-0 ${log.amount > 0 ? "text-green-500" : "text-destructive"}`}>
+                  {log.amount > 0 ? "+" : ""}{log.amount}
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>

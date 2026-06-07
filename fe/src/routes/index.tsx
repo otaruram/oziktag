@@ -27,7 +27,7 @@ function Landing() {
       <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none" 
            style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
 
-      <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-6 py-6 border-b border-border/40 backdrop-blur-sm">
+      <header className="sticky top-0 z-50 mx-auto flex max-w-6xl items-center justify-between px-6 py-4 border-b border-border/40 bg-background/80 backdrop-blur-md">
         <div className="flex items-center gap-2 font-bold text-lg tracking-tight">
           <ShieldCheck className="h-6 w-6 text-foreground" />
           Oziktag
