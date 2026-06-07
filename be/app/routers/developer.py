@@ -118,5 +118,5 @@ async def submit_qc_api(
     return {
         "success": True,
         "product_id": product.id,
-        "qr_url": f"https://oziktag.com/scan/{product.id}"
+        "qr_url": f"https://www.oziktag.my.id/scan/{product.id}"
     }

@@ -82,7 +82,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Link to="/dashboard" className="flex items-center gap-2 font-semibold tracking-tight">
             <ShieldCheck className="h-5 w-5 text-primary" />
-            <span className="hidden sm:inline">Oziktag</span>
+            <span>Oziktag</span>
           </Link>
           <nav className="hidden items-center gap-1 md:flex">
             {nav.map((item) => {
@@ -107,12 +107,12 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-4">
             <Link
               to="/pricing"
-              className="hidden items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs sm:inline-flex"
+              className="flex items-center gap-1.5 rounded-md border border-border bg-card px-2 sm:px-3 py-1.5 text-xs"
               title={isApiRoute ? "Top-Up Kredit API" : "Top-Up Kredit QR"}
             >
               {isApiRoute ? <Code2 className="h-3.5 w-3.5 text-primary" /> : <Coins className="h-3.5 w-3.5 text-primary" />}
               <span className="font-semibold text-primary">{isApiRoute ? (isAdmin ? "∞" : apiCredits) : (isAdmin ? "∞" : credits)}</span>
-              <span className="text-[10px] uppercase text-muted-foreground ml-1 hidden lg:inline">{isApiRoute ? "API" : "QR"}</span>
+              <span className="text-[10px] uppercase text-muted-foreground ml-1 hidden sm:inline">{isApiRoute ? "API" : "QR"}</span>
             </Link>
 
             {/* Profile Dropdown */}
