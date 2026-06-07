@@ -44,6 +44,7 @@ function Dashboard() {
 
     let sub1: any;
     let sub2: any;
+    let sub3: any;
 
     supabase.auth.getUser().then(({ data }) => {
       const uid = data.user?.id;
@@ -62,11 +63,19 @@ function Dashboard() {
           fetchAll();
         })
         .subscribe();
+
+      sub3 = supabase
+        .channel('dashboard-credits')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'credit_logs', filter: `user_id=eq.${uid}` }, () => {
+          fetchAll();
+        })
+        .subscribe();
     });
 
     return () => {
       if (sub1) supabase.removeChannel(sub1);
       if (sub2) supabase.removeChannel(sub2);
+      if (sub3) supabase.removeChannel(sub3);
     };
   }, []);
 
