@@ -21,6 +21,8 @@ function ApiKeys() {
   const [showHistory, setShowHistory] = useState(false);
   const [credits, setCreditsState] = useState(0);
   const [apiKeys, setApiKeys] = useState<any[]>([]);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+
 
   const fetchData = async () => {
     try {
@@ -72,13 +74,14 @@ function ApiKeys() {
   };
 
   const revokeKey = async (id: string) => {
-    if (!confirm("Yakin ingin menghapus key ini?")) return;
     try {
       await apiFetch(`/apikeys/${id}`, { method: "DELETE" });
       setApiKeys(apiKeys.filter(k => k.id !== id));
       toast.success("Key berhasil dihapus");
     } catch (e: any) {
       toast.error(e.message || "Gagal menghapus key");
+    } finally {
+      setConfirmDelete(null);
     }
   };
 
@@ -123,9 +126,9 @@ function ApiKeys() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-[1fr_300px]">
-        <div className="space-y-6">
+        <div className="space-y-6 min-w-0">
           {/* API Key Management */}
-          <section className="rounded-xl border border-border bg-card p-6">
+          <section className="rounded-xl border border-border bg-card p-4 sm:p-6">
             <div className="flex items-center gap-2 mb-4">
               <KeyRound className="h-5 w-5 text-primary" />
               <h2 className="text-lg font-semibold">API Keys</h2>
@@ -150,7 +153,7 @@ function ApiKeys() {
                     <button onClick={() => { navigator.clipboard.writeText(k.key); toast.success("Copied to clipboard"); }} className="p-2 rounded-md border border-border hover:bg-secondary">
                       <Copy className="h-4 w-4 text-muted-foreground" />
                     </button>
-                    <button onClick={() => revokeKey(k.id)} className="p-2 rounded-md border border-destructive/40 text-destructive hover:bg-destructive/10">
+                    <button onClick={() => setConfirmDelete(k.id)} className="p-2 rounded-md border border-destructive/40 text-destructive hover:bg-destructive/10">
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
@@ -166,7 +169,7 @@ function ApiKeys() {
           </section>
 
           {/* Use Cases */}
-          <section className="rounded-xl border border-border bg-card p-6">
+          <section className="rounded-xl border border-border bg-card p-4 sm:p-6">
             <h2 className="text-lg font-semibold mb-4">Kegunaan API Oziktag</h2>
             <div className="space-y-4">
               <div className="flex gap-4 items-start">
@@ -196,8 +199,8 @@ function ApiKeys() {
         </div>
 
         {/* Documentation Sidebar */}
-        <aside className="space-y-6">
-          <div className="rounded-xl border border-primary/20 bg-primary/5 p-5">
+        <aside className="space-y-6 min-w-0">
+          <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 sm:p-5">
             <div className="flex items-center gap-2 mb-3">
               <Code2 className="h-5 w-5 text-primary" />
               <h3 className="font-semibold">Quick Start</h3>
@@ -225,6 +228,21 @@ function ApiKeys() {
       {showPlayground && <PlaygroundModal onClose={() => setShowPlayground(false)} defaultKey={apiKeys[0]?.key} isAdmin={isAdmin} credits={credits} />}
       {showPricing && <PricingModal onClose={() => setShowPricing(false)} />}
       {showHistory && <ApiHistoryModal onClose={() => setShowHistory(false)} />}
+      {confirmDelete && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm" onClick={() => setConfirmDelete(null)}>
+          <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-xl text-center animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 mb-4">
+              <Trash2 className="h-6 w-6 text-destructive" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Hapus API Key?</h3>
+            <p className="text-sm text-muted-foreground mb-6">Tindakan ini tidak dapat dibatalkan. Key ini tidak akan bisa digunakan lagi.</p>
+            <div className="flex gap-3 w-full">
+              <button onClick={() => setConfirmDelete(null)} className="flex-1 rounded-md border border-border bg-background py-2 text-sm font-medium hover:bg-secondary transition-colors">Batal</button>
+              <button onClick={() => revokeKey(confirmDelete)} className="flex-1 rounded-md bg-destructive py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90 transition-colors shadow-sm">Ya, Hapus</button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }

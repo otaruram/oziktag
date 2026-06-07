@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ShieldCheck, CheckCircle2, AlertCircle, Sparkles, Loader2 } from "lucide-react";
+import { ShieldCheck, CheckCircle2, AlertCircle, Sparkles, Loader2, Copy } from "lucide-react";
+import { toast } from "sonner";
 import { getTag, type Qrtag } from "@/lib/oziktag-store";
 import { apiFetch } from "@/lib/api";
 
@@ -126,15 +127,28 @@ function PhotoGallery({ photos }: { photos: string[] }) {
       <div className="snap-x snap-mandatory overflow-x-auto">
         <div className="flex gap-2">
           {photos.map((src, i) => (
-            <img
-              key={i}
-              src={src}
-              alt={`Foto produk ${i + 1}`}
-              onClick={() => setActive(i)}
-              className={`aspect-square w-full max-w-[280px] shrink-0 snap-center cursor-pointer rounded-lg border object-cover transition-all ${
-                active === i ? "border-primary" : "border-border"
-              }`}
-            />
+            <div key={i} className="relative group shrink-0 snap-center w-full max-w-[280px]">
+              <img
+                src={src}
+                alt={`Foto produk ${i + 1}`}
+                onClick={() => setActive(i)}
+                className={`aspect-square w-full rounded-lg border object-cover transition-all cursor-pointer ${
+                  active === i ? "border-primary" : "border-border"
+                }`}
+              />
+              <div 
+                className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-lg cursor-pointer backdrop-blur-[1px]"
+                onClick={() => {
+                  navigator.clipboard.writeText(src);
+                  toast.success("Link foto disalin!");
+                }}
+              >
+                <div className="flex flex-col items-center gap-2 bg-background/90 text-foreground px-4 py-2 rounded-lg shadow-lg">
+                  <Copy className="h-5 w-5" />
+                  <span className="text-xs font-medium">Copy Link</span>
+                </div>
+              </div>
+            </div>
           ))}
         </div>
       </div>

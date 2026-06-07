@@ -19,6 +19,8 @@ function Dashboard() {
   const [totalProducts, setTotalProducts] = useState(0);
   const [loading, setLoading] = useState(true);
   const [logs, setLogs] = useState<any[]>([]);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+
 
   const fetchAll = async () => {
     try {
@@ -80,7 +82,6 @@ function Dashboard() {
   }, []);
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Hapus QR Code ini?")) return;
     try {
       await apiFetch(`/qc/${id}`, { method: "DELETE" });
       toast.success("Produk berhasil dihapus");
@@ -88,6 +89,8 @@ function Dashboard() {
       setTotalProducts(prev => prev - 1);
     } catch (e) {
       toast.error("Gagal menghapus produk");
+    } finally {
+      setConfirmDelete(null);
     }
   };
 
@@ -186,7 +189,7 @@ function Dashboard() {
                           Lihat QR <ArrowRight className="h-3 w-3" />
                         </Link>
                         <button
-                          onClick={() => handleDelete(t.id)}
+                          onClick={() => setConfirmDelete(t.id)}
                           className="text-muted-foreground hover:text-destructive p-1 rounded-md hover:bg-destructive/10 transition-colors"
                           title="Hapus"
                         >
@@ -229,6 +232,21 @@ function Dashboard() {
           </div>
         )}
       </section>
+      {confirmDelete && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm" onClick={() => setConfirmDelete(null)}>
+          <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-xl text-center animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 mb-4">
+              <Trash2 className="h-6 w-6 text-destructive" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Hapus QR Code?</h3>
+            <p className="text-sm text-muted-foreground mb-6">Tindakan ini tidak dapat dibatalkan. Label ini tidak akan bisa dipindai lagi.</p>
+            <div className="flex gap-3 w-full">
+              <button onClick={() => setConfirmDelete(null)} className="flex-1 rounded-md border border-border bg-background py-2 text-sm font-medium hover:bg-secondary transition-colors">Batal</button>
+              <button onClick={() => handleDelete(confirmDelete)} className="flex-1 rounded-md bg-destructive py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90 transition-colors shadow-sm">Ya, Hapus</button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }
