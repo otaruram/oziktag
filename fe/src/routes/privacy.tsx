@@ -10,7 +10,7 @@ function PrivacyPolicy() {
     <div className="min-h-screen bg-background text-foreground font-sans selection:bg-foreground selection:text-background relative">
       <header className="border-b border-border/40 backdrop-blur-sm sticky top-0 z-50 bg-background/80">
         <div className="mx-auto flex max-w-4xl items-center gap-4 px-6 py-4">
-          <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">
+          <Link to="/auth" className="text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div className="flex items-center gap-2 font-bold text-lg tracking-tight">

@@ -33,6 +33,8 @@ function Landing() {
           Oziktag
         </div>
         <div className="flex items-center gap-4">
+          <Link to="/auth" className="text-sm font-medium hover:text-primary transition-colors hidden sm:block">Masuk</Link>
+          <Link to="/auth" className="inline-flex items-center justify-center rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-foreground/90">Daftar</Link>
         </div>
       </header>
 

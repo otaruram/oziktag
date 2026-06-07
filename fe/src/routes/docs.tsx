@@ -9,7 +9,16 @@ export const Route = createFileRoute("/docs")({
 });
 
 function DocsPage() {
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery) return;
+    // Simple in-page search
+    window.find(searchQuery);
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
@@ -29,9 +38,22 @@ function DocsPage() {
             </Link>
           </div>
           <div className="flex items-center gap-4">
+            <form onSubmit={handleSearch} className="relative hidden sm:block">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Cari dokumentasi..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-9 w-64 rounded-md border border-border bg-muted/50 pl-9 pr-4 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </form>
             <button 
-              onClick={() => toast.info("Fitur pencarian akan segera hadir!")} 
-              className="flex items-center justify-center p-2 rounded-md border border-border bg-muted/50 text-muted-foreground hover:text-foreground transition-colors hover:bg-secondary active:scale-95"
+              onClick={() => {
+                const query = prompt("Masukkan kata kunci pencarian:");
+                if (query) window.find(query);
+              }} 
+              className="sm:hidden flex items-center justify-center p-2 rounded-md border border-border bg-muted/50 text-muted-foreground hover:text-foreground transition-colors hover:bg-secondary active:scale-95"
               title="Cari dokumen..."
             >
               <Search className="h-4 w-4" />

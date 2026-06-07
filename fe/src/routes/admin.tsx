@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import {
@@ -30,7 +30,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api';
-import { Users, Activity, ShieldAlert, CreditCard } from 'lucide-react';
+import { Users, Activity, ShieldAlert, CreditCard, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export const Route = createFileRoute('/admin')({
   component: AdminDashboard,
@@ -42,6 +42,8 @@ function AdminDashboard() {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [creditAmount, setCreditAmount] = useState<number>(0);
   const [isCreditModalOpen, setIsCreditModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const USERS_PER_PAGE = 10;
 
   // Queries
   const { data: user, isLoading: userLoading } = useQuery({
@@ -129,7 +131,10 @@ function AdminDashboard() {
   };
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto py-8 px-4 sm:px-6">
+      <Link to="/dashboard" className="mb-6 inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+        <ArrowLeft className="mr-2 h-4 w-4" /> Kembali ke Dashboard
+      </Link>
       <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
 
       {/* Stats Cards */}
@@ -188,79 +193,112 @@ function AdminDashboard() {
             Kelola data user, kredit, dan status akun.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nama</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Kredit</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Terakhir Aktif</TableHead>
-                <TableHead className="text-right">Aksi</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {usersLoading ? (
+        <CardContent className="p-0 sm:p-6 overflow-hidden">
+          <div className="overflow-x-auto w-full">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-4">
-                    Memuat data...
-                  </TableCell>
+                  <TableHead className="min-w-[150px]">Nama</TableHead>
+                  <TableHead className="min-w-[200px]">Email</TableHead>
+                  <TableHead className="min-w-[150px]">Kredit (QR/API)</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="min-w-[150px]">Terakhir Aktif</TableHead>
+                  <TableHead className="text-right min-w-[200px]">Aksi</TableHead>
                 </TableRow>
-              ) : users?.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-4">
-                    Belum ada user terdaftar.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                users?.map((usr: any) => (
-                  <TableRow key={usr.id}>
-                    <TableCell className="font-medium">{usr.nama}</TableCell>
-                    <TableCell>{usr.email}</TableCell>
-                    <TableCell>{usr.sisa_kredit}</TableCell>
-                    <TableCell>
-                      {usr.is_banned ? (
-                        <Badge variant="destructive">Banned</Badge>
-                      ) : usr.is_admin ? (
-                        <Badge className="bg-purple-500">Admin</Badge>
-                      ) : (
-                        <Badge variant="outline" className="border-green-500 text-green-500">Active</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {usr.last_seen_at
-                        ? new Date(usr.last_seen_at).toLocaleString('id-ID')
-                        : '-'}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedUser(usr);
-                            setCreditAmount(0);
-                            setIsCreditModalOpen(true);
-                          }}
-                        >
-                          Atur Kredit
-                        </Button>
-                        <Button
-                          variant={usr.is_banned ? 'outline' : 'destructive'}
-                          size="sm"
-                          onClick={() => handleBanToggle(usr)}
-                          disabled={usr.is_admin} // Don't ban admins
-                        >
-                          {usr.is_banned ? 'Unban' : 'Ban'}
-                        </Button>
-                      </div>
+              </TableHeader>
+              <TableBody>
+                {usersLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      Memuat data...
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : users?.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      Belum ada user terdaftar.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  users?.slice((currentPage - 1) * USERS_PER_PAGE, currentPage * USERS_PER_PAGE).map((usr: any) => (
+                    <TableRow key={usr.id}>
+                      <TableCell className="font-medium whitespace-nowrap">{usr.nama}</TableCell>
+                      <TableCell>{usr.email}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-1 text-xs">
+                          <span><Badge variant="outline" className="mr-1">QR</Badge> {usr.sisa_kredit}</span>
+                          <span><Badge variant="outline" className="mr-1 border-primary text-primary">API</Badge> {usr.is_admin ? "∞" : usr.api_kredit}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {usr.is_banned ? (
+                          <Badge variant="destructive">Banned</Badge>
+                        ) : usr.is_admin ? (
+                          <Badge className="bg-purple-500">Admin</Badge>
+                        ) : (
+                          <Badge variant="outline" className="border-green-500 text-green-500">Active</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        {usr.last_seen_at
+                          ? new Date(usr.last_seen_at).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+                          : '-'}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedUser(usr);
+                              setCreditAmount(0);
+                              setIsCreditModalOpen(true);
+                            }}
+                          >
+                            Atur Kredit
+                          </Button>
+                          <Button
+                            variant={usr.is_banned ? 'outline' : 'destructive'}
+                            size="sm"
+                            onClick={() => handleBanToggle(usr)}
+                            disabled={usr.is_admin} // Don't ban admins
+                          >
+                            {usr.is_banned ? 'Unban' : 'Ban'}
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+          {/* Pagination Controls */}
+          {users && users.length > USERS_PER_PAGE && (
+            <div className="flex items-center justify-between px-4 py-4 border-t border-border">
+              <span className="text-sm text-muted-foreground">
+                Menampilkan {(currentPage - 1) * USERS_PER_PAGE + 1} - {Math.min(currentPage * USERS_PER_PAGE, users.length)} dari {users.length} user
+              </span>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setCurrentPage(prev => Math.min(Math.ceil(users.length / USERS_PER_PAGE), prev + 1))}
+                  disabled={currentPage === Math.ceil(users.length / USERS_PER_PAGE)}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
