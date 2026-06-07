@@ -20,7 +20,6 @@ function ApiKeys() {
   const [showPricing, setShowPricing] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [credits, setCreditsState] = useState(0);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [apiKeys, setApiKeys] = useState<any[]>([]);
 
   const fetchData = async () => {
