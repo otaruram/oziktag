@@ -74,6 +74,8 @@ model Kyc {
   namaToko  String   @default("") @map("nama_toko")
   nik       String   @unique
   npwp      String?  @unique
+  fotoKtp   String?  @map("foto_ktp")
+  fotoNpwp  String?  @map("foto_npwp")
   status    String   @default("verified")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

@@ -177,6 +177,8 @@ async def submit_kyc(request: KYCRequest, current_user: dict = Depends(get_curre
                 "namaToko": request.nama_toko.strip(),
                 "nik": nik,
                 "npwp": npwp,
+                "fotoKtp": request.foto_ktp,
+                "fotoNpwp": request.foto_npwp,
                 "status": "verified",
             }
         )

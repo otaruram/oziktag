@@ -209,3 +209,55 @@ async def reject_api_request(request_id: str, admin: dict = Depends(get_admin_us
         data={"status": "rejected"}
     )
     return {"message": "Akses API ditolak."}
+
+from app.models.schemas import AdminKycItem
+
+@router.get("/kyc-requests", response_model=list[AdminKycItem])
+async def get_kyc_requests(admin: dict = Depends(get_admin_user)):
+    """Get all KYC requests."""
+    requests = await db.kyc.find_many(
+        include={"user": True},
+        order={"createdAt": "desc"}
+    )
+    return [
+        AdminKycItem(
+            id=r.id,
+            user_id=r.userId,
+            nama=r.user.nama if r.user else "Unknown",
+            email=r.user.email if r.user else "Unknown",
+            nama_toko=r.namaToko,
+            nik=r.nik,
+            npwp=r.npwp,
+            foto_ktp=r.fotoKtp,
+            foto_npwp=r.fotoNpwp,
+            status=r.status,
+            created_at=r.createdAt
+        )
+        for r in requests
+    ]
+
+@router.post("/kyc-requests/{request_id}/approve")
+async def approve_kyc_request(request_id: str, admin: dict = Depends(get_admin_user)):
+    """Approve a KYC request."""
+    req = await db.kyc.find_unique(where={"id": request_id})
+    if not req:
+        raise HTTPException(status_code=404, detail="Request tidak ditemukan")
+
+    await db.kyc.update(
+        where={"id": request_id},
+        data={"status": "approved"}
+    )
+    return {"message": "KYC disetujui."}
+
+@router.post("/kyc-requests/{request_id}/reject")
+async def reject_kyc_request(request_id: str, admin: dict = Depends(get_admin_user)):
+    """Reject a KYC request."""
+    req = await db.kyc.find_unique(where={"id": request_id})
+    if not req:
+        raise HTTPException(status_code=404, detail="Request tidak ditemukan")
+
+    await db.kyc.update(
+        where={"id": request_id},
+        data={"status": "rejected"}
+    )
+    return {"message": "KYC ditolak."}

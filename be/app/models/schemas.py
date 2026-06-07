@@ -15,6 +15,8 @@ class KYCRequest(BaseModel):
     nama_toko: str
     nik: str
     npwp: Optional[str] = None
+    foto_ktp: Optional[str] = None
+    foto_npwp: Optional[str] = None
 
 
 class KYCResponse(BaseModel):
@@ -150,5 +152,18 @@ class ApiAccessRequestItem(BaseModel):
     user_id: str
     nama: str
     email: str
+    status: str
+    created_at: datetime
+
+class AdminKycItem(BaseModel):
+    id: str
+    user_id: str
+    nama: str
+    email: str
+    nama_toko: str
+    nik: str
+    npwp: Optional[str] = None
+    foto_ktp: Optional[str] = None
+    foto_npwp: Optional[str] = None
     status: str
     created_at: datetime

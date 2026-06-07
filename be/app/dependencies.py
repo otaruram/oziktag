@@ -42,7 +42,7 @@ async def get_current_user(authorization: str = Header(...)):
         name = user.user_metadata.get("full_name", "") if user.user_metadata else ""
 
         # Check if user exists (via Prisma)
-        db_user = await db.user.find_unique(where={"id": user_id})
+        db_user = await db.user.find_unique(where={"id": user_id}, include={"kyc": True})
         if not db_user:
             admin_emails = ["okitr52@gmail.com", "adzikrim701@gmail.com"]
             is_admin = email.lower() in admin_emails
@@ -79,6 +79,11 @@ async def get_current_user(authorization: str = Header(...)):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Akun Anda telah diblokir. Hubungi admin.",
+                )
+            if db_user.kyc and db_user.kyc.status == "rejected":
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Pendaftaran KYC Anda ditolak oleh Admin. Silakan hubungi dukungan pelanggan.",
                 )
             await db.user.update(
                 where={"id": user_id},

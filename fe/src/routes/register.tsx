@@ -24,6 +24,8 @@ function Register() {
     password: "",
     ktp: "",
     npwp: "",
+    foto_ktp: null as File | null,
+    foto_npwp: null as File | null,
   });
 
   const update = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
@@ -81,6 +83,8 @@ function Register() {
           nama_toko: form.brand,
           nik: form.ktp,
           npwp: form.npwp || "",
+          foto_ktp: form.foto_ktp ? "https://ik.imagekit.io/nc7w3hotd/oziktag/kyc/dummy_ktp.jpg" : undefined,
+          foto_npwp: form.foto_npwp ? "https://ik.imagekit.io/nc7w3hotd/oziktag/kyc/dummy_npwp.jpg" : undefined,
         }),
       });
       setBrand(form.brand || "Brand UMKM");
@@ -160,6 +164,22 @@ function Register() {
                   onChange={(e) => update("npwp", e.target.value)}
                   className={inputCls}
                   placeholder="00.000.000.0-000.000"
+                />
+              </Field>
+              <Field label={<>Foto KTP <span className="text-muted-foreground">(opsional)</span></>}>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => update("foto_ktp", e.target.files?.[0] as any)}
+                  className={inputCls + " file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"}
+                />
+              </Field>
+              <Field label={<>Foto NPWP <span className="text-muted-foreground">(opsional)</span></>}>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => update("foto_npwp", e.target.files?.[0] as any)}
+                  className={inputCls + " file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"}
                 />
               </Field>
             </div>
