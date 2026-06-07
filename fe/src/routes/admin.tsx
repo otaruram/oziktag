@@ -531,6 +531,7 @@ function AdminDashboard() {
                               setCreditAmount(0);
                               setIsCreditModalOpen(true);
                             }}
+                            disabled={usr.is_admin}
                           >
                             Atur Kredit
                           </Button>

@@ -72,6 +72,9 @@ async def add_credits(request: AdminAddCreditsRequest, admin: dict = Depends(get
     if not user:
         raise HTTPException(status_code=404, detail="User tidak ditemukan")
 
+    if user.isAdmin:
+        raise HTTPException(status_code=400, detail="Tidak bisa mengubah kredit admin")
+
     if request.tipe_kredit == "API":
         new_credits = user.apiKredit + request.amount
         await db.user.update(
@@ -104,6 +107,9 @@ async def ban_user(request: AdminBanRequest, admin: dict = Depends(get_admin_use
 
     if not user:
         raise HTTPException(status_code=404, detail="User tidak ditemukan")
+
+    if user.isAdmin:
+        raise HTTPException(status_code=400, detail="Tidak bisa mem-ban admin")
 
     await db.user.update(
         where={"id": request.user_id},
