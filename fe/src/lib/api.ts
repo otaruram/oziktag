@@ -1,7 +1,7 @@
 import { supabase } from "./supabase";
 
 // Automatically use Render backend in Production, and localhost in Development
-const API_BASE = import.meta.env.PROD 
+export const API_BASE = import.meta.env.PROD 
   ? "https://oziktag.onrender.com/api" 
   : "http://localhost:8000/api";
 

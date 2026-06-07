@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Lock, Code2, Copy, RefreshCw, KeyRound, Server, Webhook, Coins, Play, X, Check, Trash2 } from "lucide-react";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, API_BASE } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import QRCode from "qrcode";
@@ -203,12 +203,16 @@ function ApiKeys() {
               <h3 className="font-semibold">Quick Start</h3>
             </div>
             <pre className="text-[10px] bg-background border border-border p-3 rounded-md overflow-x-auto">
-{`curl -X POST https://api.oziktag.com/v1/qc \\
-  -H "Authorization: Bearer ozk_live_..." \\
+{`curl -X POST ${API_BASE}/v1/qc \\
+  -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "nama_produk": "Kopi Susu",
-    "batch": "B-01"
+    "nama_produk": "Kopi Gayo",
+    "kategori": "Makanan & Minuman",
+    "batch": "B-2026-06",
+    "checklist": ["Segel utuh", "Warna sesuai standar"],
+    "catatan_penjual": "Diinput via API Oziktag",
+    "image_url": "https://example.com/kopi.jpg"
   }'`}
             </pre>
             <a href="/docs#api" className="mt-4 block text-xs font-medium text-primary hover:underline">
@@ -295,7 +299,7 @@ function PlaygroundModal({ onClose, credits, isAdmin, apiKeys }: { onClose: () =
     setRunning(true);
     setResultQr(null);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/v1/qc`, {
+      const res = await fetch(`${API_BASE}/v1/qc`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${defaultKey}`,
