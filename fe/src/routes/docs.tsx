@@ -112,7 +112,6 @@ function DocsPage() {
                 <li>
                   <a onClick={() => setMobileMenuOpen(false)} href="#api" className="block px-2 py-1.5 text-sm rounded-md text-muted-foreground hover:bg-muted hover:text-foreground flex items-center justify-between">
                     <span className="flex items-center gap-2"><Settings className="h-3.5 w-3.5" /> API Reference</span>
-                    <span className="text-[10px] bg-secondary px-1.5 py-0.5 rounded text-muted-foreground">TBA</span>
                   </a>
                 </li>
               </ul>
@@ -254,12 +253,55 @@ function DocsPage() {
             </div>
 
             <div className="border-t border-border pt-8 mt-12">
-              <h2 id="api" className="text-2xl font-bold tracking-tight mb-4 flex items-center gap-2 text-muted-foreground scroll-mt-20">
-                <Settings className="h-6 w-6" /> API Reference <span className="text-xs bg-secondary px-2 py-1 rounded ml-2">TBA</span>
+              <h2 id="api" className="text-2xl font-bold tracking-tight mb-4 flex items-center gap-2 scroll-mt-20">
+                <Settings className="h-6 w-6 text-primary" /> API Reference
               </h2>
-              <p className="text-muted-foreground text-sm leading-relaxed mb-4">
-                Fitur API Publik Oziktag sedang dalam pengembangan (To Be Announced). Ke depannya, developer dapat mengintegrasikan pembuatan QR Code langsung dari sistem POS atau aplikasi kasir mereka. Saat ini fitur ini masih dikunci (locked).
+              <p className="text-muted-foreground text-sm leading-relaxed mb-6">
+                Integrasikan pembuatan QR Code QC secara otomatis dari sistem ERP, POS, atau aplikasi kasir internal Anda. Gunakan API Key yang dapat di-generate melalui dashboard Developer API.
               </p>
+
+              <div className="space-y-6">
+                <div className="rounded-xl border border-border bg-card p-5 sm:p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="bg-primary/20 text-primary px-2 py-1 rounded text-xs font-bold font-mono">POST</span>
+                    <code className="text-sm font-mono font-medium">/api/v1/qc</code>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-4">Endpoint ini digunakan untuk men-generate label QR Code QC baru beserta analisis AI otomatis.</p>
+                  
+                  <h4 className="font-semibold text-sm mb-2">Headers</h4>
+                  <div className="bg-muted p-3 rounded-md overflow-x-auto text-xs font-mono border border-border/50 mb-4">
+                    <div className="flex justify-between mb-1"><span className="text-primary">Authorization:</span> <span>Bearer {'<YOUR_API_KEY>'}</span></div>
+                    <div className="flex justify-between"><span className="text-primary">Content-Type:</span> <span>application/json</span></div>
+                  </div>
+
+                  <h4 className="font-semibold text-sm mb-2">Request Body (JSON)</h4>
+                  <div className="bg-muted p-3 rounded-md overflow-x-auto text-xs font-mono border border-border/50 mb-4">
+                    <pre>{`{
+  "nama_produk": "String (Required)",
+  "kategori": "String (Required)",
+  "batch": "String (Optional)",
+  "checklist": ["String", "String"] (Array of Strings, Required),
+  "catatan_penjual": "String (Optional)",
+  "image_urls": ["String"] (Array of HTTP URLs, max 5, Required)
+}`}</pre>
+                  </div>
+
+                  <h4 className="font-semibold text-sm mb-2">Success Response (201 Created)</h4>
+                  <div className="bg-muted p-3 rounded-md overflow-x-auto text-xs font-mono border border-border/50 mb-4">
+                    <pre>{`{
+  "qr_url": "https://www.oziktag.my.id/scan/...",
+  "product_id": "uuid-string"
+}`}</pre>
+                  </div>
+
+                  <h4 className="font-semibold text-sm mb-2">Error Responses</h4>
+                  <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
+                    <li><code className="text-xs bg-secondary px-1 py-0.5 rounded text-destructive">401 Unauthorized</code>: API Key tidak valid atau tidak disertakan.</li>
+                    <li><code className="text-xs bg-secondary px-1 py-0.5 rounded text-destructive">402 Payment Required</code>: Saldo kredit API Anda habis.</li>
+                    <li><code className="text-xs bg-secondary px-1 py-0.5 rounded text-destructive">400 Bad Request</code>: Format body JSON tidak sesuai.</li>
+                  </ul>
+                </div>
+              </div>
             </div>
 
             <div className="flex justify-between items-center mt-12 pt-6 border-t border-border">
