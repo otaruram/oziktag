@@ -229,57 +229,6 @@ function ApiKeys() {
   );
 }
 
-function ApiHistoryModal({ onClose }: { onClose: () => void }) {
-  const [logs, setLogs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    apiFetch("/auth/credit-logs?tipe_kredit=API")
-      .then(setLogs)
-      .catch((e) => toast.error(e.message || "Gagal memuat riwayat"))
-      .finally(() => setLoading(false));
-  }, []);
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 px-4 backdrop-blur-sm" onClick={onClose}>
-      <div className="w-full max-w-2xl rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-elegant)] overflow-y-auto max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-start justify-between mb-6">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">Aktivitas</p>
-            <h3 className="mt-1 text-lg font-semibold flex items-center gap-2">Riwayat Kredit API</h3>
-          </div>
-          <button onClick={onClose} className="rounded-md p-1 text-muted-foreground hover:bg-secondary hover:text-foreground">
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-
-        {loading ? (
-          <div className="animate-pulse space-y-3">
-            {[1,2,3].map(i => <div key={i} className="h-16 bg-secondary/50 rounded-lg"></div>)}
-          </div>
-        ) : logs.length === 0 ? (
-          <div className="text-center py-10 text-muted-foreground border border-dashed border-border rounded-lg">
-            <p>Belum ada riwayat API</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {logs.map(log => (
-              <div key={log.id} className="flex items-center justify-between p-3 rounded-lg border border-border bg-background">
-                <div className="flex flex-col gap-1">
-                  <span className="text-sm font-medium">{log.description}</span>
-                  <span className="text-[10px] text-muted-foreground">{new Date(log.created_at).toLocaleString('id-ID')}</span>
-                </div>
-                <div className={`font-mono font-bold ${log.amount > 0 ? "text-green-500" : "text-destructive"}`}>
-                  {log.amount > 0 ? "+" : ""}{log.amount}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
 
 function PlaygroundModal({ onClose, defaultKey, isAdmin, credits }: { onClose: () => void, defaultKey?: string, isAdmin: boolean, credits: number }) {
   const [running, setRunning] = useState(false);
