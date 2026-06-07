@@ -13,6 +13,29 @@ from app.models.schemas import QCSubmitResponse, QCProductListItem
 
 router = APIRouter(prefix="/api/qc", tags=["Quality Control"])
 
+@router.post("/upload")
+async def upload_images_api(
+    images: list[UploadFile] = File(..., description="1-5 product images"),
+    current_user: dict = Depends(get_current_user),
+):
+    """Utility endpoint to upload images and return URLs. Useful for API Playground."""
+    if len(images) < 1:
+        raise HTTPException(status_code=400, detail="Upload minimal 1 foto produk")
+    if len(images) > 5:
+        raise HTTPException(status_code=400, detail="Maksimal 5 foto produk")
+
+    try:
+        image_files = []
+        for img in images:
+            content = await img.read()
+            image_files.append((content, img.filename or "image.jpg"))
+        image_urls = await upload_multiple_images(image_files)
+        return {"urls": image_urls}
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Gagal upload gambar: {str(e)}")
+
 
 @router.post("/submit", response_model=QCSubmitResponse)
 async def submit_qc(

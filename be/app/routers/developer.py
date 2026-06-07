@@ -28,9 +28,9 @@ class QCSubmitRequest(BaseModel):
     nama_produk: str
     kategori: str = "Lainnya"
     batch: Optional[str] = None
-    checklist: Optional[list[str]] = ["Kondisi fisik baik", "Sesuai standar"]
+    checklist: list[str] = ["Kondisi fisik baik", "Sesuai standar"]
     catatan_penjual: Optional[str] = "Dibuat via API"
-    image_url: Optional[str] = "https://ik.imagekit.io/nc7w3hotd/oziktag/products/dummy_api.jpg"
+    image_urls: list[str] = ["https://ik.imagekit.io/nc7w3hotd/oziktag/products/dummy_api.jpg"]
 
 @router.post("/qc")
 async def submit_qc_api(
@@ -88,7 +88,7 @@ async def submit_qc_api(
                 "aiSolution": ai_solution,
                 "images": {
                     "create": [
-                        {"imagekitUrl": req.image_url}
+                        {"imagekitUrl": url} for url in req.image_urls
                     ]
                 }
             }
