@@ -2,7 +2,9 @@
 
 import httpx
 import json
+import hashlib
 from app.config import get_settings
+from app.database import db
 
 
 async def analyze_qc(
@@ -46,6 +48,22 @@ INSIGHT: [isi insight di sini]
 SOLUSI: [isi solusi di sini]
 """
 
+    # 1. Generate Input Hash
+    raw_input = f"{nama_produk}|{kategori}|{catatan_penjual}|{','.join(sorted(checklist))}"
+    input_hash = hashlib.sha256(raw_input.encode('utf-8')).hexdigest()
+
+    # 2. Check Cache
+    try:
+        cached = await db.aicache.find_unique(where={"inputHash": input_hash})
+        if cached:
+            print(f"[AI Service] Cache HIT for {input_hash}")
+            return {
+                "ai_insight": cached.insight,
+                "ai_solution": cached.solution,
+            }
+    except Exception as e:
+        print(f"[AI Service] Cache error: {e}")
+
     try:
         # Call the custom Gemini endpoint
         base_url = settings.gemini_base_url.rstrip("/")
@@ -73,7 +91,21 @@ SOLUSI: [isi solusi di sini]
         # Parse the response
         content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
 
-        return _parse_ai_response(content, nama_produk, kategori, catatan_penjual)
+        result = _parse_ai_response(content, nama_produk, kategori, catatan_penjual)
+        
+        # 3. Save to Cache
+        try:
+            await db.aicache.create(
+                data={
+                    "inputHash": input_hash,
+                    "insight": result["ai_insight"],
+                    "solution": result["ai_solution"],
+                }
+            )
+        except Exception as e:
+            print(f"[AI Service] Failed to save cache: {e}")
+            
+        return result
 
     except Exception as e:
         print(f"[AI Service] Error calling Gemini: {e}")

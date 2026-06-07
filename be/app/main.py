@@ -11,7 +11,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.routers import auth, qc, scan, topup, admin
+from app.routers import auth, qc, scan, topup, admin, apikeys, developer
 from app.database import connect_db, disconnect_db
 
 
@@ -96,6 +96,8 @@ app.include_router(qc.router)
 app.include_router(scan.router)
 app.include_router(topup.router)
 app.include_router(admin.router)
+app.include_router(apikeys.router)
+app.include_router(developer.router)
 
 
 # ──────────────────────── Health Check ────────────────────────

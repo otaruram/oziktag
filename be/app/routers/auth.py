@@ -134,6 +134,7 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         nama=db_user.nama,
         email=db_user.email,
         sisa_kredit=db_user.sisaKredit,
+        api_kredit=db_user.apiKredit,
         is_admin=db_user.isAdmin,
         is_banned=db_user.isBanned,
         kyc_status=db_user.kyc.status if db_user.kyc else None,
@@ -203,3 +204,29 @@ async def _ensure_unique_field(field: str, value: str) -> str:
         suffix = f"_{uuid.uuid4().hex[:6]}_{int(time.time()) % 10000}"
         value = f"{value}{suffix}"
     return value
+
+from typing import Optional
+
+@router.get("/credit-logs")
+async def get_credit_logs(tipe_kredit: Optional[str] = None, current_user: dict = Depends(get_current_user)):
+    """Get credit usage and topup logs."""
+    where_clause = {"userId": current_user["id"]}
+    if tipe_kredit:
+        where_clause["tipeKredit"] = tipe_kredit
+
+    logs = await db.creditlog.find_many(
+        where=where_clause,
+        order={"createdAt": "desc"},
+        take=50
+    )
+    
+    return [
+        {
+            "id": log.id,
+            "tipe_kredit": log.tipeKredit,
+            "action": log.action,
+            "amount": log.amount,
+            "description": log.description,
+            "created_at": log.createdAt.isoformat()
+        } for log in logs
+    ]

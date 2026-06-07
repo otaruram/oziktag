@@ -27,6 +27,7 @@ class UserProfile(BaseModel):
     nama: str
     email: str
     sisa_kredit: int
+    api_kredit: int
     is_admin: bool = False
     is_banned: bool = False
     kyc_status: Optional[str] = None
@@ -73,8 +74,9 @@ class QCProductListItem(BaseModel):
 # ──────────────────────── Top-Up / Payment ────────────────────────
 
 class TopUpCreateRequest(BaseModel):
-    paket: str = Field(..., description="starter | growth | pro")
+    paket: str = Field(..., description="starter | growth | pro | api_starter | etc")
     payment_type: str = Field(..., description="qris | bni_va | bri_va | permata_va | cimb_niaga_va | gopay | shopeepay")
+    tipe_kredit: str = Field("QR", description="QR or API")
 
 
 class TopUpCreateResponse(BaseModel):

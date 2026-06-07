@@ -63,10 +63,20 @@ async def submit_qc(
         )
 
     if not is_admin:
-        await db.user.update(
-            where={"id": user_id},
-            data={"sisaKredit": credits - 1}
-        )
+        async with db.tx() as tx:
+            await tx.user.update(
+                where={"id": user_id},
+                data={"sisaKredit": credits - 1}
+            )
+            await tx.creditlog.create(
+                data={
+                    "userId": user_id,
+                    "tipeKredit": "QR",
+                    "action": "USAGE",
+                    "amount": -1,
+                    "description": f"Generate QC Label: {nama_produk[:20]}"
+                }
+            )
 
     # 4. Upload images to ImageKit
     try:
@@ -80,10 +90,20 @@ async def submit_qc(
         traceback.print_exc()
         # Refund credit if upload fails
         if not is_admin:
-            await db.user.update(
-                where={"id": user_id},
-                data={"sisaKredit": credits}
-            )
+            async with db.tx() as tx:
+                await tx.user.update(
+                    where={"id": user_id},
+                    data={"sisaKredit": credits}
+                )
+                await tx.creditlog.create(
+                    data={
+                        "userId": user_id,
+                        "tipeKredit": "QR",
+                        "action": "REFUND",
+                        "amount": 1,
+                        "description": f"Refund Gagal Upload Gambar"
+                    }
+                )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Gagal upload gambar: {str(e)}",
@@ -128,10 +148,20 @@ async def submit_qc(
         traceback.print_exc()
         # Refund credit if db save fails
         if not is_admin:
-            await db.user.update(
-                where={"id": user_id},
-                data={"sisaKredit": credits}
-            )
+            async with db.tx() as tx:
+                await tx.user.update(
+                    where={"id": user_id},
+                    data={"sisaKredit": credits}
+                )
+                await tx.creditlog.create(
+                    data={
+                        "userId": user_id,
+                        "tipeKredit": "QR",
+                        "action": "REFUND",
+                        "amount": 1,
+                        "description": f"Refund Gagal Generate QR"
+                    }
+                )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Gagal menyimpan data produk: {str(e)}",

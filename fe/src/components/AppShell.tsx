@@ -16,9 +16,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const navRouter = useNavigate();
   const [credits, setCreditsState] = useState(0);
+  const [apiCredits, setApiCreditsState] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
   const [avatar, setAvatar] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const isApiRoute = path.startsWith("/api-keys");
 
   useEffect(() => {
     // Auth Guard
@@ -35,6 +38,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       try {
         const me = await apiFetch("/auth/me");
         setCreditsState(me.sisa_kredit);
+        setApiCreditsState(me.api_kredit);
         setIsAdmin(me.is_admin);
         
         // Use real backend status instead of localStorage
@@ -52,8 +56,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       sub = supabase
         .channel(channelName)
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users', filter: `id=eq.${uid}` }, (payload) => {
-          if (payload.new && payload.new.sisa_kredit !== undefined) {
-            setCreditsState(payload.new.sisa_kredit);
+          if (payload.new) {
+            if (payload.new.sisa_kredit !== undefined) setCreditsState(payload.new.sisa_kredit);
+            if (payload.new.api_kredit !== undefined) setApiCreditsState(payload.new.api_kredit);
           }
         })
         .subscribe();
@@ -103,10 +108,11 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Link
               to="/pricing"
               className="hidden items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs sm:inline-flex"
-              title="Top-Up Kredit"
+              title={isApiRoute ? "Top-Up Kredit API" : "Top-Up Kredit QR"}
             >
-              <Coins className="h-3.5 w-3.5 text-primary" />
-              <span className="font-semibold text-primary">{credits}</span>
+              {isApiRoute ? <Code2 className="h-3.5 w-3.5 text-primary" /> : <Coins className="h-3.5 w-3.5 text-primary" />}
+              <span className="font-semibold text-primary">{isApiRoute ? apiCredits : credits}</span>
+              <span className="text-[10px] uppercase text-muted-foreground ml-1 hidden lg:inline">{isApiRoute ? "API" : "QR"}</span>
             </Link>
 
             {/* Profile Dropdown */}

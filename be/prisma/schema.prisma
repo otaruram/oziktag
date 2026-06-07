@@ -22,6 +22,7 @@ model User {
   nama       String    @default("")
   email      String    @unique
   sisaKredit Int       @default(0) @map("sisa_kredit")
+  apiKredit  Int       @default(0) @map("api_kredit")
   isAdmin    Boolean   @default(false) @map("is_admin")
   isBanned   Boolean   @default(false) @map("is_banned")
   lastSeenAt DateTime? @default(now()) @map("last_seen_at")
@@ -32,8 +33,23 @@ model User {
   qcProducts         QcProduct[]
   topupTransactions  TopupTransaction[]
   productScans       ProductScan[]
+  apiKeys            ApiKey[]
+  creditLogs         CreditLog[]
 
   @@map("users")
+}
+
+// ──────────────────────── API Keys ────────────────────────
+model ApiKey {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  key       String   @unique
+  name      String   @default("Production Key")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("api_keys")
 }
 
 // ──────────────────────── KYC ────────────────────────
@@ -89,6 +105,7 @@ model TopupTransaction {
   id                  String   @id @default(uuid())
   userId              String   @map("user_id")
   paket               String
+  tipeKredit          String   @default("QR") @map("tipe_kredit")
   amount              Int
   credits             Int      @default(0)
   status              String   @default("pending")
@@ -114,4 +131,30 @@ model ProductScan {
   user    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("product_scans")
+}
+
+// ──────────────────────── Credit Logs ────────────────────────
+model CreditLog {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  tipeKredit  String   @default("QR") @map("tipe_kredit") // "QR" or "API"
+  action      String   // "TOPUP", "USAGE", "REFUND"
+  amount      Int      // +100 or -1
+  description String
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("credit_logs")
+}
+
+// ──────────────────────── AI Cache ────────────────────────
+model AiCache {
+  id         String   @id @default(uuid())
+  inputHash  String   @unique @map("input_hash")
+  insight    String
+  solution   String
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("ai_cache")
 }

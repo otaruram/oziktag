@@ -53,6 +53,7 @@ async def create_topup(
         data={
             "userId": user_id,
             "paket": request.paket,
+            "tipeKredit": request.tipe_kredit,
             "amount": pkg["price"],
             "credits": pkg["credits"],
             "status": "pending",
@@ -112,11 +113,36 @@ async def louvin_webhook(request: Request):
                     where={"id": txn.userId}
                 )
                 if user:
-                    new_credits = user.sisaKredit + txn.credits
-                    await tx.user.update(
-                        where={"id": txn.userId},
-                        data={"sisaKredit": new_credits}
-                    )
+                    if txn.tipeKredit == "API":
+                        new_credits = user.apiKredit + txn.credits
+                        await tx.user.update(
+                            where={"id": txn.userId},
+                            data={"apiKredit": new_credits}
+                        )
+                        await tx.creditlog.create(
+                            data={
+                                "userId": txn.userId,
+                                "tipeKredit": "API",
+                                "action": "TOPUP",
+                                "amount": txn.credits,
+                                "description": f"Top-Up Paket API {txn.paket}"
+                            }
+                        )
+                    else:
+                        new_credits = user.sisaKredit + txn.credits
+                        await tx.user.update(
+                            where={"id": txn.userId},
+                            data={"sisaKredit": new_credits}
+                        )
+                        await tx.creditlog.create(
+                            data={
+                                "userId": txn.userId,
+                                "tipeKredit": "QR",
+                                "action": "TOPUP",
+                                "amount": txn.credits,
+                                "description": f"Top-Up Paket {txn.paket}"
+                            }
+                        )
 
             print(f"[Webhook] Payment settled: {order_id}, +{txn.credits} credits to user {txn.userId}")
 
@@ -177,6 +203,7 @@ async def simulate_demo_payment(request: TopUpCreateRequest, current_user: dict 
             data={
                 "userId": user_id,
                 "paket": request.paket,
+                "tipeKredit": request.tipe_kredit,
                 "amount": pkg["price"],
                 "credits": pkg["credits"],
                 "status": "settled",
@@ -186,9 +213,33 @@ async def simulate_demo_payment(request: TopUpCreateRequest, current_user: dict 
         )
         user = await tx.user.find_unique(where={"id": user_id})
         if user:
-            await tx.user.update(
-                where={"id": user_id},
-                data={"sisaKredit": user.sisaKredit + pkg["credits"]}
-            )
+            if request.tipe_kredit == "API":
+                await tx.user.update(
+                    where={"id": user_id},
+                    data={"apiKredit": user.apiKredit + pkg["credits"]}
+                )
+                await tx.creditlog.create(
+                    data={
+                        "userId": user_id,
+                        "tipeKredit": "API",
+                        "action": "TOPUP",
+                        "amount": pkg["credits"],
+                        "description": f"Demo Top-Up Paket API {request.paket}"
+                    }
+                )
+            else:
+                await tx.user.update(
+                    where={"id": user_id},
+                    data={"sisaKredit": user.sisaKredit + pkg["credits"]}
+                )
+                await tx.creditlog.create(
+                    data={
+                        "userId": user_id,
+                        "tipeKredit": "QR",
+                        "action": "TOPUP",
+                        "amount": pkg["credits"],
+                        "description": f"Demo Top-Up Paket {request.paket}"
+                    }
+                )
             
     return {"message": "Demo payment successful", "credits_added": pkg["credits"]}

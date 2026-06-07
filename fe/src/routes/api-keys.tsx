@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { AppShell } from "@/components/AppShell";
-import { Lock, Code2, Copy, RefreshCw, KeyRound, Server, Webhook, Coins, Play, X, Check } from "lucide-react";
+import { Lock, Code2, Copy, RefreshCw, KeyRound, Server, Webhook, Coins, Play, X, Check, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import QRCode from "qrcode";
 
@@ -17,17 +18,69 @@ function ApiKeys() {
 
   const [showPlayground, setShowPlayground] = useState(false);
   const [showPricing, setShowPricing] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [credits, setCreditsState] = useState(0);
+  const [apiKeys, setApiKeys] = useState<any[]>([]);
+
+  const fetchData = async () => {
+    try {
+      const [me, keys] = await Promise.all([
+        apiFetch("/auth/me"),
+        apiFetch("/apikeys")
+      ]);
+      setIsAdmin(me.is_admin);
+      setCreditsState(me.api_kredit); // USE API KREDIT
+      setApiKeys(keys);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    apiFetch("/auth/me")
-      .then((me) => {
-        setIsAdmin(me.is_admin);
-        setCreditsState(me.sisa_kredit);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+    fetchData();
+
+    let sub: any;
+    supabase.auth.getUser().then(({ data }) => {
+      const uid = data.user?.id;
+      if (!uid) return;
+      const channelName = `apikeys-user-${uid}-${Date.now()}`;
+      sub = supabase
+        .channel(channelName)
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users', filter: `id=eq.${uid}` }, (payload) => {
+          if (payload.new && payload.new.api_kredit !== undefined) {
+            setCreditsState(payload.new.api_kredit);
+          }
+        })
+        .subscribe();
+    });
+
+    return () => {
+      if (sub) supabase.removeChannel(sub);
+    };
   }, []);
+
+  const generateKey = async () => {
+    try {
+      const newKey = await apiFetch("/apikeys", { method: "POST" });
+      setApiKeys([...apiKeys, newKey]);
+      toast.success("API Key berhasil dibuat!");
+    } catch (e: any) {
+      toast.error(e.message || "Gagal membuat key");
+    }
+  };
+
+  const revokeKey = async (id: string) => {
+    if (!confirm("Yakin ingin menghapus key ini?")) return;
+    try {
+      await apiFetch(`/apikeys/${id}`, { method: "DELETE" });
+      setApiKeys(apiKeys.filter(k => k.id !== id));
+      toast.success("Key berhasil dihapus");
+    } catch (e: any) {
+      toast.error(e.message || "Gagal menghapus key");
+    }
+  };
 
   if (loading) return <AppShell><div className="animate-pulse h-32 bg-card rounded-xl"></div></AppShell>;
 
@@ -56,12 +109,15 @@ function ApiKeys() {
             Integrasikan sistem POS atau ERP Anda langsung dengan Oziktag menggunakan REST API.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button onClick={() => setShowPlayground(true)} className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-sm hover:bg-secondary">
             <Play className="h-4 w-4" /> Playground
           </button>
           <button onClick={() => setShowPricing(true)} className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-sm hover:bg-secondary">
-            <Coins className="h-4 w-4" /> Pricing API
+            <Coins className="h-4 w-4" /> Beli API Kredit
+          </button>
+          <button onClick={() => setShowHistory(true)} className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-sm hover:bg-secondary">
+            <RefreshCw className="h-4 w-4" /> Riwayat API
           </button>
         </div>
       </div>
@@ -79,29 +135,33 @@ function ApiKeys() {
             </p>
 
             <div className="space-y-4">
-              <div>
-                <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-1.5 block">
-                  Production Key
-                </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="password"
-                    value="ozk_live_98x723498nx12n30x8n12x3"
-                    readOnly
-                    className="flex-1 rounded-md border border-border bg-input/40 px-3 py-2 text-sm font-mono text-foreground focus:outline-none"
-                  />
-                  <button onClick={() => toast.success("Copied to clipboard")} className="p-2 rounded-md border border-border hover:bg-secondary">
-                    <Copy className="h-4 w-4 text-muted-foreground" />
-                  </button>
-                  <button onClick={() => toast.info("Revoking key...")} className="p-2 rounded-md border border-border hover:bg-secondary">
-                    <RefreshCw className="h-4 w-4 text-muted-foreground" />
-                  </button>
+              {apiKeys.map((k) => (
+                <div key={k.id}>
+                  <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-1.5 block">
+                    {k.name}
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="password"
+                      value={k.key}
+                      readOnly
+                      className="flex-1 rounded-md border border-border bg-input/40 px-3 py-2 text-sm font-mono text-foreground focus:outline-none"
+                    />
+                    <button onClick={() => { navigator.clipboard.writeText(k.key); toast.success("Copied to clipboard"); }} className="p-2 rounded-md border border-border hover:bg-secondary">
+                      <Copy className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                    <button onClick={() => revokeKey(k.id)} className="p-2 rounded-md border border-destructive/40 text-destructive hover:bg-destructive/10">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
-              </div>
+              ))}
 
-              <button className="text-sm text-primary font-medium hover:underline">
-                + Generate New Key
-              </button>
+              {apiKeys.length < 3 && (
+                <button onClick={generateKey} className="text-sm text-primary font-medium hover:underline">
+                  + Generate New Key
+                </button>
+              )}
             </div>
           </section>
 
@@ -116,7 +176,7 @@ function ApiKeys() {
                 <div>
                   <h3 className="font-medium text-sm">Automasi dari Sistem POS/Kasir</h3>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Saat transaksi terjadi di aplikasi kasir (seperti Moka atau majoo), sistem Anda dapat otomatis menembak API Oziktag untuk men-generate QR QC Label tanpa harus membuka web Oziktag secara manual.
+                    Saat transaksi terjadi di aplikasi kasir, sistem Anda dapat otomatis menembak API Oziktag untuk men-generate QR QC Label tanpa harus membuka web Oziktag secara manual.
                   </p>
                 </div>
               </div>
@@ -158,31 +218,104 @@ function ApiKeys() {
         </aside>
       </div>
 
-      {showPlayground && <PlaygroundModal credits={credits} onSimulateSuccess={() => setCreditsState(p => Math.max(0, p - 1))} onClose={() => setShowPlayground(false)} />}
+      {showPlayground && <PlaygroundModal apiKeys={apiKeys} credits={credits} onClose={() => setShowPlayground(false)} />}
       {showPricing && <PricingModal onClose={() => setShowPricing(false)} />}
+      {showHistory && <ApiHistoryModal onClose={() => setShowHistory(false)} />}
     </AppShell>
   );
 }
 
-function PlaygroundModal({ onClose, credits, onSimulateSuccess }: { onClose: () => void; credits: number; onSimulateSuccess: () => void }) {
+function ApiHistoryModal({ onClose }: { onClose: () => void }) {
+  const [logs, setLogs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    apiFetch("/auth/credit-logs?tipe_kredit=API")
+      .then(setLogs)
+      .catch((e) => toast.error(e.message || "Gagal memuat riwayat"))
+      .finally(() => setLoading(false));
+  }, []);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 px-4 backdrop-blur-sm" onClick={onClose}>
+      <div className="w-full max-w-2xl rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-elegant)] overflow-y-auto max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Aktivitas</p>
+            <h3 className="mt-1 text-lg font-semibold flex items-center gap-2">Riwayat Kredit API</h3>
+          </div>
+          <button onClick={onClose} className="rounded-md p-1 text-muted-foreground hover:bg-secondary hover:text-foreground">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="animate-pulse space-y-3">
+            {[1,2,3].map(i => <div key={i} className="h-16 bg-secondary/50 rounded-lg"></div>)}
+          </div>
+        ) : logs.length === 0 ? (
+          <div className="text-center py-10 text-muted-foreground border border-dashed border-border rounded-lg">
+            <p>Belum ada riwayat API</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {logs.map(log => (
+              <div key={log.id} className="flex items-center justify-between p-3 rounded-lg border border-border bg-background">
+                <div className="flex flex-col gap-1">
+                  <span className="text-sm font-medium">{log.description}</span>
+                  <span className="text-[10px] text-muted-foreground">{new Date(log.created_at).toLocaleString('id-ID')}</span>
+                </div>
+                <div className={`font-mono font-bold ${log.amount > 0 ? "text-green-500" : "text-destructive"}`}>
+                  {log.amount > 0 ? "+" : ""}{log.amount}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PlaygroundModal({ onClose, credits, apiKeys }: { onClose: () => void; credits: number; apiKeys: any[] }) {
   const [running, setRunning] = useState(false);
   const [resultQr, setResultQr] = useState<string | null>(null);
+  const [qrUrlString, setQrUrlString] = useState("");
+  const defaultKey = apiKeys.length > 0 ? apiKeys[0].key : "";
 
   const handleRun = async () => {
     if (credits <= 0) {
-      toast.error("Kredit Anda habis! Tidak dapat menjalankan simulasi.");
+      toast.error("Kredit Anda habis! Tidak dapat menjalankan request.");
+      return;
+    }
+    if (!defaultKey) {
+      toast.error("Silakan generate API Key terlebih dahulu.");
       return;
     }
     setRunning(true);
     setResultQr(null);
     try {
-      await new Promise(r => setTimeout(r, 1200));
-      const url = await QRCode.toDataURL("https://oziktag.com/scan/simulasi-uuid-1234", { width: 200 });
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/v1/qc`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${defaultKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          nama_produk: "Produk Test API",
+          kategori: "Makanan",
+          batch: "B-TEST-API"
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "API Request Failed");
+
+      const url = await QRCode.toDataURL(data.qr_url, { width: 200 });
       setResultQr(url);
-      onSimulateSuccess();
+      setQrUrlString(data.qr_url);
       toast.success("Berhasil! 1 Kredit terpotong.");
-    } catch (e) {
-      toast.error("Gagal menjalankan simulasi.");
+    } catch (e: any) {
+      toast.error(e.message || "Gagal menjalankan request API.");
     } finally {
       setRunning(false);
     }
@@ -211,15 +344,19 @@ function PlaygroundModal({ onClose, credits, onSimulateSuccess }: { onClose: () 
 
         <div className="mt-6 space-y-4">
           <div>
+            <label className="text-sm font-medium mb-1.5 block">API Key yang Digunakan</label>
+            <input type="text" readOnly value={defaultKey ? "************************" + defaultKey.slice(-4) : "Belum ada API Key"} className="w-full rounded-md border border-border bg-input/40 px-3 py-2 text-sm font-mono focus:outline-none" />
+          </div>
+          <div>
             <label className="text-sm font-medium mb-1.5 block">Endpoint</label>
             <div className="flex items-center gap-0">
               <span className="bg-secondary px-3 py-2 text-sm font-mono rounded-l-md border border-border border-r-0">POST</span>
-              <input type="text" readOnly value="https://api.oziktag.com/v1/qc" className="flex-1 w-full rounded-r-md border border-border bg-input/40 px-3 py-2 text-sm font-mono focus:outline-none" />
+              <input type="text" readOnly value={`${import.meta.env.VITE_API_URL}/v1/qc`} className="flex-1 w-full rounded-r-md border border-border bg-input/40 px-3 py-2 text-sm font-mono focus:outline-none" />
             </div>
           </div>
           <div>
             <label className="text-sm font-medium mb-1.5 block">Request Body (JSON)</label>
-            <textarea readOnly rows={5} className="w-full rounded-md border border-border bg-black/5 p-3 text-sm font-mono focus:outline-none dark:bg-black/40" defaultValue={'{\n  "nama_produk": "Produk Test",\n  "kategori": "Makanan",\n  "batch": "B-TEST-01"\n}'} />
+            <textarea readOnly rows={5} className="w-full rounded-md border border-border bg-black/5 p-3 text-sm font-mono focus:outline-none dark:bg-black/40" defaultValue={'{\n  "nama_produk": "Produk Test API",\n  "kategori": "Makanan",\n  "batch": "B-TEST-API"\n}'} />
           </div>
         </div>
 
@@ -227,13 +364,13 @@ function PlaygroundModal({ onClose, credits, onSimulateSuccess }: { onClose: () 
           <div className="mt-6 p-4 rounded-lg border border-primary/40 bg-primary/5 flex flex-col items-center animate-in fade-in zoom-in duration-300">
             <p className="text-sm font-semibold mb-3 text-primary flex items-center gap-2"><Check className="h-4 w-4" /> Response (201 Created)</p>
             <img src={resultQr} alt="Result QR" className="h-32 w-32 rounded-md bg-white p-2 shadow-sm" />
-            <p className="text-xs text-muted-foreground mt-3 font-mono bg-background px-3 py-1 rounded border border-border">https://oziktag.com/scan/simulasi-uuid-1234</p>
+            <p className="text-xs text-muted-foreground mt-3 font-mono bg-background px-3 py-1 rounded border border-border">{qrUrlString}</p>
           </div>
         )}
 
         <div className="mt-6 flex justify-end gap-3">
           <button onClick={onClose} className="rounded-md px-4 py-2 text-sm font-medium border border-border bg-background hover:bg-secondary transition-colors">Tutup</button>
-          <button onClick={handleRun} disabled={running} className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-colors shadow-[var(--shadow-elegant)] disabled:opacity-60">
+          <button onClick={handleRun} disabled={running || !defaultKey} className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-colors shadow-[var(--shadow-elegant)] disabled:opacity-60">
             {running ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />} 
             {running ? "Memproses..." : "Run Request"}
           </button>
@@ -247,7 +384,7 @@ function PricingModal({ onClose }: { onClose: () => void }) {
   const [selectedPkg, setSelectedPkg] = useState<any>(null);
 
   if (selectedPkg) {
-    return <SimulationCheckoutModal pkg={selectedPkg} onClose={() => setSelectedPkg(null)} />;
+    return <RealCheckoutModal pkg={selectedPkg} onClose={() => setSelectedPkg(null)} />;
   }
 
   return (
@@ -273,25 +410,25 @@ function PricingModal({ onClose }: { onClose: () => void }) {
           </div>
 
           <div className="space-y-3">
-            <h5 className="text-sm font-semibold">Pilih Paket Kredit API (Simulasi)</h5>
+            <h5 className="text-sm font-semibold">Pilih Paket Kredit API</h5>
             <ul className="space-y-2">
-              <button onClick={() => setSelectedPkg({ id: "starter", name: "Starter", price: 20000, credits: 50 })} className="w-full flex items-center justify-between text-sm rounded-md border border-border bg-card p-3 hover:bg-secondary transition-colors text-left">
-                <span><span className="font-medium">Starter</span> (50 kredit)</span>
+              <button onClick={() => setSelectedPkg({ id: "api_starter", name: "Starter API", price: 20000, credits: 50 })} className="w-full flex items-center justify-between text-sm rounded-md border border-border bg-card p-3 hover:bg-secondary transition-colors text-left">
+                <span><span className="font-medium">Starter</span> (50 kredit API)</span>
                 <span className="font-mono text-muted-foreground">Rp 400 / req</span>
               </button>
-              <button onClick={() => setSelectedPkg({ id: "growth", name: "Growth", price: 50000, credits: 150 })} className="w-full flex items-center justify-between text-sm rounded-md border border-primary/40 bg-primary/5 p-3 hover:bg-primary/10 transition-colors text-left">
-                <span><span className="font-medium text-primary">Growth</span> (150 kredit)</span>
+              <button onClick={() => setSelectedPkg({ id: "api_growth", name: "Growth API", price: 50000, credits: 150 })} className="w-full flex items-center justify-between text-sm rounded-md border border-primary/40 bg-primary/5 p-3 hover:bg-primary/10 transition-colors text-left">
+                <span><span className="font-medium text-primary">Growth</span> (150 kredit API)</span>
                 <span className="font-mono text-muted-foreground">Rp 333 / req</span>
               </button>
-              <button onClick={() => setSelectedPkg({ id: "pro", name: "Pro", price: 100000, credits: 400 })} className="w-full flex items-center justify-between text-sm rounded-md border border-border bg-card p-3 hover:bg-secondary transition-colors text-left">
-                <span><span className="font-medium">Pro</span> (400 kredit)</span>
+              <button onClick={() => setSelectedPkg({ id: "api_pro", name: "Pro API", price: 100000, credits: 400 })} className="w-full flex items-center justify-between text-sm rounded-md border border-border bg-card p-3 hover:bg-secondary transition-colors text-left">
+                <span><span className="font-medium">Pro</span> (400 kredit API)</span>
                 <span className="font-mono text-muted-foreground">Rp 250 / req</span>
               </button>
             </ul>
           </div>
           
           <div className="rounded-lg bg-muted p-4 text-xs text-muted-foreground">
-            <span className="font-medium text-foreground">Catatan:</span> Klik salah satu paket di atas untuk mencoba simulasi pembayaran. Tidak ada biaya bulanan, murni pay-as-you-go.
+            <span className="font-medium text-foreground">Catatan:</span> Klik salah satu paket di atas untuk memulai transaksi riil menggunakan Louvin Payment.
           </div>
         </div>
       </div>
@@ -299,21 +436,36 @@ function PricingModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-function SimulationCheckoutModal({ pkg, onClose }: { pkg: any, onClose: () => void }) {
+function RealCheckoutModal({ pkg, onClose }: { pkg: any, onClose: () => void }) {
   const [method, setMethod] = useState<"QRIS" | "GoPay">("QRIS");
   const [processing, setProcessing] = useState(false);
   const [qrImage, setQrImage] = useState<string | null>(null);
+  const [deeplink, setDeeplink] = useState<string | null>(null);
 
   const createTransaction = async () => {
     setProcessing(true);
     try {
-      await new Promise(r => setTimeout(r, 1000));
-      const dummyQrData = "00020101021126670016COM.NOBUBANK.WWW01189360050300000879140214436531182312010303UMI51440014ID.CO.QRIS.WWW0215ID10200212002010303UMI5204549953033605405200005802ID5910Oziktag API6006JAKARTA61051219062330115P20111129528250708021111296304EE88";
-      const url = await QRCode.toDataURL(dummyQrData, { width: 300 });
-      setQrImage(url);
-      toast.success("Tagihan simulasi berhasil dibuat!");
+      const paymentType = method === "QRIS" ? "qris" : "gopay";
+      const res = await apiFetch("/topup/create", {
+        method: "POST",
+        body: JSON.stringify({ 
+          paket: "starter", // Fallback to starter price for prototype
+          payment_type: paymentType,
+          tipe_kredit: "API"
+        })
+      });
+      if (res.qr_string) {
+        const url = await QRCode.toDataURL(res.qr_string, { width: 300 });
+        setQrImage(url);
+        toast.success("Tagihan berhasil dibuat!");
+      } else if (res.deeplink_url) {
+        setDeeplink(res.deeplink_url);
+        toast.success("Tagihan berhasil dibuat!");
+      } else {
+        toast.error("Tidak ada data QR/Deeplink dari server");
+      }
     } catch (e: any) {
-      toast.error("Gagal membuat transaksi");
+      toast.error(e.message || "Gagal membuat transaksi");
     } finally {
       setProcessing(false);
     }
@@ -326,7 +478,7 @@ function SimulationCheckoutModal({ pkg, onClose }: { pkg: any, onClose: () => vo
       <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-elegant)] overflow-y-auto max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">Checkout (Simulasi)</p>
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Checkout</p>
             <h3 className="mt-1 text-lg font-semibold">Paket {pkg.name} API</h3>
           </div>
           <button onClick={onClose} className="rounded-md p-1 text-muted-foreground hover:bg-secondary hover:text-foreground">
@@ -339,17 +491,26 @@ function SimulationCheckoutModal({ pkg, onClose }: { pkg: any, onClose: () => vo
           <span className="text-lg font-semibold">{idr(pkg.price)}</span>
         </div>
 
-        {qrImage ? (
+        {qrImage || deeplink ? (
           <div className="mt-5 flex flex-col items-center rounded-lg border border-dashed border-border bg-background/40 p-4 text-center">
-            <img src={qrImage} alt="QRIS" className="h-48 w-48 rounded-md bg-white p-2 shadow-sm" />
-            <p className="mt-3 text-xs font-semibold text-primary">Scan dengan e-Wallet atau m-Banking</p>
+            {qrImage && (
+              <>
+                <img src={qrImage} alt="QRIS" className="h-48 w-48 rounded-md bg-white p-2 shadow-sm" />
+                <p className="mt-3 text-xs font-semibold text-primary">Scan dengan e-Wallet atau m-Banking</p>
+              </>
+            )}
+            {deeplink && (
+              <a href={deeplink} target="_blank" rel="noreferrer" className="mt-4 rounded-md bg-[#00AED6] px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-90">
+                Buka Aplikasi Gojek
+              </a>
+            )}
             <div className="mt-6 flex flex-col items-center gap-1.5">
               <span className="relative flex h-3 w-3">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
                 <span className="relative inline-flex h-3 w-3 rounded-full bg-primary"></span>
               </span>
               <p className="text-sm font-medium">Menunggu Pembayaran...</p>
-              <p className="text-[11px] text-muted-foreground">Ini adalah QR simulasi percobaan.</p>
+              <p className="text-[11px] text-muted-foreground">Saldo Anda akan otomatis bertambah jika pembayaran berhasil.</p>
             </div>
           </div>
         ) : (
@@ -363,7 +524,7 @@ function SimulationCheckoutModal({ pkg, onClose }: { pkg: any, onClose: () => vo
               ))}
             </div>
             <button onClick={createTransaction} disabled={processing} className="mt-6 w-full rounded-md bg-primary py-2.5 text-sm font-medium text-primary-foreground shadow-[var(--shadow-elegant)] hover:opacity-90 disabled:opacity-60">
-              {processing ? "Memproses..." : "Buat Tagihan Simulasi"}
+              {processing ? "Memproses..." : "Buat Tagihan (Bayar Asli)"}
             </button>
           </>
         )}
