@@ -98,6 +98,34 @@ graph TD
 
 ---
 
+## 💳 Pricing Model (Pay-As-You-Go)
+
+Oziktag uses a **Credit-Based System (Pay-As-You-Go)** instead of a rigid monthly subscription. This ensures UMKMs only pay for what they use. 
+**1 Credit = 1x AI QC Generation (QR Code + AI Analysis).**
+
+| Package | Price | Credits | Cost per QR | Target User |
+|---------|-------|---------|-------------|-------------|
+| **Starter** | Rp 20,000 | 50 | Rp 400 | Early-stage UMKM |
+| **Growth** | Rp 50,000 | 150 | Rp 333 | Growing business *(Most Popular)* |
+| **Pro** | Rp 100,000 | 400 | Rp 250 | High-volume production |
+
+All packages include full enterprise features: AI insights, lifetime active QR codes, and an ad-free public scan page. 
+
+---
+
+## 💎 Unfair Advantage (Why it's hard to copy)
+
+While the fundamental concept of generating a QR code is easily replicable, Oziktag's true moat lies in its **Data Backbone and Ecosystem Lock-in**:
+
+1. **Vendor Lock-in via Physical Packaging:**
+   Once a UMKM prints hundreds or thousands of packaging boxes/stickers containing Oziktag's QR codes, they cannot simply switch to a competitor. If they stop using Oziktag or move to another platform, their existing printed QR codes will lead to dead links. This creates a highly sticky user base with long-term retention.
+2. **Proprietary Supply Chain & KYC Data:**
+   Oziktag collects massive amounts of real-world, localized data regarding UMKM production frequency, product quality (via AI analysis of raw photos), and validated KYC identities. This aggregated data holds immense value for B2B monetization (e.g., FMCG market research) or government analytics.
+3. **Alternative Credit Scoring (Fintech Integration):**
+   Traditional banks struggle to provide loans to UMKMs due to a lack of production data. Oziktag's platform acts as an alternative ledger: the frequency of QC generation correlates directly with product sales and inventory turnover. This data can be partnered with P2P Lending platforms to offer low-risk micro-loans to UMKMs.
+
+---
+
 ## 📂 Project Structure
 
 The repository is organized into strict boundary domains:
