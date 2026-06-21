@@ -55,23 +55,29 @@ function Profile() {
 
           {/* Oziktag Trust Score (Credit Score) */}
           {profile && (
-            <div className="mt-8 rounded-xl border border-primary/20 bg-primary/5 p-5">
+            <div className="mt-8 rounded-xl border border-border bg-card p-5 relative overflow-hidden">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-semibold text-primary">Oziktag Trust Score</h3>
-                <span className="text-2xl font-bold text-primary">{profile.credit_score || 300}</span>
+                <span className="text-2xl font-bold text-muted-foreground blur-[6px] select-none">{profile.credit_score || 850}</span>
               </div>
               <p className="text-xs text-muted-foreground mb-4">
-                Skor kelayakan kredit ini dihitung berdasarkan intensitas produksi QC, validasi KYC, dan loyalitas top-up. Skor yang tinggi dapat digunakan untuk pengajuan modal (Fintech B2B) dengan bunga rendah.
+                Skor kelayakan kredit ini dihitung berdasarkan intensitas produksi QC, validasi KYC, dan loyalitas top-up.
               </p>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
-                <div 
-                  className="h-full bg-primary transition-all duration-1000" 
-                  style={{ width: `${Math.min(((profile.credit_score || 300) / 850) * 100, 100)}%` }}
-                />
-              </div>
-              <div className="flex justify-between mt-1 text-[10px] text-muted-foreground">
-                <span>300 (Low)</span>
-                <span>850 (Excellent)</span>
+              
+              {/* Overlay Kunci */}
+              <div className="absolute inset-0 z-10 bg-background/60 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center">
+                <div className="bg-card border border-border rounded-lg p-4 shadow-sm max-w-sm">
+                  <p className="text-sm font-semibold mb-1 flex items-center justify-center gap-1">🔒 Skor Terkunci</p>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Data Credit Score bersifat rahasia dan hanya dapat diakses oleh sistem Admin untuk keperluan verifikasi Fintech.
+                  </p>
+                  <button 
+                    onClick={() => toast.success("Permintaan akses ke Admin berhasil dikirim. Menunggu persetujuan.")} 
+                    className="w-full bg-primary text-primary-foreground text-xs font-medium px-3 py-2 rounded-md hover:opacity-90 transition-opacity"
+                  >
+                    Minta Akses Lihat Skor
+                  </button>
+                </div>
               </div>
             </div>
           )}
