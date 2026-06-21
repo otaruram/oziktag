@@ -77,11 +77,11 @@ function Profile() {
           )}
 
           <div className="mt-6 space-y-4">
-            <Field label="Nama Brand / Toko">
+            <Field label="Nama Brand / Toko (Terkunci dari KYC)">
               <input
                 value={brand}
-                onChange={(e) => setBrandLocal(e.target.value)}
-                className={inputCls}
+                readOnly
+                className={inputCls + " cursor-not-allowed bg-muted opacity-80"}
               />
             </Field>
             <Field label="Email">

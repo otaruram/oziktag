@@ -18,6 +18,7 @@ export const Route = createFileRoute("/register")({
 
 function Register() {
   const nav = useNavigate();
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const [form, setForm] = useState({
     brand: "",
     email: "",
@@ -43,11 +44,15 @@ function Register() {
           nav({ to: "/dashboard" });
         }
       } catch (err) {
-        // If error or no KYC, stay on register page
+        setCheckingAuth(false);
       }
     };
     checkAuth();
   }, [nav]);
+
+  if (checkingAuth) {
+    return <div className="min-h-screen flex items-center justify-center bg-background"><div className="animate-pulse flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-primary" /> Loading...</div></div>;
+  }
 
   const DUMMIES = [
     { brand: "Kopi Senja Nusantara", email: "owner@kopisenja.id", ktp: "3174051203900001", npwp: "09.876.543.2-901.000" },
@@ -77,14 +82,39 @@ function Register() {
 
     try {
       toast.loading("Memproses KYC...", { id: "kyc" });
+
+      let ktpUrl = undefined;
+      let npwpUrl = undefined;
+
+      if (form.foto_ktp || form.foto_npwp) {
+        toast.loading("Mengunggah foto dokumen...", { id: "kyc" });
+        const formData = new FormData();
+        if (form.foto_ktp) formData.append("images", form.foto_ktp);
+        if (form.foto_npwp) formData.append("images", form.foto_npwp);
+
+        const uploadData = await apiFetch("/qc/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (form.foto_ktp && form.foto_npwp) {
+          ktpUrl = uploadData.urls[0];
+          npwpUrl = uploadData.urls[1];
+        } else if (form.foto_ktp) {
+          ktpUrl = uploadData.urls[0];
+        } else if (form.foto_npwp) {
+          npwpUrl = uploadData.urls[0];
+        }
+      }
+
       const res = await apiFetch("/auth/kyc", {
         method: "POST",
         body: JSON.stringify({
           nama_toko: form.brand,
           nik: form.ktp,
           npwp: form.npwp || "",
-          foto_ktp: form.foto_ktp ? "https://ik.imagekit.io/nc7w3hotd/oziktag/kyc/dummy_ktp.jpg" : undefined,
-          foto_npwp: form.foto_npwp ? "https://ik.imagekit.io/nc7w3hotd/oziktag/kyc/dummy_npwp.jpg" : undefined,
+          foto_ktp: ktpUrl,
+          foto_npwp: npwpUrl,
         }),
       });
       setBrand(form.brand || "Brand UMKM");
