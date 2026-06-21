@@ -123,6 +123,9 @@ function DocsPage() {
                 <li>
                   <a onClick={() => setMobileMenuOpen(false)} href="#teknologi" className="block px-2 py-1.5 text-sm rounded-md text-muted-foreground hover:bg-muted hover:text-foreground">Teknologi</a>
                 </li>
+                <li>
+                  <a onClick={() => setMobileMenuOpen(false)} href="#pricing" className="block px-2 py-1.5 text-sm rounded-md text-muted-foreground hover:bg-muted hover:text-foreground">Pricing & Skala</a>
+                </li>
               </ul>
             </div>
             <div>
@@ -260,6 +263,23 @@ function DocsPage() {
                     </tr>
                   </tbody>
                 </table>
+              </div>
+            </div>
+
+            <div className="border-t border-border pt-8 mt-12">
+              <h2 id="pricing" className="text-2xl font-bold tracking-tight mb-4 flex items-center gap-2 scroll-mt-20">
+                <Coins className="h-6 w-6 text-primary" /> Model Pricing & Skala Bisnis
+              </h2>
+              <p className="text-muted-foreground text-sm leading-relaxed mb-4">
+                Oziktag menggunakan sistem <strong>Pay-As-You-Go (Kredit)</strong>. Kami menolak model langganan bulanan agar lebih ramah bagi UMKM (tidak ada biaya yang "hangus" jika sedang sepi order). 1 Kredit = 1x Generate QR Code lengkap dengan analitik AI.
+              </p>
+              <div className="rounded-xl border border-primary/20 bg-primary/5 p-6 mb-4">
+                <h3 className="font-semibold text-primary mb-2">Mengapa Sistem Ini Kebal Fluktuasi Dollar?</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Kami mematok harga jual ke UMKM dalam Rupiah (mulai dari Rp 250 - Rp 400 per QR). Di sisi lain, biaya variabel <em>engine</em> AI kami (Gemini 2.5 Flash) dibayar dalam Dollar, dengan harga dasar yang sangat rendah ($0.30 per 1 Juta Token). 
+                  <br/><br/>
+                  Dalam setiap generasi QR, biaya AI yang dikeluarkan sistem kurang dari <strong>Rp 15</strong>. Ini menghasilkan <strong>Gross Margin di atas 90%</strong>. Bahkan jika terjadi krisis ekonomi dan nilai tukar Dollar meroket tajam, Oziktag tetap berdiri kokoh tanpa perlu menaikkan harga ke UMKM secara sepihak. Skalabilitas ini memastikan infrastruktur jutaan QR Code tetap ringan dan <em>profitable</em>.
+                </p>
               </div>
             </div>
 
