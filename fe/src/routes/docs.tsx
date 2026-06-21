@@ -1,16 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ShieldCheck, Menu, Search, BookOpen, Settings, Zap, ArrowRight, Home } from "lucide-react";
+import { ShieldCheck, Menu, Search, BookOpen, Settings, Zap, ArrowRight, Home, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/docs")({
-  head: () => ({ meta: [{ title: "Dokumentasi — Oziktag" }] }),
+  head: () => ({ meta: [{ title: "Dokumentasi (Khusus Developer) — Oziktag" }] }),
   component: DocsPage,
 });
 
 function DocsPage() {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleSearch = (e: React.FormEvent) => {
@@ -22,6 +23,37 @@ function DocsPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
+      {/* Mobile Search Overlay */}
+      {mobileSearchOpen && (
+        <div className="fixed inset-0 z-[60] bg-background sm:hidden flex flex-col p-4 animate-in fade-in slide-in-from-top-4 duration-200">
+          <div className="flex items-center gap-3">
+            <form onSubmit={(e) => {
+              handleSearch(e);
+              setMobileSearchOpen(false);
+            }} className="flex-1 relative">
+              <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
+              <input
+                type="text"
+                autoFocus
+                placeholder="Cari dokumentasi..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full h-11 rounded-lg border border-border bg-muted/30 pl-10 pr-4 text-base focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary shadow-sm"
+              />
+            </form>
+            <button 
+              onClick={() => setMobileSearchOpen(false)}
+              className="p-2 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+          <div className="mt-8 text-center text-sm text-muted-foreground">
+            Ketik kata kunci lalu tekan enter/go pada keyboard
+          </div>
+        </div>
+      )}
+
       {/* Top Navbar */}
       <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex h-14 items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -34,7 +66,7 @@ function DocsPage() {
             </button>
             <Link to="/" className="flex items-center gap-2 font-bold tracking-tight">
               <ShieldCheck className="h-5 w-5 text-primary" />
-              <span>Oziktag Docs</span>
+              <span>Oziktag Docs (Khusus Developer)</span>
             </Link>
           </div>
           <div className="flex items-center gap-4">
@@ -49,10 +81,7 @@ function DocsPage() {
               />
             </form>
             <button 
-              onClick={() => {
-                const query = prompt("Masukkan kata kunci pencarian:");
-                if (query) (window as any).find(query);
-              }} 
+              onClick={() => setMobileSearchOpen(true)} 
               className="sm:hidden flex items-center justify-center p-2 rounded-md border border-border bg-muted/50 text-muted-foreground hover:text-foreground transition-colors hover:bg-secondary active:scale-95"
               title="Cari dokumen..."
             >
@@ -137,7 +166,7 @@ function DocsPage() {
                     Registrasi & Verifikasi KYC
                   </h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    Pengguna melakukan login menggunakan **Google OAuth (Supabase)**. Setelah itu, mereka diwajibkan 
+                    Pengguna melakukan login menggunakan Google OAuth (Supabase). Setelah itu, mereka diwajibkan 
                     mengisi form KYC (Know Your Customer) berupa Nama Brand, NIK, dan NPWP. Data ini disimpan dengan 
                     aman di database dan digunakan untuk menjamin identitas valid toko.
                   </p>
@@ -150,7 +179,7 @@ function DocsPage() {
                   </h3>
                   <p className="text-sm text-muted-foreground leading-relaxed mb-4">
                     Pemilik toko memasukkan detail produk (Nama, Kategori, Batch), mengisi checklist QC, 
-                    dan **mengunggah foto produk riil**. Foto tersebut dikirim ke layanan cloud (ImageKit) 
+                    dan mengunggah foto produk riil. Foto tersebut dikirim ke layanan cloud (ImageKit) 
                     dan URL-nya diteruskan ke sistem AI.
                   </p>
                   <div className="bg-muted p-4 rounded-md overflow-x-auto text-sm border border-border/50">
@@ -172,8 +201,8 @@ function DocsPage() {
                     Analisis AI (Gemini 2.5 Flash)
                   </h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    Data yang dikirim akan dianalisis secara real-time oleh **Google Gemini AI**. AI akan memberikan 
-                    *Insight* (sudut pandang kualitas) dan *Solution* (cara menyimpan atau mengkonsumsi) 
+                    Data yang dikirim akan dianalisis secara real-time oleh Google Gemini AI. AI akan memberikan 
+                    Insight (sudut pandang kualitas) dan Solution (cara menyimpan atau mengkonsumsi) 
                     yang nantinya ditampilkan kepada pembeli.
                   </p>
                 </div>

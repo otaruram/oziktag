@@ -60,7 +60,7 @@ function Landing() {
               to="/docs"
               className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-border bg-background px-8 py-3.5 text-sm font-bold transition-colors hover:bg-muted"
             >
-              Lihat dokumentasi API
+              Lihat dokumentasi API (Khusus Developer)
             </Link>
           </div>
           
