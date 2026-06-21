@@ -13,11 +13,22 @@ router = APIRouter(prefix="/api/admin", tags=["Admin Panel"])
 async def list_all_users(admin: dict = Depends(get_admin_user)):
     """List all registered users with their details."""
     users = await db.user.find_many(
+        include={"kyc": True},
         order={"createdAt": "desc"}
     )
 
-    return [
-        AdminUserItem(
+    result = []
+    for u in users:
+        total_qr = await db.qcproduct.count(where={"userId": u.id})
+        
+        score = 300
+        if u.kyc and u.kyc.status in ["verified", "approved"]:
+            score += 150
+        score += (total_qr * 5)
+        score += min(u.sisaKredit * 2, 100)
+        score = min(score, 850)
+        
+        result.append(AdminUserItem(
             id=u.id,
             nama=u.nama,
             email=u.email,
@@ -28,9 +39,10 @@ async def list_all_users(admin: dict = Depends(get_admin_user)):
             has_api_access=u.hasApiAccess,
             last_seen_at=u.lastSeenAt.isoformat() if u.lastSeenAt else None,
             created_at=u.createdAt.isoformat(),
-        )
-        for u in users
-    ]
+            credit_score=score,
+        ))
+
+    return result
 
 
 @router.get("/users/online")

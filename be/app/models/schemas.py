@@ -35,6 +35,7 @@ class UserProfile(BaseModel):
     is_banned: bool = False
     kyc_status: Optional[str] = None
     nama_toko: Optional[str] = None
+    credit_score: int = 300
 
 
 # ──────────────────────── QC Products ────────────────────────
@@ -134,6 +135,7 @@ class AdminUserItem(BaseModel):
     has_api_access: bool
     last_seen_at: Optional[str] = None
     created_at: str
+    credit_score: int = 300
 
 
 class AdminAddCreditsRequest(BaseModel):

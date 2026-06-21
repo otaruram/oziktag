@@ -85,9 +85,9 @@ function Pricing() {
     <AppShell>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Top-Up Kredit</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">Top-Up Kredit QR</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            1 Kredit = 1× Generate QR Code QC. Bayar sekali, pakai tanpa langganan.
+            1 Kredit = 1× Generate QR Code QC & Analisis AI. Bayar sesuai pemakaian (Pay-As-You-Go).
           </p>
         </div>
         <button
@@ -100,13 +100,13 @@ function Pricing() {
 
       <div className="mt-6 flex items-center justify-between rounded-xl border border-border bg-gradient-to-br from-card to-secondary/40 p-6">
         <div>
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">Sisa kredit Anda</p>
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">Sisa Kredit QR Anda</p>
           <p className="mt-1 text-5xl font-semibold tracking-tight">
             {credits}
-            <span className="ml-2 text-base font-normal text-muted-foreground">kredit</span>
+            <span className="ml-2 text-base font-normal text-muted-foreground">kredit QR</span>
           </p>
         </div>
-        <Coins className="h-12 w-12 text-primary/70" />
+        <QrIcon className="h-12 w-12 text-primary/70" />
       </div>
 
       <div className="mt-8 grid gap-4 md:grid-cols-3">
@@ -158,7 +158,7 @@ function PackageCard({ pkg, onPick }: { pkg: Pkg; onPick: () => void }) {
       <p className="mt-1 text-xs text-muted-foreground">{pkg.tagline}</p>
 
       <div className="mt-5 rounded-lg border border-border bg-background/40 p-4">
-        <p className="text-2xl font-semibold text-primary">{pkg.credits} Kredit</p>
+        <p className="text-2xl font-semibold text-primary">{pkg.credits} Kredit QR</p>
         <p className="mt-1 text-xs text-muted-foreground">
           Setara {idr(perQr)} / QR Code
         </p>

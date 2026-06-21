@@ -478,6 +478,7 @@ function AdminDashboard() {
                   <TableHead className="min-w-[150px]">Nama</TableHead>
                   <TableHead className="min-w-[200px]">Email</TableHead>
                   <TableHead className="min-w-[150px]">Kredit (QR/API)</TableHead>
+                  <TableHead>Credit Score</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="min-w-[150px]">Terakhir Aktif</TableHead>
                   <TableHead className="text-right min-w-[200px]">Aksi</TableHead>
@@ -505,6 +506,12 @@ function AdminDashboard() {
                         <div className="flex flex-col gap-1 text-xs">
                           <span><Badge variant="outline" className="mr-1">QR</Badge> {usr.sisa_kredit}</span>
                           <span><Badge variant="outline" className="mr-1 border-primary text-primary">API</Badge> {usr.is_admin ? "∞" : usr.api_kredit}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-bold text-primary">{usr.credit_score || 300}</span>
+                          <span className="text-[10px] text-muted-foreground">/ 850</span>
                         </div>
                       </TableCell>
                       <TableCell>

@@ -129,6 +129,15 @@ async def get_me(current_user: dict = Depends(get_current_user)):
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
 
+    total_qr = await db.qcproduct.count(where={"userId": user_id})
+    
+    score = 300
+    if db_user.kyc and db_user.kyc.status in ["verified", "approved"]:
+        score += 150
+    score += (total_qr * 5)
+    score += min(db_user.sisaKredit * 2, 100)
+    score = min(score, 850)
+
     return UserProfile(
         id=db_user.id,
         nama=db_user.nama,
@@ -140,6 +149,7 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         is_banned=db_user.isBanned,
         kyc_status=db_user.kyc.status if db_user.kyc else None,
         nama_toko=db_user.kyc.namaToko if db_user.kyc else None,
+        credit_score=score,
     )
 
 
