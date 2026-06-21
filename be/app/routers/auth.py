@@ -150,7 +150,20 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         kyc_status=db_user.kyc.status if db_user.kyc else None,
         nama_toko=db_user.kyc.namaToko if db_user.kyc else None,
         credit_score=score,
+        credit_score_requested=db_user.creditScoreRequested,
+        can_view_credit_score=db_user.canViewCreditScore,
     )
+
+
+@router.post("/request-credit-score-access")
+async def request_credit_score_access(current_user: dict = Depends(get_current_user)):
+    """Request admin access to view credit score."""
+    user_id = current_user["id"]
+    await db.user.update(
+        where={"id": user_id},
+        data={"creditScoreRequested": True}
+    )
+    return {"message": "Permintaan akses terkirim"}
 
 
 @router.post("/kyc", response_model=KYCResponse)

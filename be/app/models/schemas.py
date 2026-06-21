@@ -36,7 +36,8 @@ class UserProfile(BaseModel):
     kyc_status: Optional[str] = None
     nama_toko: Optional[str] = None
     credit_score: int = 300
-
+    credit_score_requested: bool = False
+    can_view_credit_score: bool = False
 
 # ──────────────────────── QC Products ────────────────────────
 
@@ -136,6 +137,8 @@ class AdminUserItem(BaseModel):
     last_seen_at: Optional[str] = None
     created_at: str
     credit_score: int = 300
+    credit_score_requested: bool = False
+    can_view_credit_score: bool = False
 
 
 class AdminAddCreditsRequest(BaseModel):

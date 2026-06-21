@@ -40,9 +40,27 @@ async def list_all_users(admin: dict = Depends(get_admin_user)):
             last_seen_at=u.lastSeenAt.isoformat() if u.lastSeenAt else None,
             created_at=u.createdAt.isoformat(),
             credit_score=score,
+            credit_score_requested=u.creditScoreRequested,
+            can_view_credit_score=u.canViewCreditScore,
         ))
 
     return result
+
+@router.post("/approve-credit-score/{user_id}")
+async def approve_credit_score(user_id: str, admin: dict = Depends(get_admin_user)):
+    """Approve credit score view access for a user."""
+    target_user = await db.user.find_unique(where={"id": user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    await db.user.update(
+        where={"id": user_id},
+        data={
+            "canViewCreditScore": True,
+            "creditScoreRequested": False
+        }
+    )
+    return {"message": "Akses fitur Credit Score telah diberikan"}
 
 
 @router.get("/users/online")

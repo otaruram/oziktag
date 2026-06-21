@@ -26,6 +26,8 @@ model User {
   isAdmin    Boolean   @default(false) @map("is_admin")
   hasApiAccess Boolean @default(false) @map("has_api_access")
   isBanned   Boolean   @default(false) @map("is_banned")
+  creditScoreRequested Boolean @default(false) @map("credit_score_requested")
+  canViewCreditScore   Boolean @default(false) @map("can_view_credit_score")
   lastSeenAt DateTime? @default(now()) @map("last_seen_at")
   createdAt  DateTime  @default(now()) @map("created_at")
   updatedAt  DateTime  @updatedAt @map("updated_at")

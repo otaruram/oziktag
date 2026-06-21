@@ -185,6 +185,20 @@ function AdminDashboard() {
     },
   });
 
+  const approveScoreAccessMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const data = await apiFetch(`/admin/approve-credit-score/${userId}`, { method: 'POST' });
+      return data;
+    },
+    onSuccess: (data) => {
+      toast.success(data.message);
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Gagal menyetujui akses');
+    },
+  });
+
   if (!user?.is_admin) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
@@ -511,7 +525,21 @@ function AdminDashboard() {
                       <TableCell>
                         <div className="flex flex-col">
                           <span className="font-bold text-primary">{usr.credit_score || 300}</span>
-                          <span className="text-[10px] text-muted-foreground">/ 850</span>
+                          <span className="text-[10px] text-muted-foreground mb-1">/ 850</span>
+                          {usr.credit_score_requested && (
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="mt-1 text-[10px] h-6 px-2 border-primary text-primary"
+                              onClick={() => approveScoreAccessMutation.mutate(usr.id)}
+                              disabled={approveScoreAccessMutation.isPending}
+                            >
+                              Berikan Akses
+                            </Button>
+                          )}
+                          {usr.can_view_credit_score && !usr.credit_score_requested && (
+                            <Badge variant="secondary" className="mt-1 text-[9px] px-1.5 py-0 w-fit">Bisa Lihat</Badge>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>
