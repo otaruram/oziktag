@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ShieldCheck, Menu, Search, BookOpen, Settings, Zap, ArrowRight, Home, X } from "lucide-react";
+import { ShieldCheck, Menu, Search, BookOpen, Settings, Zap, ArrowRight, Home, X, Coins } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 

@@ -111,6 +111,9 @@ Oziktag uses a **Credit-Based System (Pay-As-You-Go)** instead of a rigid monthl
 
 All packages include full enterprise features: AI insights, lifetime active QR codes, and an ad-free public scan page. 
 
+**Immune to Dollar Fluctuations (Scale Economics):**
+By selling credits in IDR (Rp 250 - Rp 400 per QR) while our core AI variable cost (Gemini 2.5 Flash) is pegged to USD at $0.30 per 1M tokens, the cost per AI generation is roughly **Rp 15**. This achieves a gross margin of **>90%**. Even in extreme scenarios of currency hyperinflation, the baseline AI cost is so microscopic that the pricing model remains immensely profitable without ever needing to hike prices for UMKMs.
+
 ---
 
 ## 💎 Unfair Advantage (Why it's hard to copy)
