@@ -315,12 +315,78 @@ function QrCodeModal({ id, name, onClose }: { id: string; name: string; onClose:
   const slug = name.replace(/\s+/g, "-").toLowerCase();
 
   useEffect(() => {
+    const SIZE = 400;
+    // 1. Generate raw QR as data URL
     QRCode.toDataURL(scanUrl, {
-      width: 400,
+      width: SIZE,
       margin: 2,
       color: { dark: "#000000", light: "#ffffff" },
       errorCorrectionLevel: "H",
-    }).then((url) => setDataUrl(url));
+    }).then((qrUrl) => {
+      // 2. Draw QR onto canvas, then overlay Oziktag logo in center
+      const canvas = document.createElement("canvas");
+      canvas.width = SIZE;
+      canvas.height = SIZE;
+      const ctx = canvas.getContext("2d")!;
+
+      const qrImg = new Image();
+      qrImg.onload = () => {
+        // Draw the QR code
+        ctx.drawImage(qrImg, 0, 0, SIZE, SIZE);
+
+        const cx = SIZE / 2;
+        const cy = SIZE / 2;
+        const logoR = SIZE * 0.115; // ~46px radius — ~23% of QR width
+
+        // White circle background (border)
+        ctx.beginPath();
+        ctx.arc(cx, cy, logoR + 4, 0, Math.PI * 2);
+        ctx.fillStyle = "#ffffff";
+        ctx.fill();
+
+        // Primary brand circle
+        ctx.beginPath();
+        ctx.arc(cx, cy, logoR, 0, Math.PI * 2);
+        // Use brand green/teal — matches Oziktag primary
+        const grad = ctx.createRadialGradient(cx - logoR * 0.2, cy - logoR * 0.2, 0, cx, cy, logoR);
+        grad.addColorStop(0, "#22c55e");
+        grad.addColorStop(1, "#16a34a");
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        // Shield shape (simplified polygon)
+        ctx.save();
+        ctx.translate(cx, cy - logoR * 0.08);
+        const sw = logoR * 0.72; // shield width
+        const sh = logoR * 0.88; // shield height
+        ctx.beginPath();
+        ctx.moveTo(0, -sh / 2);
+        ctx.bezierCurveTo(sw / 2, -sh / 2, sw / 2, 0, 0, sh / 2);
+        ctx.bezierCurveTo(-sw / 2, 0, -sw / 2, -sh / 2, 0, -sh / 2);
+        ctx.fillStyle = "rgba(255,255,255,0.18)";
+        ctx.fill();
+        ctx.restore();
+
+        // "OZ" text
+        ctx.font = `bold ${Math.round(logoR * 0.78)}px system-ui, sans-serif`;
+        ctx.fillStyle = "#ffffff";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("OZ", cx, cy + 1);
+
+        // Tiny "verified" arc text at bottom of circle
+        ctx.save();
+        ctx.font = `${Math.round(logoR * 0.28)}px system-ui, sans-serif`;
+        ctx.fillStyle = "rgba(255,255,255,0.85)";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("✓ verified", cx, cy + logoR * 0.65);
+        ctx.restore();
+
+        setDataUrl(canvas.toDataURL("image/png"));
+      };
+      qrImg.src = qrUrl;
+    });
   }, [scanUrl]);
 
   const downloadPng = () => {
