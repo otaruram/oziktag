@@ -336,51 +336,50 @@ function QrCodeModal({ id, name, onClose }: { id: string; name: string; onClose:
 
         const cx = SIZE / 2;
         const cy = SIZE / 2;
-        const logoR = SIZE * 0.115; // ~46px radius — ~23% of QR width
+        const logoR = SIZE * 0.11; // ~44px — safely within 30% error correction zone
 
-        // White circle background (border)
+        // ── Outer white ring (clean separation from QR modules) ──
+        ctx.beginPath();
+        ctx.arc(cx, cy, logoR + 6, 0, Math.PI * 2);
+        ctx.fillStyle = "#ffffff";
+        ctx.fill();
+
+        // ── Subtle grey border ──
         ctx.beginPath();
         ctx.arc(cx, cy, logoR + 4, 0, Math.PI * 2);
-        ctx.fillStyle = "#ffffff";
-        ctx.fill();
+        ctx.strokeStyle = "#d1d5db";
+        ctx.lineWidth = 1;
+        ctx.stroke();
 
-        // Primary brand circle
+        // ── Black badge circle ──
         ctx.beginPath();
         ctx.arc(cx, cy, logoR, 0, Math.PI * 2);
-        // Use brand green/teal — matches Oziktag primary
-        const grad = ctx.createRadialGradient(cx - logoR * 0.2, cy - logoR * 0.2, 0, cx, cy, logoR);
-        grad.addColorStop(0, "#22c55e");
-        grad.addColorStop(1, "#16a34a");
-        ctx.fillStyle = grad;
+        ctx.fillStyle = "#0f172a";
         ctx.fill();
 
-        // Shield shape (simplified polygon)
+        // ── ShieldCheck icon (lucide, viewBox 24×24) ──
+        // Shield path from lucide ShieldCheck
+        const iconPx = logoR * 1.28; // rendered pixel size of the 24×24 icon
+        const sc = iconPx / 24;
         ctx.save();
-        ctx.translate(cx, cy - logoR * 0.08);
-        const sw = logoR * 0.72; // shield width
-        const sh = logoR * 0.88; // shield height
-        ctx.beginPath();
-        ctx.moveTo(0, -sh / 2);
-        ctx.bezierCurveTo(sw / 2, -sh / 2, sw / 2, 0, 0, sh / 2);
-        ctx.bezierCurveTo(-sw / 2, 0, -sw / 2, -sh / 2, 0, -sh / 2);
-        ctx.fillStyle = "rgba(255,255,255,0.18)";
-        ctx.fill();
-        ctx.restore();
+        ctx.translate(cx - iconPx / 2, cy - iconPx / 2);
+        ctx.scale(sc, sc);
 
-        // "OZ" text
-        ctx.font = `bold ${Math.round(logoR * 0.78)}px system-ui, sans-serif`;
+        // Shield body — white fill
+        const shieldPath = new Path2D(
+          "M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"
+        );
         ctx.fillStyle = "#ffffff";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText("OZ", cx, cy + 1);
+        ctx.fill(shieldPath);
 
-        // Tiny "verified" arc text at bottom of circle
-        ctx.save();
-        ctx.font = `${Math.round(logoR * 0.28)}px system-ui, sans-serif`;
-        ctx.fillStyle = "rgba(255,255,255,0.85)";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText("✓ verified", cx, cy + logoR * 0.65);
+        // Checkmark — dark stroke
+        const checkPath = new Path2D("M9 12l2 2 4-4");
+        ctx.strokeStyle = "#0f172a";
+        ctx.lineWidth = 2.2 / sc;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.stroke(checkPath);
+
         ctx.restore();
 
         setDataUrl(canvas.toDataURL("image/png"));
