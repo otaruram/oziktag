@@ -309,25 +309,53 @@ function Dashboard() {
 
 /* ─── Modal: Lihat QR Code ──────────────────────────────── */
 function QrCodeModal({ id, name, onClose }: { id: string; name: string; onClose: () => void }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [dataUrl, setDataUrl] = useState<string>("");
+  const [pdfLoading, setPdfLoading] = useState(false);
   const scanUrl = `${window.location.origin}/scan/${id}`;
+  const slug = name.replace(/\s+/g, "-").toLowerCase();
 
   useEffect(() => {
     QRCode.toDataURL(scanUrl, {
-      width: 300,
+      width: 400,
       margin: 2,
       color: { dark: "#000000", light: "#ffffff" },
       errorCorrectionLevel: "H",
     }).then((url) => setDataUrl(url));
   }, [scanUrl]);
 
-  const handleDownload = () => {
+  const downloadPng = () => {
+    if (!dataUrl) return;
     const a = document.createElement("a");
     a.href = dataUrl;
-    a.download = `qr-${name.replace(/\s+/g, "-").toLowerCase()}.png`;
+    a.download = `qr-${slug}.png`;
     a.click();
-    toast.success("QR Code berhasil diunduh");
+    toast.success("QR Code diunduh sebagai PNG");
+  };
+
+  const downloadPdf = async () => {
+    if (!dataUrl) return;
+    setPdfLoading(true);
+    try {
+      const { jsPDF } = await import("jspdf");
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: [80, 100] });
+      pdf.setFillColor(255, 255, 255);
+      pdf.rect(0, 0, 80, 100, "F");
+      pdf.addImage(dataUrl, "PNG", 10, 8, 60, 60);
+      pdf.setFontSize(9);
+      pdf.setTextColor(40, 40, 40);
+      const lines = pdf.splitTextToSize(name, 60) as string[];
+      pdf.text(lines, 40, 74, { align: "center" });
+      pdf.setFontSize(6.5);
+      pdf.setTextColor(120, 120, 120);
+      pdf.text("Verified by Oziktag", 40, 82, { align: "center" });
+      pdf.text(scanUrl, 40, 86, { align: "center" });
+      pdf.save(`qr-${slug}.pdf`);
+      toast.success("QR Code diunduh sebagai PDF");
+    } catch {
+      toast.error("Gagal membuat PDF");
+    } finally {
+      setPdfLoading(false);
+    }
   };
 
   return (
@@ -366,23 +394,36 @@ function QrCodeModal({ id, name, onClose }: { id: string; name: string; onClose:
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           )}
-
-          {/* Scan URL */}
           <p className="mt-3 text-[10px] text-muted-foreground font-mono text-center break-all px-2">{scanUrl}</p>
         </div>
 
         {/* Actions */}
         <div className="mt-5 flex gap-2">
+          {/* Unduh PNG */}
           <button
-            onClick={handleDownload}
+            onClick={downloadPng}
             disabled={!dataUrl}
-            className="flex-1 inline-flex items-center justify-center gap-2 rounded-md bg-primary py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50 transition-opacity"
+            title="Unduh PNG"
+            className="flex items-center justify-center gap-1.5 rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50 transition-opacity"
           >
-            <Download className="h-4 w-4" /> Unduh PNG
+            <Download className="h-4 w-4" />
+            PNG
           </button>
+
+          {/* Unduh PDF */}
+          <button
+            onClick={downloadPdf}
+            disabled={!dataUrl || pdfLoading}
+            title="Unduh PDF"
+            className="flex items-center justify-center gap-1.5 rounded-md border border-red-500/40 bg-red-500/10 px-4 py-2.5 text-sm font-medium text-red-500 hover:bg-red-500/20 disabled:opacity-50 transition-colors"
+          >
+            {pdfLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            PDF
+          </button>
+
           <button
             onClick={onClose}
-            className="rounded-md border border-border bg-background px-4 py-2.5 text-sm font-medium hover:bg-secondary transition-colors"
+            className="flex-1 rounded-md border border-border bg-background py-2.5 text-sm font-medium hover:bg-secondary transition-colors"
           >
             Tutup
           </button>
