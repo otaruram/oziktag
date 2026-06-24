@@ -21,6 +21,75 @@ const DEFAULT_QC_OPTIONS = [
 
 const CATEGORIES = ["Makanan & Minuman", "Fashion", "Kerajinan", "Kecantikan", "Lainnya"];
 
+/** Generate QR Code with Oziktag ShieldCheck logo baked into center */
+async function generateQrWithLogo(url: string, size = 512): Promise<string> {
+  const qrUrl = await QRCode.toDataURL(url, {
+    width: size,
+    margin: 2,
+    color: { dark: "#0b1220", light: "#ffffff" },
+    errorCorrectionLevel: "H",
+  });
+
+  return new Promise((resolve) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d")!;
+
+    const qrImg = new Image();
+    qrImg.onload = () => {
+      ctx.drawImage(qrImg, 0, 0, size, size);
+      const cx = size / 2;
+      const cy = size / 2;
+      const logoR = size * 0.11;
+
+      // White ring
+      ctx.beginPath();
+      ctx.arc(cx, cy, logoR + 6, 0, Math.PI * 2);
+      ctx.fillStyle = "#ffffff";
+      ctx.fill();
+
+      // Grey border
+      ctx.beginPath();
+      ctx.arc(cx, cy, logoR + 4, 0, Math.PI * 2);
+      ctx.strokeStyle = "#d1d5db";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Black badge
+      ctx.beginPath();
+      ctx.arc(cx, cy, logoR, 0, Math.PI * 2);
+      ctx.fillStyle = "#0f172a";
+      ctx.fill();
+
+      // ShieldCheck icon (lucide, viewBox 24×24)
+      const iconPx = logoR * 1.28;
+      const sc = iconPx / 24;
+      ctx.save();
+      ctx.translate(cx - iconPx / 2, cy - iconPx / 2);
+      ctx.scale(sc, sc);
+
+      const shieldPath = new Path2D(
+        "M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"
+      );
+      ctx.fillStyle = "#ffffff";
+      ctx.fill(shieldPath);
+
+      const checkPath = new Path2D("M9 12l2 2 4-4");
+      ctx.strokeStyle = "#0f172a";
+      ctx.lineWidth = 2.2 / sc;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.stroke(checkPath);
+
+      ctx.restore();
+      resolve(canvas.toDataURL("image/png"));
+    };
+    qrImg.src = qrUrl;
+  });
+}
+
+
 function Generator() {
   const [productName, setProductName] = useState("");
   const [category, setCategory] = useState(CATEGORIES[0]);
@@ -33,6 +102,7 @@ function Generator() {
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [qrUrl, setQrUrl] = useState<string | null>(null);
   const [savedTag, setSavedTag] = useState<any>(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
   const [credits, setCreditsState] = useState<number>(() => (typeof window === "undefined" ? 0 : getCredits()));
 
   const toggleQc = (item: string) =>
@@ -137,13 +207,9 @@ function Generator() {
         body: formData,
       });
 
-      const url = `${window.location.origin}/scan/${res.product_id}`;
-      const dataUrl = await QRCode.toDataURL(url, {
-        width: 512,
-        margin: 2,
-        color: { dark: "#0b1220", light: "#ffffff" },
-      });
-      setSavedTag({ productName, batch: batch || "—", id: res.product_id });
+      const scanUrl = `${window.location.origin}/scan/${res.product_id}`;
+      const dataUrl = await generateQrWithLogo(scanUrl, 512);
+      setSavedTag({ productName, batch: batch || "—", id: res.product_id, scanUrl });
       setQrUrl(dataUrl);
       toast.success("Trusted Label berhasil dibuat", { id: "qc-submit" });
     } catch (err: any) {
@@ -151,12 +217,40 @@ function Generator() {
     }
   };
 
-  const download = (format: "png") => {
+  const downloadPng = () => {
     if (!qrUrl || !savedTag) return;
     const a = document.createElement("a");
     a.href = qrUrl;
-    a.download = `oziktag-${savedTag.productName.replace(/\s+/g, "-")}.${format}`;
+    a.download = `oziktag-${savedTag.productName.replace(/\s+/g, "-")}.png`;
     a.click();
+    toast.success("QR Code diunduh sebagai PNG");
+  };
+
+  const downloadPdf = async () => {
+    if (!qrUrl || !savedTag) return;
+    setPdfLoading(true);
+    try {
+      const { jsPDF } = await import("jspdf");
+      const slug = savedTag.productName.replace(/\s+/g, "-").toLowerCase();
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: [80, 100] });
+      pdf.setFillColor(255, 255, 255);
+      pdf.rect(0, 0, 80, 100, "F");
+      pdf.addImage(qrUrl, "PNG", 10, 8, 60, 60);
+      pdf.setFontSize(9);
+      pdf.setTextColor(40, 40, 40);
+      const lines = pdf.splitTextToSize(savedTag.productName, 60) as string[];
+      pdf.text(lines, 40, 74, { align: "center" });
+      pdf.setFontSize(6.5);
+      pdf.setTextColor(120, 120, 120);
+      pdf.text("Verified by Oziktag", 40, 82, { align: "center" });
+      pdf.text(savedTag.scanUrl || "", 40, 86, { align: "center" });
+      pdf.save(`oziktag-${slug}.pdf`);
+      toast.success("QR Code diunduh sebagai PDF");
+    } catch {
+      toast.error("Gagal membuat PDF");
+    } finally {
+      setPdfLoading(false);
+    }
   };
 
   return (
@@ -366,12 +460,23 @@ function Generator() {
                   Buka halaman scan →
                 </Link>
               </div>
-              <button
-                onClick={() => download("png")}
-                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-md border border-border bg-background py-2 text-sm font-medium hover:bg-secondary"
-              >
-                <Download className="h-4 w-4" /> Download PNG
-              </button>
+              <div className="mt-4 flex gap-2">
+                <button
+                  onClick={downloadPng}
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-md bg-primary py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
+                >
+                  <Download className="h-4 w-4" /> PNG
+                </button>
+                <button
+                  onClick={downloadPdf}
+                  disabled={pdfLoading}
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-md border border-red-500/40 bg-red-500/10 py-2 text-sm font-medium text-red-500 hover:bg-red-500/20 disabled:opacity-50 transition-colors"
+                >
+                  {pdfLoading
+                    ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-red-500 border-t-transparent" />
+                    : <Download className="h-4 w-4" />} PDF
+                </button>
+              </div>
             </>
           )}
         </aside>
