@@ -42,8 +42,12 @@ function Register() {
         const me = await apiFetch("/auth/me");
         if (me.kyc_status) {
           nav({ to: "/dashboard" });
+        } else {
+          // User sudah login tapi belum KYC → tampilkan form register
+          setCheckingAuth(false);
         }
       } catch (err) {
+        // /auth/me gagal (user belum ada di DB) → tampilkan form register
         setCheckingAuth(false);
       }
     };
