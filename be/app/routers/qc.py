@@ -11,6 +11,7 @@ from app.dependencies import get_current_user
 from app.services.imagekit_service import upload_multiple_images
 from app.services.ai_service import analyze_qc
 from app.services.credit_service import deduct_qr_credit, refund_qr_credit
+from app.services.qc_service import process_qc_submission
 from app.models.schemas import QCSubmitResponse, QCProductListItem
 
 router = APIRouter(prefix="/api/qc", tags=["Quality Control"])
@@ -108,43 +109,11 @@ async def submit_qc(
             detail=f"Gagal upload gambar: {str(e)}",
         )
 
-    # 5. Call AI for analysis
+    # 5. Call AI and save product (via service layer)
     try:
-        ai_result = await analyze_qc(
-            checklist=checklist_items,
-            catatan_penjual=catatan_penjual,
-            nama_produk=nama_produk,
-            kategori=kategori,
-            harga_produksi=harga_produksi,
-            harga_jual=harga_jual,
-        )
-    except Exception as e:
-        print(f"[QC Router] AI analysis failed: {e}")
-        ai_result = {
-            "ai_insight": f"Produk {nama_produk} telah melewati Quality Control.",
-            "ai_solution": "Simpan produk sesuai petunjuk penyimpanan.",
-        }
-
-    # 6. Save product to database
-    try:
-        product = await db.qcproduct.create(
-            data={
-                "userId": user_id,
-                "namaProduk": nama_produk.strip(),
-                "kategori": kategori,
-                "batch": batch.strip() if batch else None,
-                "checklist": Json(checklist_items),
-                "catatanPenjual": catatan_penjual.strip(),
-                "hargaProduksi": harga_produksi,
-                "hargaJual": harga_jual,
-                "aiInsight": ai_result["ai_insight"],
-                "aiSolution": ai_result["ai_solution"],
-                "images": {
-                    "create": [
-                        {"imagekitUrl": url} for url in image_urls
-                    ]
-                }
-            }
+        product, ai_result = await process_qc_submission(
+            user_id, nama_produk, kategori, batch, checklist_items, 
+            catatan_penjual, harga_produksi, harga_jual, image_urls
         )
     except Exception as e:
         import traceback
@@ -158,9 +127,9 @@ async def submit_qc(
 
     return QCSubmitResponse(
         product_id=product.id,
-        message="Trusted Label berhasil dibuat!",
-        ai_insight=product.aiInsight,
-        ai_solution=product.aiSolution,
+        message="Produk berhasil di-generate beserta QR code-nya",
+        ai_insight=ai_result.get("ai_insight"),
+        ai_solution=ai_result.get("ai_solution"),
     )
 
 
