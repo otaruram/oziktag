@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { ShieldCheck } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -8,6 +9,26 @@ export const Route = createFileRoute("/auth")({
 });
 
 function AuthPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) {
+        router.navigate({ to: "/dashboard" });
+      }
+    });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        router.navigate({ to: "/dashboard" });
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [router]);
+
   const handleLogin = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({

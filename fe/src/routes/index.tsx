@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { ShieldCheck, QrCode, CheckCircle2, ArrowRight, Bot, Store, Camera, Database } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
@@ -6,11 +7,11 @@ import { supabase } from "@/lib/supabase";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Oziktag — Digital Trust Seal untuk UMKM" },
+      { title: "Oziktag — Digital Trust Seal untuk Pengrajin UMKM" },
       {
         name: "description",
         content:
-          "Validasi kualitas produk UMKM dengan QR Code tepercaya. Bangun kepercayaan pembeli dalam hitungan detik.",
+          "Validasi kualitas produk kerajinan tangan UMKM dengan QR Code tepercaya. Bangun kepercayaan pembeli dalam hitungan detik.",
       },
     ],
   }),
@@ -18,8 +19,25 @@ export const Route = createFileRoute("/")({
 });
 
 function Landing() {
+  const router = useRouter();
 
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) {
+        router.navigate({ to: "/dashboard" });
+      }
+    });
 
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        router.navigate({ to: "/dashboard" });
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [router]);
   return (
     <div className="min-h-screen bg-background text-foreground font-sans selection:bg-foreground selection:text-background overflow-hidden relative">
       
@@ -39,15 +57,15 @@ function Landing() {
         <section className="mx-auto max-w-4xl px-6 pt-24 pb-20 text-center">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-foreground/20 bg-foreground/5 px-4 py-1.5 text-xs font-semibold tracking-wide text-foreground uppercase">
             <CheckCircle2 className="h-3.5 w-3.5" />
-            Digital Trust Seal untuk UMKM
+            Digital Trust Seal Pengrajin UMKM
           </span>
           <h1 className="mt-8 text-balance text-4xl sm:text-5xl font-extrabold tracking-tight md:text-7xl leading-tight">
             Bangun kepercayaan pembeli, <br className="hidden md:block"/>
             <span className="text-muted-foreground">satu QR sekali tempel.</span>
           </h1>
           <p className="mx-auto mt-8 max-w-2xl text-lg text-muted-foreground leading-relaxed">
-            Oziktag membantu UMKM memvalidasi Quality Control produk lewat QR Code yang 
-            dianalisis oleh AI. Simpel, cepat, dan 100% kredibel di mata pelanggan Anda.
+            Oziktag membantu Pengrajin memvalidasi Quality Control (QC) produk kerajinan tangan 
+            lewat QR Code yang dianalisis AI. Simpel, cepat, dan 100% kredibel di mata pelanggan.
           </p>
           <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4">
             <Link
@@ -142,8 +160,8 @@ function Landing() {
                 <div className="inline-flex mx-auto items-center gap-1.5 rounded-full bg-foreground/10 px-3 py-1 text-xs font-semibold text-foreground">
                   <CheckCircle2 className="h-3.5 w-3.5" /> Terverifikasi Aman
                 </div>
-                <h4 className="mt-4 font-bold text-xl">Kopi Gayo Premium</h4>
-                <p className="text-sm text-muted-foreground mt-2">Batch: B-2026-06</p>
+                <h4 className="mt-4 font-bold text-xl">Tas Anyaman Rotan Premium</h4>
+                <p className="text-sm text-muted-foreground mt-2">Koleksi Eksklusif 2026</p>
               </div>
             </div>
           </div>
@@ -154,7 +172,7 @@ function Landing() {
           <div className="mx-auto max-w-3xl px-6 text-center">
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight md:text-5xl">Siap Meningkatkan Penjualan?</h2>
             <p className="mt-6 text-background/80 text-lg">
-              Bergabung dengan ribuan UMKM lain yang sudah membuktikan peningkatan 
+              Bergabung dengan ribuan pengrajin UMKM lain yang sudah membuktikan peningkatan 
               kepercayaan pelanggan mereka bersama Oziktag.
             </p>
             <div className="mt-10">
