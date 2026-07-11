@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status
 from typing import Optional
+from datetime import datetime
 import json
 
 from app.database import db
@@ -44,6 +45,8 @@ async def submit_qc(
     batch: Optional[str] = Form(None),
     checklist: str = Form(..., description="JSON array of checklist strings"),
     catatan_penjual: str = Form(...),
+    harga_produksi: Optional[int] = Form(None),
+    harga_jual: Optional[int] = Form(None),
     images: list[UploadFile] = File(..., description="1-5 product images"),
     current_user: dict = Depends(get_current_user),
 ):
@@ -139,6 +142,8 @@ async def submit_qc(
             catatan_penjual=catatan_penjual,
             nama_produk=nama_produk,
             kategori=kategori,
+            harga_produksi=harga_produksi,
+            harga_jual=harga_jual,
         )
     except Exception as e:
         print(f"[QC Router] AI analysis failed: {e}")
@@ -157,6 +162,8 @@ async def submit_qc(
                 "batch": batch.strip() if batch else None,
                 "checklist": Json(checklist_items),
                 "catatanPenjual": catatan_penjual.strip(),
+                "hargaProduksi": harga_produksi,
+                "hargaJual": harga_jual,
                 "aiInsight": ai_result["ai_insight"],
                 "aiSolution": ai_result["ai_solution"],
                 "images": {
@@ -288,7 +295,8 @@ async def scan_qc_public(product_id: str):
         "brand": brand_name,
         "photos": photos,
         "aiInsight": product.aiInsight,
-        "aiSolution": product.aiSolution
+        "aiSolution": product.aiSolution,
+        "isElite": product.user.isElite if product.user else False,
     }
 
 
@@ -309,8 +317,92 @@ async def get_stats(current_user: dict = Depends(get_current_user)):
             "scannedAt": {"gte": start_of_month}
         }
     )
-    
+
+    # Credit score calculation
+    user_data = await db.user.find_unique(
+        where={"id": user_id},
+        include={"kyc": True}
+    )
+    score = 300
+    if user_data and user_data.kyc and user_data.kyc.status in ["verified", "approved"]:
+        score += 150
+    score += (total_products * 5)
+    if user_data:
+        score += min(user_data.sisaKredit * 2, 100)
+    score = min(score, 850)
+
+    # Revenue calculation from financial data
+    products_with_prices = await db.qcproduct.find_many(
+        where={"userId": user_id, "hargaJual": {"not": None}}
+    )
+    total_revenue = sum(p.hargaJual for p in products_with_prices if p.hargaJual)
+    total_cost = sum(p.hargaProduksi for p in products_with_prices if p.hargaProduksi)
+    avg_margin = round(((total_revenue - total_cost) / total_revenue * 100), 1) if total_revenue > 0 else 0
+
     return {
         "total_products": total_products,
-        "total_scans": total_scans
+        "total_scans": total_scans,
+        "credit_score": score,
+        "total_revenue": total_revenue,
+        "avg_margin": avg_margin,
+    }
+
+
+@router.get("/credit-report")
+async def get_credit_report(current_user: dict = Depends(get_current_user)):
+    """Get detailed credit report data for PDF generation."""
+    user_id = current_user["id"]
+
+    user_data = await db.user.find_unique(
+        where={"id": user_id},
+        include={"kyc": True}
+    )
+    if not user_data:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    total_products = await db.qcproduct.count(where={"userId": user_id})
+    total_scans = await db.productscan.count(where={"userId": user_id})
+
+    # Credit score
+    score = 300
+    if user_data.kyc and user_data.kyc.status in ["verified", "approved"]:
+        score += 150
+    score += (total_products * 5)
+    score += min(user_data.sisaKredit * 2, 100)
+    score = min(score, 850)
+
+    # Financial data
+    products = await db.qcproduct.find_many(where={"userId": user_id})
+    total_revenue = sum(p.hargaJual for p in products if p.hargaJual)
+    total_cost = sum(p.hargaProduksi for p in products if p.hargaProduksi)
+    profit = total_revenue - total_cost
+    margin = round((profit / total_revenue * 100), 1) if total_revenue > 0 else 0
+
+    # Rating
+    if score >= 750:
+        rating = "Sangat Baik"
+    elif score >= 600:
+        rating = "Baik"
+    elif score >= 450:
+        rating = "Sedang"
+    else:
+        rating = "Perlu Perbaikan"
+
+    brand_name = user_data.nama
+    if user_data.kyc and user_data.kyc.namaToko:
+        brand_name = user_data.kyc.namaToko
+
+    return {
+        "brand_name": brand_name,
+        "email": user_data.email,
+        "credit_score": score,
+        "rating": rating,
+        "total_products": total_products,
+        "total_scans": total_scans,
+        "total_revenue": total_revenue,
+        "total_cost": total_cost,
+        "profit": profit,
+        "margin_percent": margin,
+        "is_elite": user_data.isElite,
+        "generated_at": datetime.now().isoformat(),
     }

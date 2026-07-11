@@ -8,6 +8,9 @@ export type Qrtag = {
   createdAt: string;
   notes?: string;
   photos?: string[];
+  aiInsight?: string;
+  aiSolution?: string;
+  isElite?: boolean;
 };
 
 const KEY = "oziktag.tags";

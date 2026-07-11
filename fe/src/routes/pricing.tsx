@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Coins, Check, Sparkles, History, X, QrCode as QrIcon } from "lucide-react";
+import { Coins, Check, Sparkles, History, X, QrCode as QrIcon, Crown, Award, Loader2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
@@ -41,11 +41,16 @@ function Pricing() {
   const [history, setHistory] = useState<any[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [selected, setSelected] = useState<Pkg | null>(null);
+  const [isElite, setIsElite] = useState(false);
+  const [eliteExpires, setEliteExpires] = useState<string | null>(null);
+  const [eliteLoading, setEliteLoading] = useState(false);
 
   const fetchAll = async () => {
     try {
       const me = await apiFetch("/auth/me");
       setCreditsState(me.sisa_kredit);
+      setIsElite(me.is_elite || false);
+      setEliteExpires(me.elite_expires_at || null);
       const hist = await apiFetch("/topup/history");
       setHistory(hist);
     } catch (e) {
@@ -124,6 +129,71 @@ function Pricing() {
             </li>
           ))}
         </ul>
+      </div>
+
+      {/* ─── Artisan Elite Subscription ──────────────────── */}
+      <div className="mt-10">
+        <h2 className="text-xl font-semibold tracking-tight">Langganan Artisan Elite</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Eksklusif untuk UMKM Kerajinan Tangan</p>
+
+        <div className="mt-4 rounded-xl border border-primary/40 bg-card p-6 shadow-[var(--shadow-elegant)]">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/15">
+                  <Crown className="h-4 w-4 text-primary" />
+                </div>
+                <p className="text-lg font-semibold">Artisan Elite</p>
+              </div>
+              <p className="mt-2 text-2xl font-semibold tracking-tight">{idr(49900)}<span className="text-sm font-normal text-muted-foreground">/bulan</span></p>
+            </div>
+            {isElite ? (
+              <div className="rounded-md border border-primary/30 bg-primary/10 px-3 py-1.5">
+                <p className="text-xs font-medium text-primary flex items-center gap-1">
+                  <Award className="h-3.5 w-3.5" /> Aktif
+                </p>
+                {eliteExpires && (
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    Hingga {new Date(eliteExpires).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={async () => {
+                  setEliteLoading(true);
+                  try {
+                    await apiFetch("/topup/demo-subscribe-elite", { method: "POST" });
+                    toast.success("Artisan Elite aktif selama 30 hari!");
+                    fetchAll();
+                  } catch (e: any) {
+                    toast.error(e.message || "Gagal berlangganan");
+                  } finally {
+                    setEliteLoading(false);
+                  }
+                }}
+                disabled={eliteLoading}
+                className="rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60 transition-opacity"
+              >
+                {eliteLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Berlangganan"}
+              </button>
+            )}
+          </div>
+
+          <ul className="mt-5 grid gap-2 sm:grid-cols-2">
+            {[
+              "Badge \"Artisan Elite\" di halaman scan publik",
+              "Video pelatihan QC kerajinan tangan",
+              "Tips & trik dari pengrajin berpengalaman",
+              "Forum diskusi sesama pengrajin (coming soon)",
+              "Prioritas dukungan Oziktag",
+            ].map((b) => (
+              <li key={b} className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Check className="h-4 w-4 text-primary shrink-0" /> {b}
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
 
       {selected && (

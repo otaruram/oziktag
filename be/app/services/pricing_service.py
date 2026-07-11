@@ -136,6 +136,14 @@ def get_packages() -> dict:
             "price_per_qr": 198,
             "tagline": "Harga termurah per QR — hemat 34%",
         },
+        "elite_monthly": {
+            "name": "Artisan Elite",
+            "price": 49900,
+            "credits": 0,
+            "price_per_qr": 0,
+            "tagline": "Langganan bulanan — eksklusif kerajinan tangan",
+            "is_subscription": True,
+        },
     }
 
 

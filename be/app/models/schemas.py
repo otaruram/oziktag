@@ -38,6 +38,8 @@ class UserProfile(BaseModel):
     credit_score: int = 300
     credit_score_requested: bool = False
     can_view_credit_score: bool = False
+    is_elite: bool = False
+    elite_expires_at: Optional[str] = None
 
 # ──────────────────────── QC Products ────────────────────────
 
@@ -60,6 +62,8 @@ class QCProductResponse(BaseModel):
     batch: Optional[str] = None
     checklist: list
     catatan_penjual: Optional[str] = None
+    harga_produksi: Optional[int] = None
+    harga_jual: Optional[int] = None
     ai_insight: Optional[str] = None
     ai_solution: Optional[str] = None
     images: list[ProductImage] = []
@@ -121,6 +125,7 @@ class ScanResponse(BaseModel):
     brand: str = "Brand UMKM"
     created_at: str
     verified: bool = True
+    is_elite: bool = False
 
 
 # ──────────────────────── Admin ────────────────────────
@@ -139,6 +144,7 @@ class AdminUserItem(BaseModel):
     credit_score: int = 300
     credit_score_requested: bool = False
     can_view_credit_score: bool = False
+    is_elite: bool = False
 
 
 class AdminAddCreditsRequest(BaseModel):

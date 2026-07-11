@@ -42,6 +42,7 @@ async def list_all_users(admin: dict = Depends(get_admin_user)):
             credit_score=score,
             credit_score_requested=u.creditScoreRequested,
             can_view_credit_score=u.canViewCreditScore,
+            is_elite=u.isElite,
         ))
 
     return result
@@ -61,6 +62,26 @@ async def approve_credit_score(user_id: str, admin: dict = Depends(get_admin_use
         }
     )
     return {"message": "Akses fitur Credit Score telah diberikan"}
+
+
+@router.post("/toggle-elite/{user_id}")
+async def toggle_elite(user_id: str, admin: dict = Depends(get_admin_user)):
+    """Toggle elite status for a user. Sets 30-day expiry when enabling."""
+    target_user = await db.user.find_unique(where={"id": user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    new_status = not target_user.isElite
+    update_data = {"isElite": new_status}
+
+    if new_status:
+        update_data["eliteExpiresAt"] = datetime.now(timezone.utc) + timedelta(days=30)
+    else:
+        update_data["eliteExpiresAt"] = None
+
+    await db.user.update(where={"id": user_id}, data=update_data)
+    action = "diaktifkan (30 hari)" if new_status else "dinonaktifkan"
+    return {"message": f"Status Elite {action} untuk {target_user.email}", "is_elite": new_status}
 
 
 @router.get("/users/online")

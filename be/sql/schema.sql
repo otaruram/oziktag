@@ -150,3 +150,15 @@ CREATE POLICY "Public can view product images" ON product_images
 -- Policy: Users can view own transactions
 CREATE POLICY "Users can view own transactions" ON topup_transactions
     FOR SELECT USING (auth.uid() = user_id);
+
+-- ============================================================
+-- MIGRATION: Elite Community & Credit Analyst
+-- ============================================================
+
+-- Add Elite membership fields to users
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_elite BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS elite_expires_at TIMESTAMPTZ;
+
+-- Add financial data fields to qc_products (for credit scoring)
+ALTER TABLE qc_products ADD COLUMN IF NOT EXISTS harga_produksi INTEGER;
+ALTER TABLE qc_products ADD COLUMN IF NOT EXISTS harga_jual INTEGER;

@@ -26,6 +26,8 @@ model User {
   isAdmin    Boolean   @default(false) @map("is_admin")
   hasApiAccess Boolean @default(false) @map("has_api_access")
   isBanned   Boolean   @default(false) @map("is_banned")
+  isElite    Boolean   @default(false) @map("is_elite")
+  eliteExpiresAt DateTime? @map("elite_expires_at")
   creditScoreRequested Boolean @default(false) @map("credit_score_requested")
   canViewCreditScore   Boolean @default(false) @map("can_view_credit_score")
   lastSeenAt DateTime? @default(now()) @map("last_seen_at")
@@ -96,6 +98,8 @@ model QcProduct {
   batch          String?
   checklist      Json     @default("[]")
   catatanPenjual String?  @map("catatan_penjual")
+  hargaProduksi  Int?     @map("harga_produksi")
+  hargaJual      Int?     @map("harga_jual")
   aiInsight      String?  @map("ai_insight")
   aiSolution     String?  @map("ai_solution")
   createdAt      DateTime @default(now()) @map("created_at")

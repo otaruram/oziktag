@@ -12,6 +12,8 @@ async def analyze_qc(
     catatan_penjual: str,
     nama_produk: str,
     kategori: str,
+    harga_produksi: int | None = None,
+    harga_jual: int | None = None,
 ) -> dict:
     """
     Call Gemini AI to analyze QC data.
@@ -48,8 +50,21 @@ INSIGHT: [isi insight di sini]
 SOLUSI: [isi solusi di sini]
 """
 
+    # Enrich prompt with financial data if available
+    if harga_produksi and harga_jual:
+        margin = round((harga_jual - harga_produksi) / harga_jual * 100, 1)
+        prompt += f"""
+
+=== DATA FINANSIAL (RAHASIA — hanya untuk analisis) ===
+Harga Produksi: Rp {harga_produksi:,}
+Harga Jual: Rp {harga_jual:,}
+Margin: {margin}%
+
+Tambahkan saran bisnis singkat di dalam SOLUSI: apakah margin sehat, tips efisiensi produksi, atau saran pengemasan untuk mengurangi retur.
+"""
+
     # 1. Generate Input Hash
-    raw_input = f"{nama_produk}|{kategori}|{catatan_penjual}|{','.join(sorted(checklist))}"
+    raw_input = f"{nama_produk}|{kategori}|{catatan_penjual}|{','.join(sorted(checklist))}|{harga_produksi or ''}|{harga_jual or ''}"
     input_hash = hashlib.sha256(raw_input.encode('utf-8')).hexdigest()
 
     # 2. Check Cache
@@ -110,7 +125,7 @@ SOLUSI: [isi solusi di sini]
     except Exception as e:
         print(f"[AI Service] Error calling Gemini: {e}")
         # Fallback response if AI fails
-        return _fallback_response(nama_produk, kategori, catatan_penjual, checklist)
+        return _fallback_response(nama_produk, kategori, catatan_penjual, checklist, harga_produksi, harga_jual)
 
 
 def _parse_ai_response(
@@ -156,6 +171,8 @@ def _fallback_response(
     kategori: str,
     catatan_penjual: str,
     checklist: list[str],
+    harga_produksi: int | None = None,
+    harga_jual: int | None = None,
 ) -> dict:
     """Generate fallback response when AI is unavailable."""
     has_notes = catatan_penjual and catatan_penjual.strip()
@@ -180,6 +197,14 @@ def _fallback_response(
     }
 
     solution = care_tips.get(kategori, "Simpan di tempat aman, kering, dan jauh dari jangkauan anak-anak.")
+
+    # Enrich with business tip if financial data present
+    if harga_produksi and harga_jual and harga_jual > 0:
+        margin = round((harga_jual - harga_produksi) / harga_jual * 100, 1)
+        if margin < 20:
+            solution += f" Margin Anda ({margin}%) cukup tipis — pertimbangkan efisiensi bahan baku atau naikkan harga sedikit."
+        elif margin > 50:
+            solution += f" Margin Anda ({margin}%) sangat sehat. Pertahankan kualitas untuk menjaga loyalitas pembeli."
 
     return {
         "ai_insight": insight,

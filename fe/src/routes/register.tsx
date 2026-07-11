@@ -73,6 +73,8 @@ function Register() {
       password: "demo-password-" + Math.floor(Math.random() * 1000),
       ktp: d.ktp,
       npwp: d.npwp,
+      foto_ktp: null,
+      foto_npwp: null,
     });
     toast.success("Data KYC dummy berhasil diisi");
   };

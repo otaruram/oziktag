@@ -152,6 +152,8 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         credit_score=score,
         credit_score_requested=db_user.creditScoreRequested,
         can_view_credit_score=db_user.canViewCreditScore,
+        is_elite=db_user.isElite,
+        elite_expires_at=db_user.eliteExpiresAt.isoformat() if db_user.eliteExpiresAt else None,
     )
 
 

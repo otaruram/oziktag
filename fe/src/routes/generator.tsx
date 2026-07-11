@@ -19,7 +19,16 @@ const DEFAULT_QC_OPTIONS = [
   "Lulus uji kebersihan",
 ];
 
-const CATEGORIES = ["Makanan & Minuman", "Fashion", "Kerajinan", "Kecantikan", "Lainnya"];
+const CATEGORIES = [
+  "Makanan & Minuman",
+  "Fashion",
+  "Kerajinan — Anyaman",
+  "Kerajinan — Kayu",
+  "Kerajinan — Keramik",
+  "Kerajinan — Lainnya",
+  "Kecantikan",
+  "Lainnya",
+];
 
 /** Generate QR Code with Oziktag ShieldCheck logo baked into center */
 async function generateQrWithLogo(url: string, size = 512): Promise<string> {
@@ -98,6 +107,8 @@ function Generator() {
   const [qc, setQc] = useState<string[]>([DEFAULT_QC_OPTIONS[0], DEFAULT_QC_OPTIONS[1]]);
   const [customQc, setCustomQc] = useState("");
   const [notes, setNotes] = useState("");
+  const [hargaProduksi, setHargaProduksi] = useState("");
+  const [hargaJual, setHargaJual] = useState("");
   const [photos, setPhotos] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [qrUrl, setQrUrl] = useState<string | null>(null);
@@ -198,6 +209,8 @@ function Generator() {
     if (batch) formData.append("batch", batch.trim());
     formData.append("checklist", JSON.stringify(qc));
     formData.append("catatan_penjual", notes.trim());
+    if (hargaProduksi) formData.append("harga_produksi", hargaProduksi);
+    if (hargaJual) formData.append("harga_jual", hargaJual);
     imageFiles.forEach((f) => formData.append("images", f));
 
     try {
@@ -307,6 +320,38 @@ function Generator() {
               placeholder="Contoh: B-2026-05-31"
             />
           </Field>
+
+          {/* Data Finansial (Opsional & Rahasia) */}
+          <div className="rounded-lg border border-dashed border-border bg-background/40 p-4">
+            <p className="mb-1 text-sm font-medium">Data Finansial <span className="text-muted-foreground font-normal">(Opsional &amp; Rahasia)</span></p>
+            <p className="mb-3 text-[11px] text-muted-foreground">
+              Opsional. Data ini rahasia dan hanya digunakan untuk menghitung Skor Kesehatan Bisnis Anda.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-medium text-muted-foreground">Harga Produksi (Rp)</span>
+                <input
+                  type="number"
+                  min="0"
+                  value={hargaProduksi}
+                  onChange={(e) => setHargaProduksi(e.target.value)}
+                  className={inputCls}
+                  placeholder="Contoh: 25000"
+                />
+              </label>
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-medium text-muted-foreground">Harga Jual (Rp)</span>
+                <input
+                  type="number"
+                  min="0"
+                  value={hargaJual}
+                  onChange={(e) => setHargaJual(e.target.value)}
+                  className={inputCls}
+                  placeholder="Contoh: 50000"
+                />
+              </label>
+            </div>
+          </div>
 
           <div>
             <p className="mb-2 text-sm font-medium">Checklist Quality Control</p>

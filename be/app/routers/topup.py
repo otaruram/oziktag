@@ -243,3 +243,113 @@ async def simulate_demo_payment(request: TopUpCreateRequest, current_user: dict 
                 )
             
     return {"message": "Demo payment successful", "credits_added": pkg["credits"]}
+
+
+@router.post("/subscribe-elite")
+async def subscribe_elite(
+    payment_type: str = "qris",
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Create a subscription transaction for Artisan Elite membership.
+    Price: Rp 49,900/month.
+    """
+    user_id = current_user["id"]
+
+    # Check if already elite
+    user = await db.user.find_unique(where={"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if user.isElite:
+        raise HTTPException(status_code=400, detail="Anda sudah menjadi member Artisan Elite")
+
+    elite_price = 49900
+    reference = f"elite-{uuid.uuid4().hex[:12]}"
+
+    # Create transaction via Louvin
+    try:
+        from app.services.louvin_service import create_elite_transaction
+        louvin_response = await create_elite_transaction(
+            payment_type=payment_type,
+            customer_name=current_user.get("name", ""),
+            customer_email=current_user.get("email", ""),
+            reference=reference,
+        )
+    except ImportError:
+        # Fallback: If create_elite_transaction doesn't exist, use generic
+        louvin_response = await create_transaction(
+            paket="elite_monthly",
+            payment_type=payment_type,
+            customer_name=current_user.get("name", ""),
+            customer_email=current_user.get("email", ""),
+            reference=reference,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Gagal membuat transaksi: {str(e)}",
+        )
+
+    txn_data = louvin_response.get("transaction", {})
+    payment = louvin_response.get("payment", {})
+
+    # Save transaction
+    await db.topuptransaction.create(
+        data={
+            "userId": user_id,
+            "paket": "elite_monthly",
+            "tipeKredit": "QR",
+            "amount": elite_price,
+            "credits": 0,
+            "status": "pending",
+            "louvinRef": reference,
+            "louvinTransactionId": txn_data.get("id", ""),
+            "paymentType": payment_type,
+        }
+    )
+
+    return {
+        "transaction_id": reference,
+        "amount": elite_price,
+        "payment_type": payment_type,
+        "qr_string": payment.get("qr_string"),
+        "deeplink_url": payment.get("deeplink_url"),
+    }
+
+
+@router.post("/demo-subscribe-elite")
+async def demo_subscribe_elite(current_user: dict = Depends(get_current_user)):
+    """Demo endpoint to instantly activate Elite membership for 30 days."""
+    from datetime import datetime, timedelta, timezone
+
+    user_id = current_user["id"]
+    user = await db.user.find_unique(where={"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    expires_at = datetime.now(timezone.utc) + timedelta(days=30)
+
+    await db.user.update(
+        where={"id": user_id},
+        data={
+            "isElite": True,
+            "eliteExpiresAt": expires_at,
+        }
+    )
+
+    await db.creditlog.create(
+        data={
+            "userId": user_id,
+            "tipeKredit": "QR",
+            "action": "TOPUP",
+            "amount": 0,
+            "description": "Aktivasi Artisan Elite (Demo)"
+        }
+    )
+
+    return {
+        "message": "Artisan Elite aktif selama 30 hari",
+        "elite_expires_at": expires_at.isoformat(),
+    }
+

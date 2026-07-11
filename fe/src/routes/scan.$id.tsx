@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ShieldCheck, CheckCircle2, AlertCircle, Sparkles, Loader2, Copy } from "lucide-react";
+import { ShieldCheck, CheckCircle2, AlertCircle, Sparkles, Loader2, Copy, Award } from "lucide-react";
 import { toast } from "sonner";
 import { getTag, type Qrtag } from "@/lib/oziktag-store";
 import { apiFetch } from "@/lib/api";
@@ -66,6 +66,12 @@ function Scan() {
               Produk ini telah melewati Quality Control oleh
             </p>
             <p className="mt-1 text-base font-medium text-primary">{tag.brand}</p>
+            {tag.isElite && (
+              <span className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-medium text-primary">
+                <Award className="h-3.5 w-3.5" />
+                Oziktag Artisan Elite
+              </span>
+            )}
           </div>
 
           <div className="space-y-3 border-t border-border px-6 py-5 text-sm">
