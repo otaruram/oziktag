@@ -63,8 +63,8 @@ export function AdminSupaledger() {
           <FileText className="h-4 w-4" /> Download CSV
         </Button>
       </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto rounded-md border bg-card">
+      <CardContent className="p-0 sm:p-6 overflow-hidden">
+        <div className="overflow-x-auto w-full rounded-md border bg-card">
           <Table>
             <TableHeader>
               <TableRow>

@@ -35,8 +35,8 @@ export function AdminActivities() {
           <CardTitle>QR Code Terbaru</CardTitle>
           <CardDescription>Aktivitas generate Trusted Label terakhir</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
+        <CardContent className="p-0 sm:p-6 overflow-hidden">
+          <div className="overflow-x-auto w-full">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -88,8 +88,8 @@ export function AdminActivities() {
           <CardTitle>Log Kredit Terbaru</CardTitle>
           <CardDescription>Aktivitas pemakaian atau top-up kredit user</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
+        <CardContent className="p-0 sm:p-6 overflow-hidden">
+          <div className="overflow-x-auto w-full">
             <Table>
               <TableHeader>
                 <TableRow>
