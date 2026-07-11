@@ -133,7 +133,7 @@ export function EliteArticles({ isEliteOrAdmin, isAdmin }: { isEliteOrAdmin: boo
             <DialogTitle className="text-xl mb-2">{selectedArticle?.title.replace(/\*/g, '')}</DialogTitle>
           </DialogHeader>
           <div
-            className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground"
+            className="prose prose-base dark:prose-invert max-w-none text-foreground prose-p:leading-relaxed prose-p:mb-6 prose-img:rounded-xl prose-img:shadow-lg prose-img:mb-8 prose-headings:font-bold font-sans"
             dangerouslySetInnerHTML={{ __html: selectedArticle?.content?.replace(/\*/g, '') || "" }}
           />
         </DialogContent>
