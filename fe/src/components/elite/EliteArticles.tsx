@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { BookOpen, Plus } from "lucide-react";
+import { BookOpen, Plus, ImagePlus, Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,8 @@ export function EliteArticles({ isEliteOrAdmin, isAdmin }: { isEliteOrAdmin: boo
   const [newTitle, setNewTitle] = useState("");
   const [newPreview, setNewPreview] = useState("");
   const [newContent, setNewContent] = useState("");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: articles, isLoading } = useQuery({
     queryKey: ["elite-articles"],
@@ -57,6 +59,31 @@ export function EliteArticles({ isEliteOrAdmin, isAdmin }: { isEliteOrAdmin: boo
     addArticleMutation.mutate({ title: newTitle, preview: newPreview, content: newContent });
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingImage(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const data = await apiFetch("/upload/image", {
+        method: "POST",
+        body: formData,
+      });
+      if (data.url) {
+        setNewContent((prev) => prev + `\n<img src="${data.url}" alt="Article Image" style="max-width:100%; border-radius:8px;" />\n`);
+        toast.success("Gambar berhasil ditambahkan");
+      }
+    } catch (err: any) {
+      toast.error("Gagal mengupload gambar");
+    } finally {
+      setIsUploadingImage(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   return (
     <>
       <section className="mt-10">
@@ -79,7 +106,7 @@ export function EliteArticles({ isEliteOrAdmin, isAdmin }: { isEliteOrAdmin: boo
           )}
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-3 max-h-[380px] overflow-y-auto pr-2 custom-scrollbar">
           {isLoading ? (
             <p className="text-sm text-muted-foreground">Memuat artikel...</p>
           ) : articles && articles.length > 0 ? (
@@ -89,8 +116,8 @@ export function EliteArticles({ isEliteOrAdmin, isAdmin }: { isEliteOrAdmin: boo
                 onClick={() => setSelectedArticle(a)}
                 className="rounded-xl border border-border bg-card p-5 hover:border-primary/40 transition-colors cursor-pointer"
               >
-                <p className="text-sm font-semibold">{a.title}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{a.preview}</p>
+                <p className="text-sm font-semibold">{a.title.replace(/\*/g, '')}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{a.preview.replace(/\*/g, '')}</p>
               </div>
             ))
           ) : (
@@ -103,11 +130,11 @@ export function EliteArticles({ isEliteOrAdmin, isAdmin }: { isEliteOrAdmin: boo
       <Dialog open={!!selectedArticle} onOpenChange={() => setSelectedArticle(null)}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl mb-2">{selectedArticle?.title}</DialogTitle>
+            <DialogTitle className="text-xl mb-2">{selectedArticle?.title.replace(/\*/g, '')}</DialogTitle>
           </DialogHeader>
           <div
             className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground"
-            dangerouslySetInnerHTML={{ __html: selectedArticle?.content || "" }}
+            dangerouslySetInnerHTML={{ __html: selectedArticle?.content?.replace(/\*/g, '') || "" }}
           />
         </DialogContent>
       </Dialog>
@@ -139,7 +166,27 @@ export function EliteArticles({ isEliteOrAdmin, isAdmin }: { isEliteOrAdmin: boo
               />
             </div>
             <div className="space-y-2">
-              <Label>Isi Konten (HTML diperbolehkan)</Label>
+              <div className="flex items-center justify-between">
+                <Label>Isi Konten (HTML diperbolehkan)</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs gap-1"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploadingImage}
+                >
+                  {isUploadingImage ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImagePlus className="h-3 w-3" />}
+                  Sisipkan Gambar
+                </Button>
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  className="hidden"
+                  onChange={handleImageUpload}
+                />
+              </div>
               <Textarea
                 value={newContent}
                 onChange={(e) => setNewContent(e.target.value)}

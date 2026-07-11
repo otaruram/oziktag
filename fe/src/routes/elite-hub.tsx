@@ -5,6 +5,12 @@ import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
 import { EliteArticles } from "@/components/elite/EliteArticles";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/elite-hub")({
   head: () => ({ meta: [{ title: "Elite Hub — Oziktag" }] }),
@@ -17,6 +23,8 @@ export const Route = createFileRoute("/elite-hub")({
 // The TIPS_ARTICLES constant has been moved to EliteArticles.tsx (dynamic)
 
 function EliteHub() {
+  const [selectedVideo, setSelectedVideo] = useState<any>(null);
+
   const { data: me, isLoading: meLoading } = useQuery({
     queryKey: ["auth-me"],
     queryFn: async () => await apiFetch("/auth/me")
@@ -98,12 +106,10 @@ function EliteHub() {
             <p className="text-sm text-muted-foreground">Memuat video realtime dari YouTube...</p>
           ) : trainingVideos && trainingVideos.length > 0 ? (
             trainingVideos.map((v: any) => (
-              <a
+              <div
                 key={v.id}
-                href={v.youtubeUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="group rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/40 block"
+                onClick={() => setSelectedVideo(v)}
+                className="group rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/40 block cursor-pointer"
               >
                 <div className="relative flex aspect-video items-center justify-center rounded-lg bg-secondary/60 mb-4 overflow-hidden">
                   {v.thumbnail ? (
@@ -122,7 +128,7 @@ function EliteHub() {
                 <p className="text-sm font-semibold line-clamp-2" dangerouslySetInnerHTML={{ __html: v.title }} />
                 <p className="mt-1 text-xs text-muted-foreground">{v.category}</p>
                 <p className="mt-2 text-[10px] text-muted-foreground">{v.duration}</p>
-              </a>
+              </div>
             ))
           ) : (
              <p className="text-sm text-muted-foreground">Tidak ada video tersedia.</p>
@@ -147,6 +153,26 @@ function EliteHub() {
           </p>
         </div>
       </section>
+
+      {/* Video Player Modal */}
+      <Dialog open={!!selectedVideo} onOpenChange={() => setSelectedVideo(null)}>
+        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black/90 border-none">
+          <DialogHeader className="p-4 bg-background">
+            <DialogTitle dangerouslySetInnerHTML={{ __html: selectedVideo?.title || "" }} />
+          </DialogHeader>
+          {selectedVideo && (
+            <div className="aspect-video w-full">
+              <iframe
+                src={`https://www.youtube.com/embed/${selectedVideo.id}?autoplay=1`}
+                title={selectedVideo.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full border-0"
+              ></iframe>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }
