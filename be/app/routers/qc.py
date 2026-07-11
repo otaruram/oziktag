@@ -10,6 +10,7 @@ from prisma import Json
 from app.dependencies import get_current_user
 from app.services.imagekit_service import upload_multiple_images
 from app.services.ai_service import analyze_qc
+from app.services.credit_service import deduct_qr_credit, refund_qr_credit
 from app.models.schemas import QCSubmitResponse, QCProductListItem
 
 router = APIRouter(prefix="/api/qc", tags=["Quality Control"])
@@ -88,21 +89,7 @@ async def submit_qc(
             detail="Kredit habis. Silakan top-up dulu.",
         )
 
-    async with db.tx() as tx:
-        if not is_admin:
-            await tx.user.update(
-                where={"id": user_id},
-                data={"sisaKredit": credits - 1}
-            )
-        await tx.creditlog.create(
-            data={
-                "userId": user_id,
-                "tipeKredit": "QR",
-                "action": "USAGE",
-                "amount": 0 if is_admin else -1,
-                "description": f"Generate QC Label: {nama_produk[:20]}"
-            }
-        )
+    await deduct_qr_credit(user_id, is_admin, credits, f"Generate QC Label: {nama_produk[:20]}")
 
     # 4. Upload images to ImageKit
     try:
@@ -115,21 +102,7 @@ async def submit_qc(
         import traceback
         traceback.print_exc()
         # Refund credit if upload fails
-        if not is_admin:
-            async with db.tx() as tx:
-                await tx.user.update(
-                    where={"id": user_id},
-                    data={"sisaKredit": credits}
-                )
-                await tx.creditlog.create(
-                    data={
-                        "userId": user_id,
-                        "tipeKredit": "QR",
-                        "action": "REFUND",
-                        "amount": 1,
-                        "description": f"Refund Gagal Upload Gambar"
-                    }
-                )
+        await refund_qr_credit(user_id, is_admin, credits, "Refund Gagal Upload Gambar")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Gagal upload gambar: {str(e)}",
@@ -177,21 +150,7 @@ async def submit_qc(
         import traceback
         traceback.print_exc()
         # Refund credit if db save fails
-        if not is_admin:
-            async with db.tx() as tx:
-                await tx.user.update(
-                    where={"id": user_id},
-                    data={"sisaKredit": credits}
-                )
-                await tx.creditlog.create(
-                    data={
-                        "userId": user_id,
-                        "tipeKredit": "QR",
-                        "action": "REFUND",
-                        "amount": 1,
-                        "description": f"Refund Gagal Generate QR"
-                    }
-                )
+        await refund_qr_credit(user_id, is_admin, credits, "Refund Gagal Generate QR")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Gagal menyimpan data produk: {str(e)}",

@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from app.database import db
 from app.dependencies import get_current_user
 from app.services.louvin_service import create_transaction, get_package
+from app.services.credit_service import add_credits
 from app.models.schemas import TopUpCreateRequest, TopUpCreateResponse, TopUpHistoryItem
 
 router = APIRouter(prefix="/api/topup", tags=["Top-Up & Payment"])
@@ -108,41 +109,9 @@ async def louvin_webhook(request: Request):
                     data={"status": "settled"}
                 )
 
-                # Fetch user
-                user = await tx.user.find_unique(
-                    where={"id": txn.userId}
-                )
-                if user:
-                    if txn.tipeKredit == "API":
-                        new_credits = user.apiKredit + txn.credits
-                        await tx.user.update(
-                            where={"id": txn.userId},
-                            data={"apiKredit": new_credits}
-                        )
-                        await tx.creditlog.create(
-                            data={
-                                "userId": txn.userId,
-                                "tipeKredit": "API",
-                                "action": "TOPUP",
-                                "amount": txn.credits,
-                                "description": f"Top-Up Paket API {txn.paket}"
-                            }
-                        )
-                    else:
-                        new_credits = user.sisaKredit + txn.credits
-                        await tx.user.update(
-                            where={"id": txn.userId},
-                            data={"sisaKredit": new_credits}
-                        )
-                        await tx.creditlog.create(
-                            data={
-                                "userId": txn.userId,
-                                "tipeKredit": "QR",
-                                "action": "TOPUP",
-                                "amount": txn.credits,
-                                "description": f"Top-Up Paket {txn.paket}"
-                            }
-                        )
+                # Add credits using the service within the same transaction
+                desc = f"Top-Up Paket API {txn.paket}" if txn.tipeKredit == "API" else f"Top-Up Paket {txn.paket}"
+                await add_credits(txn.userId, txn.credits, txn.tipeKredit, desc, tx_client=tx)
 
             print(f"[Webhook] Payment settled: {order_id}, +{txn.credits} credits to user {txn.userId}")
 

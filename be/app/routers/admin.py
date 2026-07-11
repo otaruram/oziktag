@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from app.database import db
 from app.dependencies import get_admin_user
+from app.services.credit_service import add_credits
 from app.models.schemas import AdminUserItem, AdminAddCreditsRequest, AdminBanRequest
 
 router = APIRouter(prefix="/api/admin", tags=["Admin Panel"])
@@ -127,23 +128,20 @@ async def add_credits(request: AdminAddCreditsRequest, admin: dict = Depends(get
         raise HTTPException(status_code=400, detail="Tidak bisa mengubah kredit admin")
 
     if request.tipe_kredit == "API":
-        new_credits = user.apiKredit + request.amount
-        await db.user.update(
-            where={"id": request.user_id},
-            data={"apiKredit": new_credits}
-        )
         msg_kredit = "kredit API"
     else:
-        new_credits = user.sisaKredit + request.amount
-        await db.user.update(
-            where={"id": request.user_id},
-            data={"sisaKredit": new_credits}
-        )
         msg_kredit = "kredit QR"
+        
+    desc = f"Admin Bonus: {request.amount} {msg_kredit}"
+    await add_credits(request.user_id, request.amount, request.tipe_kredit, desc)
+    
+    # Fetch updated user to return new balance
+    updated_user = await db.user.find_unique(where={"id": request.user_id})
+    new_balance = updated_user.apiKredit if request.tipe_kredit == "API" else updated_user.sisaKredit
 
     return {
         "message": f"Berhasil menambahkan {request.amount} {msg_kredit} ke {user.email}",
-        "new_balance": new_credits,
+        "new_balance": new_balance,
     }
 
 
@@ -281,16 +279,14 @@ async def approve_api_request(request_id: str, admin: dict = Depends(get_admin_u
         where={"id": request_id},
         data={"status": "approved"}
     )
-    # Update user access and give 2 credits
+    # Update user access
     await db.user.update(
         where={"id": req.userId},
-        data={
-            "hasApiAccess": True,
-            "apiKredit": {
-                "increment": 2
-            }
-        }
+        data={"hasApiAccess": True}
     )
+    
+    # Add 2 API credits
+    await add_credits(req.userId, 2, "API", "Free API Credits on Approval")
     
     return {"message": "Akses API disetujui, 2 kredit diberikan."}
 
