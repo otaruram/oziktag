@@ -28,9 +28,9 @@ export function AdminActivities() {
   });
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2 mb-8">
+    <div className="grid gap-6 lg:grid-cols-2 mb-8 min-w-0 w-full">
       {/* Latest QR Generations */}
-      <Card>
+      <Card className="min-w-0 w-full">
         <CardHeader>
           <CardTitle>QR Code Terbaru</CardTitle>
           <CardDescription>Aktivitas generate Trusted Label terakhir</CardDescription>
@@ -40,10 +40,10 @@ export function AdminActivities() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="min-w-[120px]">User</TableHead>
-                  <TableHead className="min-w-[180px]">Produk</TableHead>
-                  <TableHead className="min-w-[120px]">Waktu</TableHead>
-                  <TableHead className="min-w-[100px]"></TableHead>
+                  <TableHead className="whitespace-nowrap">User</TableHead>
+                  <TableHead className="whitespace-nowrap">Produk</TableHead>
+                  <TableHead className="whitespace-nowrap">Waktu</TableHead>
+                  <TableHead></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -83,7 +83,7 @@ export function AdminActivities() {
       </Card>
 
       {/* Latest Credit Logs */}
-      <Card>
+      <Card className="min-w-0 w-full">
         <CardHeader>
           <CardTitle>Log Kredit Terbaru</CardTitle>
           <CardDescription>Aktivitas pemakaian atau top-up kredit user</CardDescription>
@@ -93,9 +93,9 @@ export function AdminActivities() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="min-w-[150px]">User</TableHead>
-                  <TableHead className="min-w-[100px]">Aksi</TableHead>
-                  <TableHead className="min-w-[200px]">Detail</TableHead>
+                  <TableHead className="whitespace-nowrap">User</TableHead>
+                  <TableHead className="whitespace-nowrap">Aksi</TableHead>
+                  <TableHead className="whitespace-nowrap">Detail</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
