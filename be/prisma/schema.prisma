@@ -181,3 +181,14 @@ model AiCache {
 
   @@map("ai_cache")
 }
+
+// ──────────────────────── Elite Articles ────────────────────────
+model EliteArticle {
+  id        String   @id @default(uuid())
+  title     String
+  preview   String
+  content   String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("elite_articles")
+}

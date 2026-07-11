@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Crown, Play, BookOpen, MessageCircle, Lock, ArrowRight, Award } from "lucide-react";
+import { Crown, Play, MessageCircle, Lock, ArrowRight, Award } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
+import { EliteArticles } from "@/components/elite/EliteArticles";
 
 export const Route = createFileRoute("/elite-hub")({
   head: () => ({ meta: [{ title: "Elite Hub — Oziktag" }] }),
@@ -13,20 +14,7 @@ export const Route = createFileRoute("/elite-hub")({
 // We now fetch from YouTube API
 // const TRAINING_VIDEOS = [...]
 
-const TIPS_ARTICLES = [
-  {
-    title: "5 Kesalahan QC yang Sering Dilakukan Pengrajin Pemula",
-    preview: "Dari tidak mengecek sudut anyaman hingga lupa foto detail — hindari kesalahan ini.",
-  },
-  {
-    title: "Cara Mengurangi Retur Produk Kerajinan Tangan",
-    preview: "Retur bisa ditekan 40% dengan bubble wrap ekstra di bagian sudut dan tepi produk.",
-  },
-  {
-    title: "Meningkatkan Skor Kredit UMKM Anda",
-    preview: "Isi data finansial, konsisten generate QR, dan jaga nol komplain untuk skor maksimal.",
-  },
-];
+// The TIPS_ARTICLES constant has been moved to EliteArticles.tsx (dynamic)
 
 function EliteHub() {
   const { data: me, isLoading: meLoading } = useQuery({
@@ -143,23 +131,7 @@ function EliteHub() {
       </section>
 
       {/* Tips & Artikel */}
-      <section className="mt-10">
-        <div className="flex items-center gap-2 mb-4">
-          <BookOpen className="h-4 w-4 text-primary" />
-          <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">Tips QC Kerajinan Tangan</h2>
-        </div>
-        <div className="space-y-3">
-          {TIPS_ARTICLES.map((a) => (
-            <div
-              key={a.title}
-              className="rounded-xl border border-border bg-card p-5 hover:border-primary/40 transition-colors cursor-pointer"
-            >
-              <p className="text-sm font-semibold">{a.title}</p>
-              <p className="mt-1 text-xs text-muted-foreground">{a.preview}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      <EliteArticles isEliteOrAdmin={!!isEliteOrAdmin} isAdmin={!!me?.is_admin} />
 
       {/* Forum Diskusi — Coming Soon */}
       <section className="mt-10 mb-10">
