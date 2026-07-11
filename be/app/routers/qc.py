@@ -318,19 +318,6 @@ async def get_stats(current_user: dict = Depends(get_current_user)):
         }
     )
 
-    # Credit score calculation
-    user_data = await db.user.find_unique(
-        where={"id": user_id},
-        include={"kyc": True}
-    )
-    score = 300
-    if user_data and user_data.kyc and user_data.kyc.status in ["verified", "approved"]:
-        score += 150
-    score += (total_products * 5)
-    if user_data:
-        score += min(user_data.sisaKredit * 2, 100)
-    score = min(score, 850)
-
     # Revenue calculation from financial data
     products_with_prices = await db.qcproduct.find_many(
         where={"userId": user_id, "hargaJual": {"not": None}}
@@ -338,6 +325,38 @@ async def get_stats(current_user: dict = Depends(get_current_user)):
     total_revenue = sum(p.hargaJual for p in products_with_prices if p.hargaJual)
     total_cost = sum(p.hargaProduksi for p in products_with_prices if p.hargaProduksi)
     avg_margin = round(((total_revenue - total_cost) / total_revenue * 100), 1) if total_revenue > 0 else 0
+
+    # 4-Layer Credit Score Calculation
+    user_data = await db.user.find_unique(
+        where={"id": user_id},
+        include={"kyc": True}
+    )
+    
+    all_time_scans = await db.productscan.count(where={"userId": user_id})
+
+    score = 300 # Base Score
+
+    # Layer 1: KYC
+    if user_data and user_data.kyc and user_data.kyc.status in ["verified", "approved"]:
+        score += 150
+
+    # Layer 2: Activity (Scans)
+    activity_points = min(all_time_scans * 2, 150)
+    score += activity_points
+
+    # Layer 3 & 4: Financial & Trust Factor
+    financial_points = 0
+    if total_revenue > 0 and 0 <= avg_margin <= 85: # Heuristic: Margin must be reasonable
+        trust_factor = min(all_time_scans / 50.0, 1.0) # Need 50 scans to fully trust financial data
+        financial_points = int(150 * trust_factor)
+    score += financial_points
+
+    # Loyalty (Elite/Credits)
+    if user_data:
+        loyalty = min(user_data.sisaKredit * 2, 100)
+        score += loyalty
+        
+    score = min(score, 850)
 
     return {
         "total_products": total_products,
@@ -363,11 +382,32 @@ async def get_credit_report(current_user: dict = Depends(get_current_user)):
     total_products = await db.qcproduct.count(where={"userId": user_id})
     total_scans = await db.productscan.count(where={"userId": user_id})
 
-    # Credit score
-    score = 300
+    # Financial data
+    products = await db.qcproduct.find_many(where={"userId": user_id})
+    total_revenue = sum(p.hargaJual for p in products if p.hargaJual)
+    total_cost = sum(p.hargaProduksi for p in products if p.hargaProduksi)
+    profit = total_revenue - total_cost
+    margin = round((profit / total_revenue * 100), 1) if total_revenue > 0 else 0
+
+    # 4-Layer Credit Score Calculation
+    score = 300 # Base Score
+
+    # Layer 1: KYC
     if user_data.kyc and user_data.kyc.status in ["verified", "approved"]:
         score += 150
-    score += (total_products * 5)
+
+    # Layer 2: Activity (Scans)
+    activity_points = min(total_scans * 2, 150)
+    score += activity_points
+
+    # Layer 3 & 4: Financial & Trust Factor
+    financial_points = 0
+    if total_revenue > 0 and 0 <= margin <= 85: # Heuristic
+        trust_factor = min(total_scans / 50.0, 1.0) # Need 50 scans to fully trust financial data
+        financial_points = int(150 * trust_factor)
+    score += financial_points
+
+    # Loyalty
     score += min(user_data.sisaKredit * 2, 100)
     score = min(score, 850)
 

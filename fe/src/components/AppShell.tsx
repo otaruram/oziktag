@@ -179,7 +179,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           </div>
         </div>
-        <div className="flex gap-1 border-t border-border px-4 py-2 md:hidden">
+        <div className="flex gap-2 overflow-x-auto overflow-y-hidden border-t border-border px-4 py-2 md:hidden scrollbar-none whitespace-nowrap">
           {nav.map((item) => {
             const active = path === item.to;
             const Icon = item.icon;
@@ -187,7 +187,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link
                 key={item.to}
                 to={item.to}
-                className={`flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-xs ${
+                className={`flex shrink-0 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs ${
                   active ? "bg-secondary text-foreground" : "text-muted-foreground"
                 }`}
               >
