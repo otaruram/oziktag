@@ -30,8 +30,9 @@ import {
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api';
-import { Users, Activity, ShieldAlert, CreditCard, ArrowLeft, ChevronLeft, ChevronRight, RefreshCw, FileText } from 'lucide-react';
-
+import { AdminApiRequests } from '@/components/admin/AdminApiRequests';
+import { AdminKycRequests } from '@/components/admin/AdminKycRequests';
+import { Users, Activity, ShieldAlert, CreditCard, ArrowLeft, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
 export const Route = createFileRoute('/admin')({
   component: AdminDashboard,
 });
@@ -73,23 +74,7 @@ function AdminDashboard() {
     enabled: !!user?.is_admin,
   });
 
-  const { data: apiRequests, isLoading: apiRequestsLoading } = useQuery({
-    queryKey: ['admin-api-requests'],
-    queryFn: async () => {
-      const data = await apiFetch('/admin/api-requests');
-      return data;
-    },
-    enabled: !!user?.is_admin,
-  });
 
-  const { data: kycRequests, isLoading: kycRequestsLoading, refetch: refetchKyc } = useQuery({
-    queryKey: ['admin-kyc-requests'],
-    queryFn: async () => {
-      const data = await apiFetch('/admin/kyc-requests');
-      return data;
-    },
-    enabled: !!user?.is_admin,
-  });
 
   // Mutations
   const addCreditsMutation = useMutation({
@@ -128,62 +113,7 @@ function AdminDashboard() {
     },
   });
 
-  const approveApiRequestMutation = useMutation({
-    mutationFn: async (requestId: string) => {
-      const data = await apiFetch(`/admin/api-requests/${requestId}/approve`, { method: 'POST' });
-      return data;
-    },
-    onSuccess: (data) => {
-      toast.success(data.message);
-      queryClient.invalidateQueries({ queryKey: ['admin-api-requests'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-    },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.detail || 'Gagal menyetujui request');
-    },
-  });
 
-  const rejectApiRequestMutation = useMutation({
-    mutationFn: async (requestId: string) => {
-      const data = await apiFetch(`/admin/api-requests/${requestId}/reject`, { method: 'POST' });
-      return data;
-    },
-    onSuccess: (data) => {
-      toast.success(data.message);
-      queryClient.invalidateQueries({ queryKey: ['admin-api-requests'] });
-    },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.detail || 'Gagal menolak request');
-    },
-  });
-
-  const approveKycMutation = useMutation({
-    mutationFn: async (requestId: string) => {
-      const data = await apiFetch(`/admin/kyc-requests/${requestId}/approve`, { method: 'POST' });
-      return data;
-    },
-    onSuccess: (data) => {
-      toast.success(data.message);
-      queryClient.invalidateQueries({ queryKey: ['admin-kyc-requests'] });
-    },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.detail || 'Gagal menyetujui KYC');
-    },
-  });
-
-  const rejectKycMutation = useMutation({
-    mutationFn: async (requestId: string) => {
-      const data = await apiFetch(`/admin/kyc-requests/${requestId}/reject`, { method: 'POST' });
-      return data;
-    },
-    onSuccess: (data) => {
-      toast.success(data.message);
-      queryClient.invalidateQueries({ queryKey: ['admin-kyc-requests'] });
-    },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.detail || 'Gagal menolak KYC');
-    },
-  });
 
   const approveScoreAccessMutation = useMutation({
     mutationFn: async (userId: string) => {
@@ -335,205 +265,10 @@ function AdminDashboard() {
       </Card>
 
       {/* API Access Requests */}
-      <Card className="mb-8">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              API Access Requests
-              <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={() => queryClient.invalidateQueries({ queryKey: ['admin-api-requests'] })}>
-                <RefreshCw className="h-3 w-3" />
-              </Button>
-            </CardTitle>
-            <CardDescription>
-              Tinjau permintaan pengguna untuk mendapatkan akses ke Developer API.
-            </CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0 sm:p-6 overflow-hidden">
-          <div className="overflow-x-auto w-full">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nama</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Waktu Request</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Aksi</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {apiRequestsLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                      Memuat data...
-                    </TableCell>
-                  </TableRow>
-                ) : !apiRequests || apiRequests.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                      Belum ada permintaan API.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  apiRequests.map((req: any) => (
-                    <TableRow key={req.id}>
-                      <TableCell className="font-medium">{req.nama}</TableCell>
-                      <TableCell>{req.email}</TableCell>
-                      <TableCell>
-                        {new Date(req.created_at).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                      </TableCell>
-                      <TableCell>
-                        {req.status === 'pending' ? (
-                          <Badge variant="outline" className="text-yellow-500 border-yellow-500">Pending</Badge>
-                        ) : req.status === 'approved' ? (
-                          <Badge className="bg-green-500">Approved</Badge>
-                        ) : (
-                          <Badge variant="destructive">Rejected</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {req.status === 'pending' && (
-                          <div className="flex justify-end gap-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                              onClick={() => approveApiRequestMutation.mutate(req.id)}
-                              disabled={approveApiRequestMutation.isPending}
-                            >
-                              Terima
-                            </Button>
-                            <Button 
-                              variant="destructive" 
-                              size="sm"
-                              onClick={() => rejectApiRequestMutation.mutate(req.id)}
-                              disabled={rejectApiRequestMutation.isPending}
-                            >
-                              Tolak
-                            </Button>
-                          </div>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+      <AdminApiRequests />
 
       {/* KYC Verification Requests */}
-      <Card className="mb-8 border-primary/20">
-        <CardHeader className="flex flex-row items-center justify-between pb-2 bg-primary/5 rounded-t-xl">
-          <div>
-            <CardTitle className="flex items-center gap-2 text-primary">
-              KYC Verification Requests
-              <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full text-primary hover:text-primary/80" onClick={() => refetchKyc()}>
-                <RefreshCw className="h-3 w-3" />
-              </Button>
-            </CardTitle>
-            <CardDescription>
-              Tinjau dokumen identitas pengguna (KYC) secara manual.
-            </CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0 sm:p-6 overflow-hidden">
-          <div className="overflow-x-auto w-full">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nama / Email</TableHead>
-                  <TableHead>Toko</TableHead>
-                  <TableHead>Identitas</TableHead>
-                  <TableHead>Dokumen</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Aksi</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {kycRequestsLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      Memuat data...
-                    </TableCell>
-                  </TableRow>
-                ) : !kycRequests || kycRequests.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      Belum ada permintaan KYC.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  kycRequests.map((req: any) => (
-                    <TableRow key={req.id}>
-                      <TableCell>
-                        <div className="font-medium">{req.nama}</div>
-                        <div className="text-xs text-muted-foreground">{req.email}</div>
-                      </TableCell>
-                      <TableCell className="font-medium">{req.nama_toko}</TableCell>
-                      <TableCell>
-                        <div className="text-xs">NIK: <span className="font-medium">{req.nik}</span></div>
-                        {req.npwp && <div className="text-xs mt-1">NPWP: <span className="font-medium">{req.npwp}</span></div>}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col gap-2">
-                          {req.foto_ktp ? (
-                            <a href={req.foto_ktp} target="_blank" rel="noreferrer" className="inline-flex items-center text-xs text-blue-500 hover:underline">
-                              <FileText className="mr-1 h-3 w-3" /> Lihat KTP
-                            </a>
-                          ) : (
-                            <span className="text-xs text-muted-foreground italic">KTP -</span>
-                          )}
-                          {req.foto_npwp ? (
-                            <a href={req.foto_npwp} target="_blank" rel="noreferrer" className="inline-flex items-center text-xs text-blue-500 hover:underline">
-                              <FileText className="mr-1 h-3 w-3" /> Lihat NPWP
-                            </a>
-                          ) : (
-                            <span className="text-xs text-muted-foreground italic">NPWP -</span>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {req.status === 'pending' ? (
-                          <Badge variant="outline" className="text-yellow-500 border-yellow-500">Pending</Badge>
-                        ) : req.status === 'verified' || req.status === 'approved' ? (
-                          <Badge className="bg-green-500">Approved</Badge>
-                        ) : (
-                          <Badge variant="destructive">Rejected</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {req.status !== 'rejected' && req.status !== 'approved' && (
-                          <div className="flex justify-end gap-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                              onClick={() => approveKycMutation.mutate(req.id)}
-                              disabled={approveKycMutation.isPending}
-                            >
-                              Terima
-                            </Button>
-                            <Button 
-                              variant="destructive" 
-                              size="sm"
-                              onClick={() => rejectKycMutation.mutate(req.id)}
-                              disabled={rejectKycMutation.isPending}
-                            >
-                              Tolak
-                            </Button>
-                          </div>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+      <AdminKycRequests />
 
       {/* Users Table */}
       <Card>

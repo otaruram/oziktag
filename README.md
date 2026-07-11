@@ -1,7 +1,7 @@
 <div align="center">
   <img src="https://raw.githubusercontent.com/otaruram/oziktag/main/fe/public/logo.png" alt="Oziktag Logo" width="120" />
   <h1>Oziktag</h1>
-  <p><strong>Digital Trust Seal & Quality Control Platform for UMKM</strong></p>
+  <p><strong>Platform Digital Trust Seal & Quality Control untuk UMKM</strong></p>
 
   <!-- Badges -->
   <a href="https://github.com/otaruram/oziktag/actions"><img src="https://img.shields.io/github/actions/workflow/status/otaruram/oziktag/build.yml?branch=main&style=flat-square" alt="Build Status"></a>
@@ -13,50 +13,50 @@
 
 <br />
 
-## 📖 Overview
+## 📖 Ringkasan
 
-**Oziktag** is an enterprise-grade Quality Control (QC) and Digital Trust Seal platform built explicitly for Micro, Small, and Medium Enterprises (UMKMs). By leveraging Artificial Intelligence and a robust backend architecture, Oziktag allows sellers to generate verifiable, immutable QR-based QC labels that provide end-consumers with absolute transparency regarding product authenticity, condition, and care instructions.
+**Oziktag** adalah platform Quality Control (QC) tingkat perusahaan dan *Digital Trust Seal* (Stempel Kepercayaan Digital) yang dibangun khusus untuk Usaha Mikro, Kecil, dan Menengah (UMKM). Dengan memanfaatkan Kecerdasan Buatan (AI) dan arsitektur backend yang kokoh, Oziktag memungkinkan penjual untuk menghasilkan label QC berbasis kode QR yang dapat diverifikasi dan tidak dapat diubah. Ini memberikan transparansi absolut kepada konsumen akhir mengenai keaslian produk, kondisi, dan petunjuk perawatannya.
 
-With an integrated Developer API and a dual-wallet ecosystem, Oziktag is not just an application—it's a comprehensive Trust-as-a-Service infrastructure.
-
----
-
-## ✨ Enterprise Features
-
-- 🧠 **AI-Powered Quality Insights**: Intelligent integration with **Google Gemini 2.5 Flash** to automatically generate professional product insights and tailored care solutions based on raw QC checklist data.
-- ⚡ **Intelligent Caching System**: A highly optimized SHA-256 caching layer (`AiCache`) that intercepts redundant AI processing, significantly reducing external LLM token consumption and accelerating response times by up to 80%.
-- 💰 **Dual-Wallet Credit Architecture**: Independent ledger separation for UI-based QR Generation Credits and programmatic API Credits, ensuring strict granular billing control for different platform usage metrics.
-- 🔌 **Developer API & Webhooks**: RESTful endpoints with secure Bearer Token authentication designed for seamless POS and ERP integration.
-- 🛒 **Automated Payment Gateways**: End-to-end integration with **Louvin Payment Gateway** supporting dynamic QRIS/GoPay routing with instantaneous Webhook fulfillment.
-- 📊 **Real-time Telemetry Dashboard**: Live WebSocket event subscriptions via Supabase to track active product scans, credit consumption logs, and comprehensive platform analytics.
+Dengan API Developer yang terintegrasi dan ekosistem dompet ganda (dual-wallet), Oziktag bukan sekadar aplikasi—ini adalah infrastruktur *Trust-as-a-Service* yang komprehensif.
 
 ---
 
-## 🏗️ System Architecture & Workflow
+## ✨ Fitur Enterprise
 
-Oziktag utilizes a modern, decoupled monolithic architecture ensuring high availability and seamless developer experience.
+- 🧠 **Analisis Kualitas Berbasis AI**: Integrasi cerdas dengan **Google Gemini 1.5 Flash** untuk secara otomatis menghasilkan analisis produk profesional dan solusi perawatan yang disesuaikan berdasarkan data daftar periksa QC mentah.
+- ⚡ **Sistem Caching Cerdas**: Lapisan *caching* SHA-256 yang sangat optimal (`AiCache`) yang memotong pemrosesan AI yang berlebihan, secara signifikan mengurangi konsumsi token LLM eksternal dan mempercepat waktu respons hingga 80%.
+- 💰 **Arsitektur Kredit Dompet Ganda**: Pemisahan buku besar independen untuk Kredit Pembuatan QR berbasis UI dan Kredit API terprogram, memastikan kontrol penagihan terperinci yang ketat untuk metrik penggunaan platform yang berbeda.
+- 🔌 **API Developer & Webhook**: Endpoint RESTful dengan autentikasi Bearer Token aman yang dirancang untuk integrasi POS dan ERP yang mulus.
+- 🛒 **Payment Gateway Otomatis**: Integrasi end-to-end dengan **Louvin Payment Gateway** yang mendukung perutean dinamis QRIS/GoPay dengan pemenuhan Webhook secara instan.
+- 📊 **Dashboard Telemetri Real-time**: Langganan *event* WebSocket langsung melalui Supabase untuk melacak pemindaian produk yang aktif, log konsumsi kredit, dan analitik platform yang komprehensif.
+
+---
+
+## 🏗️ Arsitektur Sistem & Alur Kerja
+
+Oziktag menggunakan arsitektur monolitik modern yang terpisah untuk memastikan ketersediaan tinggi (high availability) dan pengalaman developer yang mulus.
 
 ```mermaid
 graph TD
     %% Entities
     User((UMKM / Developer))
-    Buyer((End Consumer))
+    Buyer((Konsumen Akhir))
     
     %% Frontend
     subgraph Frontend [Frontend (React + Vite)]
         UI[Web Dashboard]
-        Scanner[Public QR Scanner]
+        Scanner[Pemindai QR Publik]
     end
 
     %% Backend
     subgraph Backend [Backend (FastAPI)]
-        Auth[Auth & KYC Service]
-        QC[QC & API Controller]
-        Payment[Topup & Webhook Router]
+        Auth[Layanan Auth & KYC]
+        QC[QC & Kontroler API]
+        Payment[Topup & Router Webhook]
     end
 
     %% External Services
-    subgraph External [External Services]
+    subgraph External [Layanan Eksternal]
         Gemini[Google Gemini AI]
         Louvin[Louvin Payment Gateway]
         ImageKit[ImageKit CDN]
@@ -65,22 +65,22 @@ graph TD
     %% Database
     subgraph Database [Database (PostgreSQL + Prisma)]
         Prisma[(Prisma ORM)]
-        Supabase[(Supabase DB)]
+        Supabase[(Database Supabase)]
     end
 
     %% Workflows
-    User -->|Generates QC| UI
-    User -->|API Requests| QC
-    Buyer -->|Scans QR| Scanner
+    User -->|Membuat QC| UI
+    User -->|Permintaan API| QC
+    Buyer -->|Memindai QR| Scanner
     
     UI -->|REST API| Backend
-    Scanner -->|Fetch Data| QC
+    Scanner -->|Mengambil Data| QC
     
-    QC -->|1. Upload Media| ImageKit
-    QC -->|2. Check Hash| Prisma
-    QC -.->|3. If Cache Miss| Gemini
+    QC -->|1. Unggah Media| ImageKit
+    QC -->|2. Cek Hash| Prisma
+    QC -.->|3. Jika Tidak Ada Cache| Gemini
     
-    Payment <-->|Create Transaction & Webhook| Louvin
+    Payment <-->|Buat Transaksi & Webhook| Louvin
     
     Auth --> Prisma
     QC --> Prisma
@@ -89,136 +89,153 @@ graph TD
     Prisma --- Supabase
 ```
 
-### Request Flow: AI QC Generation
-1. **Request Intake**: Client (Web UI or Developer API) submits product details, seller notes, and checklists.
-2. **Billing Authorization**: The system routes the transaction to the Dual-Wallet module to deduct either QR Credits or API Credits based on the caller context.
-3. **Cache Validation**: An SHA-256 hash is generated from the payload and cross-referenced with `AiCache`.
-4. **LLM Invocation**: On a cache miss, the system securely invokes Google Gemini to synthesize insights.
-5. **Persistence & Return**: The generated insight, along with CDN-uploaded images, are stored in PostgreSQL. A unique UUID is generated and returned as a QR code link.
+### Alur Permintaan: Pembuatan QC AI
+1. **Penerimaan Permintaan**: Klien (Web UI atau Developer API) mengirimkan detail produk, catatan penjual, dan daftar periksa.
+2. **Otorisasi Penagihan**: Sistem merutekan transaksi ke modul Dompet Ganda untuk memotong Kredit QR atau Kredit API berdasarkan konteks pemanggil.
+3. **Validasi Cache**: Hash SHA-256 dihasilkan dari muatan payload dan direferensikan silang dengan `AiCache`.
+4. **Pemanggilan LLM**: Jika tidak ada di cache (Cache miss), sistem secara aman memanggil Google Gemini untuk menyintesis wawasan/analisis.
+5. **Penyimpanan & Pengembalian**: Analisis yang dihasilkan, bersama dengan gambar yang diunggah ke CDN, disimpan di PostgreSQL. UUID unik dihasilkan dan dikembalikan sebagai tautan kode QR.
 
 ---
 
-## 💳 Pricing Model (Pay-As-You-Go)
+## 💳 Model Harga (Pay-As-You-Go)
 
-Oziktag uses a **Credit-Based System (Pay-As-You-Go)** instead of a rigid monthly subscription. This ensures UMKMs only pay for what they use. 
-**1 Credit = 1x AI QC Generation (QR Code + AI Analysis).**
+Oziktag menggunakan **Sistem Berbasis Kredit (Pay-As-You-Go)** alih-alih langganan bulanan yang kaku. Ini memastikan UMKM hanya membayar untuk apa yang mereka gunakan. 
+**1 Kredit = 1x Pembuatan QC AI (Kode QR + Analisis AI).**
 
-| Package | Price | Credits | Cost per QR | Target User |
+| Paket | Harga | Kredit | Biaya per QR | Target Pengguna |
 |---------|-------|---------|-------------|-------------|
-| **Starter** | Rp 20,000 | 50 | Rp 400 | Early-stage UMKM |
-| **Growth** | Rp 50,000 | 150 | Rp 333 | Growing business *(Most Popular)* |
-| **Pro** | Rp 100,000 | 400 | Rp 250 | High-volume production |
+| **Starter** | Rp 20.000 | 50 | Rp 400 | UMKM Tahap Awal |
+| **Growth** | Rp 50.000 | 150 | Rp 333 | Bisnis Berkembang *(Paling Laris)* |
+| **Pro** | Rp 100.000 | 400 | Rp 250 | Produksi Volume Tinggi |
 
-All packages include full enterprise features: AI insights, lifetime active QR codes, and an ad-free public scan page. 
+Semua paket termasuk fitur enterprise penuh: Analisis AI, kode QR aktif seumur hidup, dan halaman pemindaian publik tanpa iklan. 
 
-**Immune to Dollar Fluctuations (Scale Economics):**
-By selling credits in IDR (Rp 250 - Rp 400 per QR) while our core AI variable cost (Gemini 2.5 Flash) is pegged to USD at $0.30 per 1M tokens, the cost per AI generation is roughly **Rp 15**. This achieves a gross margin of **>90%**. Even in extreme scenarios of currency hyperinflation, the baseline AI cost is so microscopic that the pricing model remains immensely profitable without ever needing to hike prices for UMKMs.
-
----
-
-## 💎 Unfair Advantage (Why it's hard to copy)
-
-While the fundamental concept of generating a QR code is easily replicable, Oziktag's true moat lies in its **Data Backbone and Ecosystem Lock-in**:
-
-1. **Vendor Lock-in via Physical Packaging:**
-   Once a UMKM prints hundreds or thousands of packaging boxes/stickers containing Oziktag's QR codes, they cannot simply switch to a competitor. If they stop using Oziktag or move to another platform, their existing printed QR codes will lead to dead links. This creates a highly sticky user base with long-term retention.
-2. **Proprietary Supply Chain & KYC Data:**
-   Oziktag collects massive amounts of real-world, localized data regarding UMKM production frequency, product quality (via AI analysis of raw photos), and validated KYC identities. This aggregated data holds immense value for B2B monetization (e.g., FMCG market research) or government analytics.
-3. **Alternative Credit Scoring (Fintech Integration):**
-   Traditional banks struggle to provide loans to UMKMs due to a lack of production data. Oziktag's platform acts as an alternative ledger: the frequency of QC generation correlates directly with product sales and inventory turnover. This data can be partnered with P2P Lending platforms to offer low-risk micro-loans to UMKMs.
-
-### 4-Layer Alternative Credit Scoring Validation
-To ensure that the financial health scores generated for UMKMs are fully robust and resilient against manipulation (e.g., faking profit margins), Oziktag implements a proprietary 4-layer validation framework:
-1. **Plausibility Filter (Heuristics):** Automatic rejection of impossible financial margins (e.g. >85%) preventing score manipulation from raw self-reported data.
-2. **Market Validation (Trust Factor):** Cross-verifying claimed revenue against actual QR scan activities by end consumers. Financial scores are heavily discounted unless backed by a high Trust Factor multiplier.
-3. **AI Fraud Detection:** Context-aware evaluation via Google Gemini 2.5 Flash to ensure the production cost and selling price correlate realistically to the product category.
-4. **Weighted Distribution:** The final 850-point score is a robust composite of KYC verification status, Scan activity (market engagement), Profitability (post-heuristics), and Platform loyalty.
+**Kebal terhadap Fluktuasi Dolar (Skala Ekonomi):**
+Dengan menjual kredit dalam mata uang Rupiah (Rp 250 - Rp 400 per QR) sementara biaya variabel AI inti kami (Gemini 1.5 Flash) dipatok ke Dolar AS sebesar $0.35 per 1 juta token, biaya per proses AI kira-kira hanya **Rp 15**. Ini mencapai margin kotor **>90%**. Bahkan dalam skenario ekstrem hiperinflasi mata uang, biaya dasar AI sangat mikroskopis sehingga model harga tetap sangat menguntungkan tanpa pernah perlu menaikkan harga untuk UMKM.
 
 ---
 
-## 📂 Project Structure
+## 🏗️ Infrastruktur & Biaya Operasional (Base Pay)
 
-The repository is organized into strict boundary domains:
+Untuk menjalankan Oziktag di tingkat enterprise, tumpukan infrastruktur berikut dan biaya dasarnya diperlukan. Pendekatan ini memastikan ketersediaan tinggi, skalabilitas, dan keamanan:
+
+1. **Supabase Pro (Database, Auth, Realtime)**: ~$25/bulan. Termasuk ruang database 100GB, bandwidth 50GB, dan 100.000 Pengguna Aktif Bulanan. Sangat penting untuk telemetri WebSocket dan Autentikasi.
+2. **ImageKit Pro (Media CDN & Penyimpanan)**: ~$49/bulan (atau pay-as-you-go). Digunakan untuk pengiriman gambar global yang cepat, optimasi gambar real-time, dan menyimpan foto produk QC mentah.
+3. **Google Gemini 1.5 Flash (Mesin AI)**: Bayar per token (sekitar $0.35 / 1 juta token). Digunakan untuk menyintesis daftar periksa QC menjadi analisis profesional. Biaya variabel yang sangat hemat biaya.
+4. **Hosting VPS (FastAPI Backend)**: ~Rp 100.000/bulan (misal Contabo, Hostinger, atau DigitalOcean). Menjalankan backend Python, Mesin Prisma, dan tugas mitigasi *cold-start* di latar belakang.
+5. **Domain (FE & BE)**: ~$15 - $25/tahun (misal `oziktag.com` dan `api.oziktag.com`).
+6. **Payment Gateway (misal Midtrans, Xendit, Louvin)**: **Tanpa Biaya Dasar Bulanan**. Menggunakan model bayar per transaksi (MDR). Misalnya, 0.7% untuk QRIS, atau ~2% untuk e-Wallet (GoPay, OVO), ditambah pajak yang berlaku (PPN).
+7. ***Opsional*: Custom SMTP (Resend / SendGrid)**: ~$20/bulan jika melebihi batas email transaksional gratis Supabase untuk pengiriman OTP/Email selamat datang.
+8. ***Opsional*: Cloudflare Pro (WAF & Perlindungan DDoS)**: ~$20/bulan untuk mitigasi bot tingkat lanjut dan *edge caching*.
+
+**Total Biaya Dasar Tetap (Minimum)**: ~**$80 - $90 per bulan** (tidak termasuk biaya variabel AI dan MDR Payment Gateway).
+
+---
+
+## 💎 Keunggulan Tidak Wajar (Mengapa sulit ditiru)
+
+Meskipun konsep dasar membuat kode QR mudah ditiru, parit pelindung (moat) sejati Oziktag terletak pada **Tulang Punggung Data dan Penguncian Ekosistem (Ecosystem Lock-in)**:
+
+1. **Penguncian Vendor melalui Kemasan Fisik:**
+   Setelah UMKM mencetak ratusan atau ribuan kotak/stiker kemasan yang berisi kode QR Oziktag, mereka tidak dapat begitu saja beralih ke pesaing. Jika mereka berhenti menggunakan Oziktag atau pindah ke platform lain, kode QR cetak mereka yang ada akan mengarah ke tautan mati. Ini menciptakan basis pengguna yang sangat terikat dengan retensi jangka panjang.
+2. **Data Rantai Pasokan & KYC Eksklusif:**
+   Oziktag mengumpulkan sejumlah besar data lokal dunia nyata mengenai frekuensi produksi UMKM, kualitas produk (melalui analisis AI terhadap foto mentah), dan identitas KYC yang divalidasi. Kumpulan data ini memiliki nilai yang sangat besar untuk monetisasi B2B (misal, riset pasar FMCG) atau analitik pemerintah.
+3. **Penilaian Kredit Alternatif (Integrasi Fintech):**
+   Bank tradisional berjuang untuk memberikan pinjaman kepada UMKM karena kurangnya data produksi. Platform Oziktag bertindak sebagai buku besar alternatif: frekuensi pembuatan QC berkorelasi langsung dengan penjualan produk dan perputaran persediaan. Data ini dapat bermitra dengan platform P2P Lending untuk menawarkan pinjaman mikro berisiko rendah kepada UMKM.
+
+### Validasi Penilaian Kredit Alternatif 4-Lapis
+Untuk memastikan bahwa skor kesehatan keuangan yang dihasilkan untuk UMKM benar-benar kuat dan tangguh terhadap manipulasi (misal, memalsukan margin keuntungan), Oziktag menerapkan kerangka validasi 4-lapis milik kami sendiri:
+1. **Filter Masuk Akal (Heuristik):** Penolakan otomatis terhadap margin keuangan yang tidak mungkin (misal >85%) untuk mencegah manipulasi skor dari data yang dilaporkan sendiri secara mentah.
+2. **Validasi Pasar (Faktor Kepercayaan):** Memverifikasi silang pendapatan yang diklaim terhadap aktivitas pemindaian QR aktual oleh konsumen akhir. Skor keuangan akan dikurangi secara signifikan kecuali didukung oleh pengali Faktor Kepercayaan yang tinggi.
+3. **Deteksi Penipuan AI:** Evaluasi berbasis konteks melalui Google Gemini 1.5 Flash untuk memastikan biaya produksi dan harga jual berkorelasi secara realistis dengan kategori produk.
+4. **Distribusi Tertimbang:** Skor 850 poin akhir adalah gabungan kuat dari status verifikasi KYC, Aktivitas pemindaian (keterlibatan pasar), Profitabilitas (pasca-heuristik), dan Loyalitas platform.
+
+---
+
+## 📂 Struktur Proyek
+
+Repositori ini diatur ke dalam domain batas (boundary domains) yang ketat:
 
 ```text
 oziktag/
-├── be/                       # Backend Application
+├── be/                       # Aplikasi Backend
 │   ├── app/                  
-│   │   ├── models/           # Pydantic Schemas
-│   │   ├── routers/          # FastAPI Route Controllers
-│   │   ├── services/         # Business Logic (AI, ImageKit, Louvin)
-│   │   └── database.py       # Prisma Client Connection
-│   ├── prisma/               # Database Schema & Migrations
-│   └── main.py               # Application Entrypoint & Lifecycle
+│   │   ├── models/           # Skema Pydantic
+│   │   ├── routers/          # Pengontrol Rute FastAPI
+│   │   ├── services/         # Logika Bisnis (AI, ImageKit, Louvin)
+│   │   └── database.py       # Koneksi Klien Prisma
+│   ├── prisma/               # Skema Database & Migrasi
+│   └── main.py               # Titik Masuk & Siklus Hidup Aplikasi
 │
-├── fe/                       # Frontend Application
+├── fe/                       # Aplikasi Frontend
 │   ├── src/                  
-│   │   ├── components/       # Reusable React UI Components
-│   │   ├── routes/           # TanStack Router Pages
-│   │   └── lib/              # API Clients, Supabase, Store
-│   └── vite.config.ts        # Bundler Configuration
+│   │   ├── components/       # Komponen UI React yang dapat digunakan ulang
+│   │   ├── routes/           # Halaman TanStack Router
+│   │   └── lib/              # Klien API, Supabase, Store
+│   └── vite.config.ts        # Konfigurasi Bundler
 │
-└── README.md                 # Project Documentation
+└── README.md                 # Dokumentasi Proyek
 ```
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Memulai
 
-### Prerequisites
+### Prasyarat
 - [Node.js](https://nodejs.org/) v18+
 - [Python](https://www.python.org/) 3.12+
-- [PostgreSQL](https://www.postgresql.org/) (via Supabase or local instance)
+- [PostgreSQL](https://www.postgresql.org/) (melalui Supabase atau instans lokal)
 
-### 1. Database Setup (Backend)
-Navigate to the backend directory and configure the environment:
+### 1. Pengaturan Database (Backend)
+Navigasi ke direktori backend dan konfigurasikan lingkungan:
 ```bash
 cd be
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate  # Di Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-Set up your `.env` file based on `.env.example`, then push the schema:
+Atur file `.env` Anda berdasarkan `.env.example`, lalu dorong skema:
 ```bash
 npx prisma db push
 python -m prisma generate
 ```
 
-Start the API Server:
+Mulai Server API:
 ```bash
 python -m uvicorn app.main:app --reload --port 8000
 ```
-> The API documentation will be available at `http://localhost:8000/docs`
+> Dokumentasi API akan tersedia di `http://localhost:8000/docs`
 
-### 2. UI Setup (Frontend)
-Open a new terminal and navigate to the frontend directory:
+### 2. Pengaturan UI (Frontend)
+Buka terminal baru dan navigasi ke direktori frontend:
 ```bash
 cd fe
 npm install
 ```
 
-Set up your `.env` file for the frontend, then start the development server:
+Atur file `.env` Anda untuk frontend, lalu mulai server pengembangan:
 ```bash
 npm run dev
 ```
-> The UI will be accessible at `http://localhost:5173`
+> UI akan dapat diakses di `http://localhost:5173`
 
 ---
 
-## 🔐 Security & Operations
+## 🔐 Keamanan & Operasi
 
-- **API Keys Management**: Developer keys are secured and hashed. Access can be revoked instantly via the dashboard.
-- **Cold-Start Mitigation**: Built-in background asyncio tasks perform automated self-pings to prevent container hibernation on serverless/free-tier hosting environments (e.g., Render).
-- **Data Integrity**: Enforced Foreign Key constraints, transaction-level state management, and real-time ledger rollbacks for failed processes.
+- **Manajemen Kunci API**: Kunci developer diamankan dan di-*hash*. Akses dapat dicabut secara instan melalui dasbor.
+- **Mitigasi Cold-Start**: Tugas *asyncio* latar belakang bawaan melakukan *ping* otomatis (self-ping) untuk mencegah hibernasi kontainer pada lingkungan hosting serverless/tier gratis (misal, Render).
+- **Integritas Data**: Kendala Kunci Asing (*Foreign Key constraints*) yang ditegakkan, manajemen status tingkat transaksi, dan pembatalan (*rollback*) buku besar secara *real-time* untuk proses yang gagal.
 
 ---
 
-## 📄 License
+## 📄 Lisensi
 
-This project is proprietary and confidential. Unauthorized copying, distribution, or use of this source code is strictly prohibited. 
+Proyek ini bersifat tertutup dan rahasia (*proprietary and confidential*). Penyalinan, distribusi, atau penggunaan kode sumber ini tanpa izin dilarang keras. 
 
 <div align="center">
   <br />
-  <p>Engineered with ❤️ for UMKM Indonesia.</p>
+  <p>Direkayasa dengan ❤️ untuk UMKM Indonesia.</p>
 </div>
