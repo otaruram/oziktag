@@ -40,10 +40,10 @@ export function AdminActivities() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Produk</TableHead>
-                  <TableHead>Waktu</TableHead>
-                  <TableHead></TableHead>
+                  <TableHead className="min-w-[120px]">User</TableHead>
+                  <TableHead className="min-w-[180px]">Produk</TableHead>
+                  <TableHead className="min-w-[120px]">Waktu</TableHead>
+                  <TableHead className="min-w-[100px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -93,9 +93,9 @@ export function AdminActivities() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Aksi</TableHead>
-                  <TableHead>Detail</TableHead>
+                  <TableHead className="min-w-[150px]">User</TableHead>
+                  <TableHead className="min-w-[100px]">Aksi</TableHead>
+                  <TableHead className="min-w-[200px]">Detail</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
