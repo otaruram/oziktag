@@ -52,13 +52,13 @@ export function AdminActivities() {
                 ) : data?.qrs?.length > 0 ? (
                   data.qrs.slice(0, 10).map((qr: any) => (
                     <TableRow key={qr.id}>
-                      <TableCell className="text-xs">{qr.user_email}</TableCell>
+                      <TableCell className="text-xs whitespace-nowrap">{qr.user_email}</TableCell>
                       <TableCell className="font-medium text-xs">
                         {qr.nama_produk}
                         <br/>
                         <span className="text-muted-foreground">{qr.kategori}</span>
                       </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
+                      <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                         {new Date(qr.created_at).toLocaleString('id-ID')}
                       </TableCell>
                       <TableCell>
@@ -104,13 +104,13 @@ export function AdminActivities() {
                 ) : data?.credit_logs?.length > 0 ? (
                   data.credit_logs.slice(0, 10).map((log: any) => (
                     <TableRow key={log.id}>
-                      <TableCell className="text-xs">{log.user_email}</TableCell>
-                      <TableCell>
+                      <TableCell className="text-xs whitespace-nowrap">{log.user_email}</TableCell>
+                      <TableCell className="whitespace-nowrap">
                         <Badge variant={log.amount > 0 ? "default" : "destructive"} className="text-[10px]">
                           {log.amount > 0 ? `+${log.amount}` : log.amount} {log.action}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-xs text-muted-foreground max-w-[150px] truncate" title={log.description}>
+                      <TableCell className="text-xs text-muted-foreground min-w-[200px]" title={log.description}>
                         {log.description}
                       </TableCell>
                     </TableRow>
