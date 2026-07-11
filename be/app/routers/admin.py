@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.database import db
 from app.dependencies import get_admin_user
 from app.services.credit_service import add_credits
-from app.services.admin_service import get_all_users_for_admin, get_platform_stats, get_supaledger_dataset
+from app.services.admin_service import get_all_users_for_admin, get_platform_stats, get_supaledger_dataset, get_all_activities
 from app.models.schemas import AdminUserItem, AdminAddCreditsRequest, AdminBanRequest
 
 router = APIRouter(prefix="/api/admin", tags=["Admin Panel"])
@@ -150,6 +150,12 @@ async def get_admin_stats(admin: dict = Depends(get_admin_user)):
 async def export_ml_dataset(admin: dict = Depends(get_admin_user)):
     """Export dataset for Supaledger ML training."""
     return await get_supaledger_dataset()
+
+
+@router.get("/activities")
+async def get_activities(admin: dict = Depends(get_admin_user)):
+    """Get global user activities for admin dashboard."""
+    return await get_all_activities()
 
 
 from app.models.schemas import ApiAccessRequestItem

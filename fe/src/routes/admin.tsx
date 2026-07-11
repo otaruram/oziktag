@@ -32,6 +32,8 @@ import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api';
 import { AdminApiRequests } from '@/components/admin/AdminApiRequests';
 import { AdminKycRequests } from '@/components/admin/AdminKycRequests';
+import { AdminSupaledger } from '@/components/admin/AdminSupaledger';
+import { AdminActivities } from '@/components/admin/AdminActivities';
 import { Users, Activity, ShieldAlert, CreditCard, ArrowLeft, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
 export const Route = createFileRoute('/admin')({
   component: AdminDashboard,
@@ -242,27 +244,11 @@ function AdminDashboard() {
         </Card>
       </div>
 
-      {/* Supaledger ML Dataset Export */}
-      <Card className="mb-8 border-primary/20 bg-primary/5">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              Supaledger (ML Dataset Export)
-            </CardTitle>
-            <CardDescription className="max-w-2xl mt-1">
-              Ekspor dataset tabular dari semua produk QC yang memiliki data finansial (Harga Produksi & Harga Jual). Dataset ini digabungkan dengan total scan dan KYC status, siap untuk dilatih pada model Traditional Machine Learning.
-            </CardDescription>
-          </div>
-          <Button onClick={handleExportDataset} className="hidden sm:flex items-center gap-2">
-            <FileText className="h-4 w-4" /> Download CSV
-          </Button>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <Button onClick={handleExportDataset} className="w-full sm:hidden flex items-center justify-center gap-2 mt-4">
-            <FileText className="h-4 w-4" /> Download CSV
-          </Button>
-        </CardContent>
-      </Card>
+      {/* Supaledger ML Dataset Table */}
+      <AdminSupaledger />
+      
+      {/* User Activities (QRs & Credits) */}
+      <AdminActivities />
 
       {/* API Access Requests */}
       <AdminApiRequests />

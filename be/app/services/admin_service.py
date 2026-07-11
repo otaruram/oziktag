@@ -102,3 +102,46 @@ async def get_supaledger_dataset() -> list[dict]:
         })
 
     return dataset
+
+async def get_all_activities() -> dict:
+    """Fetch all QC Products (QRs) and CreditLogs globally."""
+    # Fetch recent QR generations (QcProducts)
+    products = await db.qcproduct.find_many(
+        include={"user": True},
+        order={"createdAt": "desc"},
+        take=100
+    )
+    
+    qrs = []
+    for p in products:
+        qrs.append({
+            "id": p.id,
+            "user_email": p.user.email if p.user else "Unknown",
+            "nama_produk": p.namaProduk,
+            "kategori": p.kategori,
+            "catatan_penjual": p.catatanPenjual,
+            "created_at": p.createdAt.isoformat()
+        })
+        
+    # Fetch recent Credit Logs
+    logs = await db.creditlog.find_many(
+        include={"user": True},
+        order={"createdAt": "desc"},
+        take=100
+    )
+    
+    credit_logs = []
+    for log in logs:
+        credit_logs.append({
+            "id": log.id,
+            "user_email": log.user.email if log.user else "Unknown",
+            "action": log.action,
+            "amount": log.amount,
+            "description": log.description,
+            "created_at": log.createdAt.isoformat()
+        })
+        
+    return {
+        "qrs": qrs,
+        "credit_logs": credit_logs
+    }

@@ -120,7 +120,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div className="relative">
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-border bg-secondary hover:ring-2 hover:ring-primary/50 transition-all"
+                className="relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-border bg-secondary hover:ring-2 hover:ring-primary/50 transition-all"
               >
                 {avatar ? (
                   <img src={avatar} alt="Profile" className="h-full w-full object-cover" />
@@ -128,6 +128,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <User className="h-4 w-4 text-muted-foreground" />
                 )}
               </button>
+              {isAdmin && (
+                <div className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary shadow-sm ring-2 ring-background z-10 pointer-events-none">
+                  <Crown className="h-3 w-3 text-primary-foreground" />
+                </div>
+              )}
 
               {isDropdownOpen && (
                 <>
