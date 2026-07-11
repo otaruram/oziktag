@@ -127,6 +127,13 @@ While the fundamental concept of generating a QR code is easily replicable, Ozik
 3. **Alternative Credit Scoring (Fintech Integration):**
    Traditional banks struggle to provide loans to UMKMs due to a lack of production data. Oziktag's platform acts as an alternative ledger: the frequency of QC generation correlates directly with product sales and inventory turnover. This data can be partnered with P2P Lending platforms to offer low-risk micro-loans to UMKMs.
 
+### 4-Layer Alternative Credit Scoring Validation
+To ensure that the financial health scores generated for UMKMs are fully robust and resilient against manipulation (e.g., faking profit margins), Oziktag implements a proprietary 4-layer validation framework:
+1. **Plausibility Filter (Heuristics):** Automatic rejection of impossible financial margins (e.g. >85%) preventing score manipulation from raw self-reported data.
+2. **Market Validation (Trust Factor):** Cross-verifying claimed revenue against actual QR scan activities by end consumers. Financial scores are heavily discounted unless backed by a high Trust Factor multiplier.
+3. **AI Fraud Detection:** Context-aware evaluation via Google Gemini 2.5 Flash to ensure the production cost and selling price correlate realistically to the product category.
+4. **Weighted Distribution:** The final 850-point score is a robust composite of KYC verification status, Scan activity (market engagement), Profitability (post-heuristics), and Platform loyalty.
+
 ---
 
 ## 📂 Project Structure
