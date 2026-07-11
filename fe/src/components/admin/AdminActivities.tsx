@@ -16,6 +16,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "@tanstack/react-router";
+import { ExternalLink } from "lucide-react";
 
 export function AdminActivities() {
   const { data, isLoading } = useQuery({
@@ -41,6 +43,7 @@ export function AdminActivities() {
                   <TableHead>User</TableHead>
                   <TableHead>Produk</TableHead>
                   <TableHead>Waktu</TableHead>
+                  <TableHead></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -58,10 +61,20 @@ export function AdminActivities() {
                       <TableCell className="text-xs text-muted-foreground">
                         {new Date(qr.created_at).toLocaleString('id-ID')}
                       </TableCell>
+                      <TableCell>
+                        <Link
+                          to="/scan/$id"
+                          params={{ id: qr.id }}
+                          target="_blank"
+                          className="inline-flex items-center gap-1 text-xs text-primary hover:underline whitespace-nowrap"
+                        >
+                          Cek QR <ExternalLink className="h-3 w-3" />
+                        </Link>
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : (
-                  <TableRow><TableCell colSpan={3} className="text-center">Belum ada QR.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={4} className="text-center">Belum ada QR.</TableCell></TableRow>
                 )}
               </TableBody>
             </Table>
