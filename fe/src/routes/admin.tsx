@@ -220,6 +220,43 @@ function AdminDashboard() {
     banUserMutation.mutate({ userId: usr.id, banned: !usr.is_banned });
   };
 
+  const handleExportDataset = async () => {
+    try {
+      toast.loading("Menyiapkan dataset Supaledger...", { id: "export-dataset" });
+      const dataset = await apiFetch("/admin/dataset/export");
+      
+      if (!dataset || dataset.length === 0) {
+        toast.error("Tidak ada data produk yang memiliki harga.", { id: "export-dataset" });
+        return;
+      }
+      
+      // Convert to CSV
+      const headers = Object.keys(dataset[0]).join(",");
+      const csvRows = dataset.map((row: any) => {
+        return Object.values(row).map((val: any) => {
+          // Escape quotes and wrap in quotes for CSV safety
+          const str = String(val).replace(/"/g, '""');
+          return `"${str}"`;
+        }).join(",");
+      });
+      const csvString = [headers, ...csvRows].join("\n");
+      
+      // Trigger download
+      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `supaledger_dataset_${new Date().getTime()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success("Dataset berhasil diunduh!", { id: "export-dataset" });
+    } catch (err: any) {
+      toast.error(err.message || "Gagal mengunduh dataset", { id: "export-dataset" });
+    }
+  };
+
   return (
     <div className="container mx-auto py-8 px-4 sm:px-6">
       <Link to="/dashboard" className="mb-6 inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
@@ -274,6 +311,28 @@ function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Supaledger ML Dataset Export */}
+      <Card className="mb-8 border-primary/20 bg-primary/5">
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              Supaledger (ML Dataset Export)
+            </CardTitle>
+            <CardDescription className="max-w-2xl mt-1">
+              Ekspor dataset tabular dari semua produk QC yang memiliki data finansial (Harga Produksi & Harga Jual). Dataset ini digabungkan dengan total scan dan KYC status, siap untuk dilatih pada model Traditional Machine Learning.
+            </CardDescription>
+          </div>
+          <Button onClick={handleExportDataset} className="hidden sm:flex items-center gap-2">
+            <FileText className="h-4 w-4" /> Download CSV
+          </Button>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <Button onClick={handleExportDataset} className="w-full sm:hidden flex items-center justify-center gap-2 mt-4">
+            <FileText className="h-4 w-4" /> Download CSV
+          </Button>
+        </CardContent>
+      </Card>
 
       {/* API Access Requests */}
       <Card className="mb-8">

@@ -206,6 +206,46 @@ async def get_admin_stats(admin: dict = Depends(get_admin_user)):
     }
 
 
+@router.get("/dataset/export")
+async def export_ml_dataset(admin: dict = Depends(get_admin_user)):
+    """Export dataset for Supaledger ML training."""
+    # Only get products with financial data
+    products = await db.qcproduct.find_many(
+        where={
+            "hargaProduksi": {"not": None},
+            "hargaJual": {"not": None}
+        },
+        include={"user": {"include": {"kyc": True}}, "scans": True}
+    )
+
+    dataset = []
+    for p in products:
+        if not p.hargaProduksi or not p.hargaJual:
+            continue
+            
+        profit = p.hargaJual - p.hargaProduksi
+        margin = round((profit / p.hargaJual * 100), 1) if p.hargaJual > 0 else 0
+        total_scans = len(p.scans) if p.scans else 0
+        
+        kyc_status = "unverified"
+        if p.user and p.user.kyc:
+            kyc_status = p.user.kyc.status
+
+        dataset.append({
+            "id_produk": p.id,
+            "kategori": p.kategori,
+            "harga_produksi": p.hargaProduksi,
+            "harga_jual": p.hargaJual,
+            "margin_persen": margin,
+            "total_scan": total_scans,
+            "catatan_penjual": p.catatanPenjual or "",
+            "ai_insight": p.aiInsight or "",
+            "kyc_status": kyc_status
+        })
+
+    return dataset
+
+
 from app.models.schemas import ApiAccessRequestItem
 
 @router.get("/api-requests", response_model=list[ApiAccessRequestItem])
