@@ -110,14 +110,14 @@ function Generator() {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_400px]">
         <form onSubmit={submit} className="space-y-4 rounded-xl border border-border bg-card p-6">
-          <div className="flex justify-end">
-            <button
+          <div className="hidden">
+            {/* <button
               type="button"
               onClick={autoFill}
               className="inline-flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20"
             >
               <Sparkles className="h-3.5 w-3.5" /> Auto-Fill Dummy Data
-            </button>
+            </button> */}
           </div>
           <Field label="Nama Produk">
             <input
