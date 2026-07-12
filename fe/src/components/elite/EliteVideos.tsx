@@ -143,11 +143,13 @@ export function EliteVideos({ isEliteOrAdmin, isAdmin }: { isEliteOrAdmin: boole
             <Play className="h-4 w-4 text-primary" />
             <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">Video Pelatihan</h2>
           </div>
+          {/* 
           {isAdmin && (
             <Button variant="outline" size="sm" onClick={openAddModal} className="h-8 rounded-md px-3 text-xs">
               <Plus className="mr-1.5 h-3.5 w-3.5" /> Tambah Video
             </Button>
-          )}
+          )} 
+          */}
         </div>
         
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -160,6 +162,7 @@ export function EliteVideos({ isEliteOrAdmin, isAdmin }: { isEliteOrAdmin: boole
                 onClick={() => setSelectedVideo(v)}
                 className="group relative rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/40 block cursor-pointer"
               >
+                {/*
                 {isAdmin && (
                   <div className="absolute top-2 right-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Button size="icon" variant="secondary" className="h-7 w-7 bg-white/80 hover:bg-white text-black backdrop-blur-sm" onClick={(e) => openEditModal(v, e)}>
@@ -170,6 +173,7 @@ export function EliteVideos({ isEliteOrAdmin, isAdmin }: { isEliteOrAdmin: boole
                     </Button>
                   </div>
                 )}
+                */}
                 <div className="relative flex aspect-video items-center justify-center rounded-lg bg-secondary/60 mb-4 overflow-hidden">
                   {v.thumbnail ? (
                     <img src={v.thumbnail} alt={v.title} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
