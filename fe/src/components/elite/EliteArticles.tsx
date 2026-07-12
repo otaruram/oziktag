@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { BookOpen, Plus, ImagePlus, Loader2 } from "lucide-react";
+import { BookOpen, Plus, ImagePlus, Loader2, Edit, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -13,12 +13,17 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 
 export function EliteArticles({ isEliteOrAdmin, isAdmin }: { isEliteOrAdmin: boolean; isAdmin: boolean }) {
   const queryClient = useQueryClient();
   const [selectedArticle, setSelectedArticle] = useState<any>(null);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [editingArticle, setEditingArticle] = useState<any>(null);
+
   const [newTitle, setNewTitle] = useState("");
   const [newPreview, setNewPreview] = useState("");
   const [newContent, setNewContent] = useState("");
@@ -31,32 +36,74 @@ export function EliteArticles({ isEliteOrAdmin, isAdmin }: { isEliteOrAdmin: boo
     enabled: !!isEliteOrAdmin,
   });
 
-  const addArticleMutation = useMutation({
+  const saveArticleMutation = useMutation({
     mutationFn: async (data: { title: string; preview: string; content: string }) => {
-      return await apiFetch("/elite/articles", {
-        method: "POST",
+      const url = editingArticle ? `/elite/articles/${editingArticle.id}` : "/elite/articles";
+      const method = editingArticle ? "PUT" : "POST";
+      return await apiFetch(url, {
+        method,
         body: JSON.stringify(data),
       });
     },
     onSuccess: () => {
-      toast.success("Artikel berhasil ditambahkan");
-      setIsAddModalOpen(false);
-      setNewTitle("");
-      setNewPreview("");
-      setNewContent("");
+      toast.success(editingArticle ? "Artikel berhasil diupdate" : "Artikel berhasil ditambahkan");
+      setIsModalOpen(false);
+      resetForm();
       queryClient.invalidateQueries({ queryKey: ["elite-articles"] });
     },
     onError: (err: any) => {
-      toast.error(err.message || "Gagal menambahkan artikel");
+      toast.error(err.message || "Gagal menyimpan artikel");
     },
   });
 
-  const handleAddArticle = (e: React.FormEvent) => {
+  const deleteArticleMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiFetch(`/elite/articles/${id}`, { method: "DELETE" });
+    },
+    onSuccess: () => {
+      toast.success("Artikel berhasil dihapus");
+      setIsDeleteModalOpen(false);
+      setEditingArticle(null);
+      queryClient.invalidateQueries({ queryKey: ["elite-articles"] });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Gagal menghapus artikel");
+    },
+  });
+
+  const resetForm = () => {
+    setNewTitle("");
+    setNewPreview("");
+    setNewContent("");
+    setEditingArticle(null);
+  };
+
+  const openAddModal = () => {
+    resetForm();
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (article: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingArticle(article);
+    setNewTitle(article.title);
+    setNewPreview(article.preview);
+    setNewContent(article.content);
+    setIsModalOpen(true);
+  };
+
+  const openDeleteModal = (article: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingArticle(article);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleSaveArticle = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle || !newPreview || !newContent) {
       return toast.error("Semua field harus diisi");
     }
-    addArticleMutation.mutate({ title: newTitle, preview: newPreview, content: newContent });
+    saveArticleMutation.mutate({ title: newTitle, preview: newPreview, content: newContent });
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -98,10 +145,10 @@ export function EliteArticles({ isEliteOrAdmin, isAdmin }: { isEliteOrAdmin: boo
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setIsAddModalOpen(true)}
-              className="gap-2"
+              onClick={openAddModal}
+              className="gap-2 h-8 px-3 rounded-md text-xs"
             >
-              <Plus className="h-4 w-4" /> Tambah Artikel
+              <Plus className="h-3.5 w-3.5" /> Tambah Artikel
             </Button>
           )}
         </div>
@@ -114,10 +161,22 @@ export function EliteArticles({ isEliteOrAdmin, isAdmin }: { isEliteOrAdmin: boo
               <div
                 key={a.id}
                 onClick={() => setSelectedArticle(a)}
-                className="rounded-xl border border-border bg-card p-5 hover:border-primary/40 transition-colors cursor-pointer"
+                className="group relative rounded-xl border border-border bg-card p-5 hover:border-primary/40 transition-colors cursor-pointer"
               >
-                <p className="text-sm font-semibold">{a.title.replace(/\*/g, '')}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{a.preview.replace(/\*/g, '')}</p>
+                {isAdmin && (
+                  <div className="absolute top-4 right-4 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button size="icon" variant="secondary" className="h-7 w-7 bg-white/80 hover:bg-white text-black backdrop-blur-sm" onClick={(e) => openEditModal(a, e)}>
+                      <Edit className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button size="icon" variant="destructive" className="h-7 w-7" onClick={(e) => openDeleteModal(a, e)}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                )}
+                <div className="pr-16">
+                  <p className="text-sm font-semibold">{a.title.replace(/\*/g, '')}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{a.preview.replace(/\*/g, '')}</p>
+                </div>
               </div>
             ))
           ) : (
@@ -139,13 +198,13 @@ export function EliteArticles({ isEliteOrAdmin, isAdmin }: { isEliteOrAdmin: boo
         </DialogContent>
       </Dialog>
 
-      {/* Add Article Dialog (Admin Only) */}
-      <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+      {/* Form Add/Edit Article Modal (Admin Only) */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-w-xl">
           <DialogHeader>
-            <DialogTitle>Tambah Artikel Tips QC</DialogTitle>
+            <DialogTitle>{editingArticle ? "Edit Artikel" : "Tambah Artikel Tips QC"}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleAddArticle} className="space-y-4">
+          <form onSubmit={handleSaveArticle} className="space-y-4">
             <div className="space-y-2">
               <Label>Judul Artikel</Label>
               <Input
@@ -196,11 +255,38 @@ export function EliteArticles({ isEliteOrAdmin, isAdmin }: { isEliteOrAdmin: boo
               />
             </div>
             <DialogFooter>
-              <Button type="submit" disabled={addArticleMutation.isPending}>
-                {addArticleMutation.isPending ? "Menyimpan..." : "Simpan Artikel"}
+              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
+                Batal
+              </Button>
+              <Button type="submit" disabled={saveArticleMutation.isPending}>
+                {saveArticleMutation.isPending ? "Menyimpan..." : "Simpan Artikel"}
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Modal */}
+      <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Hapus Artikel?</DialogTitle>
+            <DialogDescription>
+              Tindakan ini tidak dapat dibatalkan. Artikel ini akan dihapus secara permanen.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="pt-4">
+            <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>
+              Batal
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={deleteArticleMutation.isPending}
+              onClick={() => deleteArticleMutation.mutate(editingArticle?.id)}
+            >
+              {deleteArticleMutation.isPending ? "Menghapus..." : "Hapus Artikel"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

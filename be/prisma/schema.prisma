@@ -192,3 +192,16 @@ model EliteArticle {
 
   @@map("elite_articles")
 }
+
+// ──────────────────────── Elite Videos ────────────────────────
+model EliteVideo {
+  id         String   @id @default(uuid())
+  title      String
+  youtubeUrl String   @map("youtube_url")
+  thumbnail  String
+  duration   String
+  category   String
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("elite_videos")
+}

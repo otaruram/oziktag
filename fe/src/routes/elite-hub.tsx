@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
 import { EliteArticles } from "@/components/elite/EliteArticles";
+import { EliteVideos } from "@/components/elite/EliteVideos";
 import {
   Dialog,
   DialogContent,
@@ -23,7 +24,6 @@ export const Route = createFileRoute("/elite-hub")({
 // The TIPS_ARTICLES constant has been moved to EliteArticles.tsx (dynamic)
 
 function EliteHub() {
-  const [selectedVideo, setSelectedVideo] = useState<any>(null);
 
   const { data: me, isLoading: meLoading } = useQuery({
     queryKey: ["auth-me"],
@@ -32,12 +32,6 @@ function EliteHub() {
 
   const isEliteOrAdmin = me?.is_elite || me?.is_admin;
   const eliteExpires = me?.elite_expires_at || null;
-
-  const { data: trainingVideos, isLoading: videosLoading } = useQuery({
-    queryKey: ["elite-videos"],
-    queryFn: async () => await apiFetch("/elite/videos"),
-    enabled: !!isEliteOrAdmin
-  });
 
   if (meLoading) {
     return (
@@ -96,45 +90,7 @@ function EliteHub() {
       </div>
 
       {/* Video Pelatihan */}
-      <section className="mt-10">
-        <div className="flex items-center gap-2 mb-4">
-          <Play className="h-4 w-4 text-primary" />
-          <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">Video Pelatihan</h2>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {videosLoading ? (
-            <p className="text-sm text-muted-foreground">Memuat video realtime dari YouTube...</p>
-          ) : trainingVideos && trainingVideos.length > 0 ? (
-            trainingVideos.map((v: any) => (
-              <div
-                key={v.id}
-                onClick={() => setSelectedVideo(v)}
-                className="group rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/40 block cursor-pointer"
-              >
-                <div className="relative flex aspect-video items-center justify-center rounded-lg bg-secondary/60 mb-4 overflow-hidden">
-                  {v.thumbnail ? (
-                    <img src={v.thumbnail} alt={v.title} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
-                  ) : (
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/20 group-hover:bg-primary/30 transition-colors">
-                      <Play className="h-5 w-5 text-primary ml-0.5" />
-                    </div>
-                  )}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-black/50 backdrop-blur-sm group-hover:scale-110 transition-transform">
-                       <Play className="h-5 w-5 text-white ml-0.5" />
-                     </div>
-                  </div>
-                </div>
-                <p className="text-sm font-semibold line-clamp-2" dangerouslySetInnerHTML={{ __html: v.title }} />
-                <p className="mt-1 text-xs text-muted-foreground">{v.category}</p>
-                <p className="mt-2 text-[10px] text-muted-foreground">{v.duration}</p>
-              </div>
-            ))
-          ) : (
-             <p className="text-sm text-muted-foreground">Tidak ada video tersedia.</p>
-          )}
-        </div>
-      </section>
+      <EliteVideos isEliteOrAdmin={!!isEliteOrAdmin} isAdmin={!!me?.is_admin} />
 
       {/* Tips & Artikel */}
       <EliteArticles isEliteOrAdmin={!!isEliteOrAdmin} isAdmin={!!me?.is_admin} />
@@ -154,25 +110,7 @@ function EliteHub() {
         </div>
       </section>
 
-      {/* Video Player Modal */}
-      <Dialog open={!!selectedVideo} onOpenChange={() => setSelectedVideo(null)}>
-        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black/90 border-none">
-          <DialogHeader className="p-4 bg-background">
-            <DialogTitle dangerouslySetInnerHTML={{ __html: selectedVideo?.title || "" }} />
-          </DialogHeader>
-          {selectedVideo && (
-            <div className="aspect-video w-full">
-              <iframe
-                src={`https://www.youtube.com/embed/${selectedVideo.id}?autoplay=1`}
-                title={selectedVideo.title}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                className="w-full h-full border-0"
-              ></iframe>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+
     </AppShell>
   );
 }
