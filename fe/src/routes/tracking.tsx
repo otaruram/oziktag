@@ -82,6 +82,7 @@ function TrackingPage() {
     e.preventDefault();
     if (!name.trim()) return toast.error("Nama produk wajib diisi");
     if (checklist.length === 0) return toast.error("Pilih minimal 1 checklist");
+    if (!imageFile) return toast.error("Foto produk wajib di-upload");
 
     setSubmitting(true);
     try {
@@ -96,10 +97,11 @@ function TrackingPage() {
         body: formData,
       });
 
-      const qrDataUrl = await generateQrWithLogo(res.tracking_url);
+      const trackingUrl = `${window.location.origin}/tracking/${res.product_id}`;
+      const qrDataUrl = await generateQrWithLogo(trackingUrl);
 
       setQrResult({
-        url: res.tracking_url,
+        url: trackingUrl,
         qrDataUrl,
         summary: res.ai_summary || "",
       });
@@ -139,6 +141,31 @@ function TrackingPage() {
     } catch (err: any) {
       toast.error(err.message || "Gagal melakukan handover", { id: "handover" });
     }
+  };
+
+  const autoFill = async () => {
+    setName("Kopi Gayo Premium 250gr (Tracking)");
+    setChecklist([DEFAULT_CHECKS[0], DEFAULT_CHECKS[1], DEFAULT_CHECKS[2]]);
+    setNotes("Tolong jangan dibanting ya mas kurir, kemasan rentan bocor. Pastikan disimpan di tempat kering.");
+    
+    // Create dummy image file
+    const canvas = document.createElement("canvas");
+    canvas.width = 400; canvas.height = 400;
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      ctx.fillStyle = "#8b5a2b";
+      ctx.fillRect(0, 0, 400, 400);
+      ctx.fillStyle = "white";
+      ctx.font = "24px sans-serif";
+      ctx.fillText("Foto Kopi Gayo", 110, 200);
+    }
+    const file = await new Promise<File>((resolve) => {
+      canvas.toBlob((b) => resolve(new File([b!], `kopi-gayo.jpg`, { type: "image/jpeg" })));
+    });
+
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+    toast.success("Dummy data tracking diisi otomatis!");
   };
 
   const resetForm = () => {
@@ -201,7 +228,16 @@ function TrackingPage() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
-              <h2 className="text-lg font-semibold">Buat Tracking Produk Baru</h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Buat Tracking Produk Baru</h2>
+                <button
+                  type="button"
+                  onClick={autoFill}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20"
+                >
+                  <Sparkles className="h-3.5 w-3.5" /> Auto-Fill Dummy Data
+                </button>
+              </div>
 
               <div>
                 <label className="block text-sm font-medium mb-1.5">Nama Produk</label>
@@ -255,11 +291,12 @@ function TrackingPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1.5">Foto Produk (opsional)</label>
+                <label className="block text-sm font-medium mb-1.5">Foto Produk <span className="text-destructive">*</span></label>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleImageChange}
+                  required
                   className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
                 />
                 {imagePreview && (

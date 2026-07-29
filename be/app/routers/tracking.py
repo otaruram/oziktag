@@ -26,7 +26,7 @@ async def init_tracking(
     name: str = Form(...),
     checklist_qc: str = Form("[]"),
     seller_notes: str = Form(""),
-    image: Optional[UploadFile] = File(None),
+    image: UploadFile = File(...),
     current_user: dict = Depends(get_current_user),
 ):
     """
