@@ -41,6 +41,7 @@ model User {
   apiKeys            ApiKey[]
   creditLogs         CreditLog[]
   apiAccessRequests  ApiAccessRequest[]
+  trackingProducts   TrackingProduct[]
 
   @@map("users")
 }
@@ -204,4 +205,37 @@ model EliteVideo {
   createdAt  DateTime @default(now()) @map("created_at")
 
   @@map("elite_videos")
+}
+
+// ──────────────────────── Tracking Products ────────────────────────
+model TrackingProduct {
+  id             String   @id @default(uuid())
+  userId         String   @map("user_id")
+  name           String
+  checklistQc    Json     @default("[]") @map("checklist_qc")
+  sellerNotes    String?  @map("seller_notes") @db.Text
+  aiSummary      String?  @map("ai_summary") @db.Text
+  imageUrl       String?  @map("image_url")
+  currentStatus  String   @default("PACKED") @map("current_status")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  user    User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  history TrackingHistory[]
+
+  @@map("tracking_products")
+}
+
+// ──────────────────────── Tracking History ────────────────────────
+model TrackingHistory {
+  id            String   @id @default(uuid())
+  productId     String   @map("product_id")
+  statusUpdate  String   @map("status_update")
+  scannedByRole String   @map("scanned_by_role")
+  latitude      Float?
+  longitude     Float?
+  timestamp     DateTime @default(now())
+
+  product TrackingProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("tracking_history")
 }

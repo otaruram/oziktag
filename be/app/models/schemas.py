@@ -178,3 +178,52 @@ class AdminKycItem(BaseModel):
     foto_npwp: Optional[str] = None
     status: str
     created_at: datetime
+
+
+# ──────────────────────── Tracking ────────────────────────
+
+class TrackingInitRequest(BaseModel):
+    name: str
+    checklist_qc: list[str] = []
+    seller_notes: str = ""
+
+
+class TrackingInitResponse(BaseModel):
+    product_id: str
+    tracking_url: str
+    ai_summary: Optional[str] = None
+    message: str
+
+
+class TrackingScanRequest(BaseModel):
+    product_id: str
+    role: str  # seller, courier, buyer
+    lat: Optional[float] = None
+    lng: Optional[float] = None
+
+
+class TrackingScanResponse(BaseModel):
+    message: str
+    new_status: str
+
+
+class TrackingHistoryItem(BaseModel):
+    id: str
+    status_update: str
+    scanned_by_role: str
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    timestamp: str
+
+
+class TrackingDetailResponse(BaseModel):
+    id: str
+    name: str
+    current_status: str
+    image_url: Optional[str] = None
+    ai_summary: Optional[str] = None
+    checklist_qc: list = []
+    seller_notes: Optional[str] = None
+    brand: Optional[str] = None
+    history: list[TrackingHistoryItem] = []
+    created_at: str
