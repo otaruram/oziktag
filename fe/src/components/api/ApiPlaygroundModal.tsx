@@ -5,6 +5,7 @@ import QRCode from "qrcode";
 import { API_BASE, apiFetch } from "../../lib/api";
 
 export function PlaygroundModal({ onClose, defaultKey, isAdmin, credits }: { onClose: () => void, defaultKey?: string, isAdmin: boolean, credits: number }) {
+  const [endpointType, setEndpointType] = useState<"qc" | "tracking">("qc");
   const [running, setRunning] = useState(false);
   const [resultQr, setResultQr] = useState<string | null>(null);
   const [qrUrlString, setQrUrlString] = useState("");
@@ -60,13 +61,18 @@ export function PlaygroundModal({ onClose, defaultKey, isAdmin, credits }: { onC
     toast.success("Form berhasil diisi otomatis!");
   };
 
-  const jsonPayload = {
+  const jsonPayload = endpointType === "qc" ? {
     nama_produk: namaProduk,
     kategori,
     batch,
     checklist,
     catatan_penjual: catatanPenjual,
     image_urls: imageUrls.length > 0 ? imageUrls : ["https://ik.imagekit.io/nc7w3hotd/oziktag/products/dummy_api.jpg"]
+  } : {
+    nama_produk: namaProduk,
+    checklist,
+    catatan_penjual: catatanPenjual,
+    image_url: imageUrls.length > 0 ? imageUrls[0] : "https://ik.imagekit.io/nc7w3hotd/oziktag/products/dummy_api.jpg"
   };
 
   const handleRun = async () => {
@@ -79,7 +85,7 @@ export function PlaygroundModal({ onClose, defaultKey, isAdmin, credits }: { onC
     setRunning(true);
     setResultQr(null);
     try {
-      const res = await fetch(`${API_BASE}/v1/qc`, {
+      const res = await fetch(`${API_BASE}/v1/${endpointType}`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${defaultKey}`,
@@ -90,9 +96,9 @@ export function PlaygroundModal({ onClose, defaultKey, isAdmin, credits }: { onC
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || "API Request Failed");
 
-      const url = await QRCode.toDataURL(data.qr_url, { width: 200 });
+      const url = await QRCode.toDataURL(endpointType === "qc" ? data.qr_url : data.tracking_url, { width: 200 });
       setResultQr(url);
-      setQrUrlString(data.qr_url);
+      setQrUrlString(endpointType === "qc" ? data.qr_url : data.tracking_url);
       toast.success("Berhasil! 1 Kredit terpotong.");
     } catch (e: any) {
       toast.error(e.message || "Gagal menjalankan request API.");
@@ -127,18 +133,22 @@ export function PlaygroundModal({ onClose, defaultKey, isAdmin, credits }: { onC
           </button>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
+            <div className={endpointType === "qc" ? "col-span-2" : "col-span-2"}>
               <label className="text-xs font-medium mb-1 block">Nama Produk</label>
               <input value={namaProduk} onChange={e => setNamaProduk(e.target.value)} className="w-full rounded-md border border-border bg-input/40 px-3 py-2 text-sm focus:outline-none" />
             </div>
-            <div>
-              <label className="text-xs font-medium mb-1 block">Kategori</label>
-              <input value={kategori} onChange={e => setKategori(e.target.value)} className="w-full rounded-md border border-border bg-input/40 px-3 py-2 text-sm focus:outline-none" />
-            </div>
-            <div>
-              <label className="text-xs font-medium mb-1 block">Batch</label>
-              <input value={batch} onChange={e => setBatch(e.target.value)} className="w-full rounded-md border border-border bg-input/40 px-3 py-2 text-sm focus:outline-none" />
-            </div>
+            {endpointType === "qc" && (
+              <>
+                <div>
+                  <label className="text-xs font-medium mb-1 block">Kategori</label>
+                  <input value={kategori} onChange={e => setKategori(e.target.value)} className="w-full rounded-md border border-border bg-input/40 px-3 py-2 text-sm focus:outline-none" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium mb-1 block">Batch</label>
+                  <input value={batch} onChange={e => setBatch(e.target.value)} className="w-full rounded-md border border-border bg-input/40 px-3 py-2 text-sm focus:outline-none" />
+                </div>
+              </>
+            )}
           </div>
 
           <div>
@@ -201,9 +211,23 @@ export function PlaygroundModal({ onClose, defaultKey, isAdmin, credits }: { onC
           <div className="flex-1 space-y-4">
             <div>
               <label className="text-xs font-medium mb-1.5 block">Endpoint URL</label>
+              <div className="flex gap-2 mb-2">
+                <button
+                  onClick={() => setEndpointType("qc")}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${endpointType === "qc" ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border hover:bg-secondary"}`}
+                >
+                  QC Label (/qc)
+                </button>
+                <button
+                  onClick={() => setEndpointType("tracking")}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${endpointType === "tracking" ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border hover:bg-secondary"}`}
+                >
+                  Tracking (/tracking)
+                </button>
+              </div>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center w-full rounded-md border border-border overflow-hidden">
                 <span className="bg-secondary px-3 py-2 text-sm font-mono border-b sm:border-b-0 sm:border-r border-border text-center sm:text-left">POST</span>
-                <input type="text" readOnly value={`${API_BASE}/v1/qc`} className="min-w-0 flex-1 bg-input/40 px-3 py-2 text-xs sm:text-sm font-mono focus:outline-none" />
+                <input type="text" readOnly value={`${API_BASE}/v1/${endpointType}`} className="min-w-0 flex-1 bg-input/40 px-3 py-2 text-xs sm:text-sm font-mono focus:outline-none" />
               </div>
             </div>
             <div>

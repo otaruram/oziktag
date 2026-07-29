@@ -29,7 +29,7 @@ export function PricingModal({ onClose }: { onClose: () => void }) {
             <Coins className="h-10 w-10 text-primary mx-auto mb-3" />
             <h4 className="text-xl font-bold">1 Request = 1 Kredit</h4>
             <p className="text-sm text-muted-foreground mt-2">
-              Setiap kali Anda menembak API untuk membuat QR Code QC, sistem akan otomatis memotong 1 kredit dari saldo akun Anda.
+              Setiap kali Anda menembak API untuk membuat QR Code QC ataupun Tracking Lite, sistem akan otomatis memotong 1 kredit dari saldo akun Anda.
             </p>
           </div>
 

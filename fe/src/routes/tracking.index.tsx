@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { Package, MapPin, Truck, CheckCircle2, Plus, QrCode, Sparkles, Copy, ArrowRight, X, Loader2 } from "lucide-react";
+import { Package, MapPin, Truck, CheckCircle2, Plus, QrCode, Sparkles, Copy, ArrowRight, X, Loader2, Trash2 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
@@ -40,6 +40,8 @@ function TrackingPage() {
   // Selected product for modal
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
   const [selectedProductQr, setSelectedProductQr] = useState<string | null>(null);
+
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   const DEFAULT_CHECKS = [
     "Produk sudah diperiksa kondisinya",
@@ -155,10 +157,10 @@ function TrackingPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Yakin ingin menghapus riwayat ini? Tautan Tracking untuk pembeli akan tetap aktif.")) return;
     try {
       await apiFetch(`/tracking/seller/my-products/${id}`, { method: "DELETE" });
       toast.success("Riwayat berhasil dihapus!");
+      setConfirmDelete(null);
       fetchProducts(page);
     } catch (err: any) {
       toast.error(err.message || "Gagal menghapus riwayat");
@@ -380,7 +382,7 @@ function TrackingPage() {
             return (
               <div 
                 key={p.id} 
-                className="rounded-xl border border-border bg-card p-5 flex items-center justify-between gap-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                className="rounded-xl border border-border bg-card p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 cursor-pointer hover:bg-muted/50 transition-colors"
                 onClick={async () => {
                   setSelectedProduct(p);
                   const url = `${window.location.origin}/tracking/${p.id}`;
@@ -388,16 +390,16 @@ function TrackingPage() {
                   setSelectedProductQr(qr);
                 }}
               >
-                <div className="flex items-center gap-4 min-w-0">
+                <div className="flex items-center gap-4 min-w-0 w-full sm:w-auto">
                   <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-muted">
                     <QrCode className="h-5 w-5 text-muted-foreground" />
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="font-medium truncate">{p.name}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{p.last_update}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 truncate">{p.last_update}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 flex-shrink-0">
+                <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto pt-3 sm:pt-0 border-t border-border sm:border-0">
                   <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${statusInfo.color}`}>
                     <StatusIcon className="h-3 w-3" />
                     {statusInfo.label}
@@ -405,14 +407,14 @@ function TrackingPage() {
                   {p.current_status === "PACKED" && (
                     <button
                       onClick={(e) => { e.stopPropagation(); handleHandover(p.id); }}
-                      className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
+                      className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 ml-auto sm:ml-0"
                     >
                       <MapPin className="h-3 w-3" /> Serahkan ke Kurir
                     </button>
                   )}
                   <button
-                    onClick={(e) => { e.stopPropagation(); handleDelete(p.id); }}
-                    className="p-1.5 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                    onClick={(e) => { e.stopPropagation(); setConfirmDelete(p.id); }}
+                    className={`p-1.5 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors ${p.current_status !== "PACKED" ? "ml-auto sm:ml-0" : ""}`}
                     title="Hapus riwayat (Sembunyikan)"
                   >
                     <X className="h-4 w-4" />
@@ -499,6 +501,23 @@ function TrackingPage() {
                   Buka Halaman Tracking <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm" onClick={() => setConfirmDelete(null)}>
+          <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-xl text-center animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 mb-4">
+              <Trash2 className="h-6 w-6 text-destructive" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Hapus Riwayat?</h3>
+            <p className="text-sm text-muted-foreground mb-6">Tautan Tracking untuk pembeli akan tetap aktif selamanya. Ini hanya menyembunyikan produk dari dashboard Anda.</p>
+            <div className="flex gap-3 w-full">
+              <button onClick={() => setConfirmDelete(null)} className="flex-1 rounded-md border border-border bg-background py-2 text-sm font-medium hover:bg-secondary transition-colors">Batal</button>
+              <button onClick={() => handleDelete(confirmDelete)} className="flex-1 rounded-md bg-destructive py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90 transition-colors shadow-sm">Ya, Hapus</button>
             </div>
           </div>
         </div>
