@@ -3,6 +3,7 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query, status
 from typing import Optional
 
+from app.database import db
 from app.dependencies import get_current_user
 from app.services.tracking_service import (
     create_tracking_product,
@@ -11,12 +12,14 @@ from app.services.tracking_service import (
     get_seller_products,
 )
 from app.services.imagekit_service import upload_image
+from app.services.credit_service import deduct_qr_credit, refund_qr_credit
 from app.models.schemas import (
     TrackingInitResponse,
     TrackingScanRequest,
     TrackingScanResponse,
     TrackingDetailResponse,
 )
+from app.config import get_settings
 
 router = APIRouter(prefix="/api/tracking", tags=["Tracking"])
 
@@ -42,6 +45,22 @@ async def init_tracking(
     except (json.JSONDecodeError, TypeError):
         checklist = []
 
+    # Check and deduct credit
+    user_data = await db.user.find_unique(where={"id": current_user["id"]})
+    if not user_data:
+        raise HTTPException(status_code=404, detail="User tidak ditemukan")
+
+    credits = user_data.sisaKredit
+    is_admin = user_data.isAdmin
+
+    if not is_admin and credits <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail="Kredit habis. Silakan top-up dulu.",
+        )
+
+    await deduct_qr_credit(current_user["id"], is_admin, credits, f"Generate Tracking: {name[:20]}")
+
     # Upload image if provided
     image_url = None
     if image:
@@ -50,17 +69,28 @@ async def init_tracking(
             image_url = await upload_image(content, image.filename or "tracking_img.jpg")
         except Exception as e:
             print(f"[Tracking] Image upload failed: {e}")
+            await refund_qr_credit(current_user["id"], is_admin, credits, "Refund Gagal Upload Gambar Tracking")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Gagal upload gambar: {str(e)}",
+            )
 
     # Create tracking product
-    result = await create_tracking_product(
-        user_id=current_user["id"],
-        name=name,
-        checklist=checklist,
-        seller_notes=seller_notes,
-        image_url=image_url,
-    )
+    try:
+        result = await create_tracking_product(
+            user_id=current_user["id"],
+            name=name,
+            checklist=checklist,
+            seller_notes=seller_notes,
+            image_url=image_url,
+        )
+    except Exception as e:
+        await refund_qr_credit(current_user["id"], is_admin, credits, "Refund Gagal Generate Tracking")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Gagal menyimpan data tracking: {str(e)}",
+        )
 
-    from app.config import get_settings
     settings = get_settings()
     tracking_url = f"{settings.frontend_url}/tracking/{result['id']}"
 
