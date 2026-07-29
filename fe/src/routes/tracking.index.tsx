@@ -4,6 +4,7 @@ import { Package, MapPin, Truck, CheckCircle2, Plus, QrCode, Sparkles, Copy, Arr
 import { Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
 import { generateQrWithLogo } from "@/lib/qr";
 import { toast } from "sonner";
 
@@ -66,6 +67,32 @@ function TrackingPage() {
 
   useEffect(() => {
     fetchProducts(page);
+
+    let sub: any;
+    supabase.auth.getUser().then(({ data }) => {
+      const uid = data.user?.id;
+      if (!uid) return;
+      const channelName = `tracking-escrow-${uid}-${Date.now()}`;
+      sub = supabase
+        .channel(channelName)
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tracking_products', filter: `user_id=eq.${uid}` }, (payload) => {
+          if (payload.old && payload.new) {
+            if (payload.old.escrow_status === "HELD" && payload.new.escrow_status === "RELEASED") {
+              toast.success(`Dana Escrow Berhasil Dicairkan! Produk: ${payload.new.name}`, {
+                duration: 6000,
+                icon: "💰"
+              });
+              // Refresh the list to reflect any changes if needed
+              fetchProducts(page);
+            }
+          }
+        })
+        .subscribe();
+    });
+
+    return () => {
+      if (sub) supabase.removeChannel(sub);
+    };
   }, [page]);
 
   const toggleCheck = (item: string) => {
@@ -404,6 +431,11 @@ function TrackingPage() {
                     <StatusIcon className="h-3 w-3" />
                     {statusInfo.label}
                   </span>
+                  {p.escrow_status === "RELEASED" && (
+                    <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium bg-green-100 text-green-700 border border-green-200">
+                      💰 Dana Cair
+                    </span>
+                  )}
                   {p.current_status === "PACKED" && (
                     <button
                       onClick={(e) => { e.stopPropagation(); handleHandover(p.id); }}

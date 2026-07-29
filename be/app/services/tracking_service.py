@@ -155,10 +155,17 @@ async def process_scan(
         raise ValueError(f"Invalid role: {role}")
 
     # Update product status if changed
+    update_data = {}
     if new_status != product.currentStatus:
+        update_data["currentStatus"] = new_status
+        if new_status == "DELIVERED" and product.deliveredAt is None:
+            from datetime import datetime, timezone
+            update_data["deliveredAt"] = datetime.now(timezone.utc)
+
+    if update_data:
         await db.trackingproduct.update(
             where={"id": product_id},
-            data={"currentStatus": new_status},
+            data=update_data,
         )
 
     # Log to tracking history

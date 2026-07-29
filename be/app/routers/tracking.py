@@ -12,6 +12,8 @@ from app.services.tracking_service import (
     get_seller_products,
     hide_tracking_product,
 )
+from app.services.escrow_service import verify_buyer_pin
+from pydantic import BaseModel
 from app.services.imagekit_service import upload_image
 from app.services.credit_service import deduct_qr_credit, refund_qr_credit
 from app.models.schemas import (
@@ -128,6 +130,22 @@ async def scan_tracking(request: TrackingScanRequest):
         return TrackingScanResponse(**result)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+
+class VerifyPinRequest(BaseModel):
+    product_id: str
+    buyer_pin: str
+
+@router.post("/verify-pin")
+async def verify_pin(request: VerifyPinRequest):
+    """
+    Verify buyer PIN for escrow release.
+    """
+    try:
+        result = await verify_buyer_pin(request.product_id, request.buyer_pin)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("/seller/my-products")

@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.routers import auth, qc, scan, topup, admin, apikeys, developer, elite, tracking
 from app.database import connect_db, disconnect_db
+from app.services.escrow_service import auto_release_escrow_funds
 
 
 # ──────────────────────── Self-Ping (Anti Cold-Start) ────────────────────────
@@ -30,6 +31,18 @@ async def _self_ping_loop():
         except Exception as e:
             print(f"[Self-Ping] Failed: {e}")
 
+async def _auto_release_loop():
+    """Check and auto-release escrow funds every hour."""
+    while True:
+        try:
+            released_count = await auto_release_escrow_funds()
+            if released_count > 0:
+                print(f"[Escrow] Auto-released funds for {released_count} products.")
+        except Exception as e:
+            print(f"[Escrow] Auto-release failed: {e}")
+        # Sleep for 1 hour (3600 seconds)
+        await asyncio.sleep(3600)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -39,14 +52,18 @@ async def lifespan(app: FastAPI):
     
     # Start self-ping background task
     ping_task = asyncio.create_task(_self_ping_loop())
+    escrow_task = asyncio.create_task(_auto_release_loop())
     print("[Oziktag] Backend started [OK]")
     print("[Oziktag] Self-ping loop active (every 12 min)")
+    print("[Oziktag] Escrow auto-release loop active (every 1 hr)")
     yield
     # Shutdown
     await disconnect_db()
     ping_task.cancel()
+    escrow_task.cancel()
     try:
         await ping_task
+        await escrow_task
     except asyncio.CancelledError:
         pass
     print("[Oziktag] Backend shutdown [OK]")
