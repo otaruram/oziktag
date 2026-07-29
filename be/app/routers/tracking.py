@@ -10,6 +10,7 @@ from app.services.tracking_service import (
     process_scan,
     get_tracking_data,
     get_seller_products,
+    hide_tracking_product,
 )
 from app.services.imagekit_service import upload_image
 from app.services.credit_service import deduct_qr_credit, refund_qr_credit
@@ -130,10 +131,27 @@ async def scan_tracking(request: TrackingScanRequest):
 
 
 @router.get("/seller/my-products")
-async def get_my_tracking_products(current_user: dict = Depends(get_current_user)):
+async def get_my_tracking_products(
+    page: int = Query(1, ge=1),
+    current_user: dict = Depends(get_current_user)
+):
     """Get all tracking products for the authenticated seller."""
-    products = await get_seller_products(current_user["id"])
+    limit = 10
+    offset = (page - 1) * limit
+    products = await get_seller_products(current_user["id"], limit, offset)
     return products
+
+
+@router.delete("/seller/my-products/{product_id}")
+async def delete_my_tracking_product(
+    product_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Soft delete a tracking product from seller's dashboard."""
+    success = await hide_tracking_product(product_id, current_user["id"])
+    if not success:
+        raise HTTPException(status_code=404, detail="Tracking product tidak ditemukan")
+    return {"message": "Tracking product berhasil dihapus dari riwayat"}
 
 
 @router.get("/{product_id}", response_model=TrackingDetailResponse)

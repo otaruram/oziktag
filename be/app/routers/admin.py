@@ -6,6 +6,7 @@ from app.database import db
 from app.dependencies import get_admin_user
 from app.services.credit_service import add_credits
 from app.services.admin_service import get_all_users_for_admin, get_platform_stats, get_supaledger_dataset, get_all_activities
+from app.services.tracking_service import get_all_tracking_admin
 from app.models.schemas import AdminUserItem, AdminAddCreditsRequest, AdminBanRequest
 
 router = APIRouter(prefix="/api/admin", tags=["Admin Panel"])
@@ -153,9 +154,19 @@ async def export_ml_dataset(admin: dict = Depends(get_admin_user)):
 
 
 @router.get("/activities")
-async def get_activities(admin: dict = Depends(get_admin_user)):
-    """Get global user activities for admin dashboard."""
+async def fetch_activities(admin: dict = Depends(get_admin_user)):
+    """Fetch global QC generation activities across all users."""
     return await get_all_activities()
+
+@router.get("/tracking-activities")
+async def fetch_tracking_activities(
+    page: int = 1,
+    admin: dict = Depends(get_admin_user)
+):
+    """Fetch global Tracking Lite activities across all users."""
+    limit = 20
+    offset = (page - 1) * limit
+    return await get_all_tracking_admin(limit, offset)
 
 
 from app.models.schemas import ApiAccessRequestItem

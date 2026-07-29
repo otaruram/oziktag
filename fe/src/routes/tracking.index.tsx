@@ -20,6 +20,8 @@ const STATUS_MAP: Record<string, { label: string; color: string; icon: any }> = 
 
 function TrackingPage() {
   const [products, setProducts] = useState<any[]>([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -47,20 +49,22 @@ function TrackingPage() {
     "Foto kondisi produk sudah diambil",
   ];
 
-  useEffect(() => {
-    loadProducts();
-  }, []);
-
-  const loadProducts = async () => {
+  const fetchProducts = async (currentPage = 1) => {
     try {
-      const data = await apiFetch("/tracking/seller/my-products");
+      setLoading(true);
+      const data = await apiFetch(`/tracking/seller/my-products?page=${currentPage}`);
       setProducts(data);
-    } catch (err) {
-      console.error(err);
+      setHasMore(data.length === 10);
+    } catch (error) {
+      console.error(error);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchProducts(page);
+  }, [page]);
 
   const toggleCheck = (item: string) => {
     setChecklist((prev) =>
@@ -113,7 +117,8 @@ function TrackingPage() {
       });
 
       toast.success("Tracking product berhasil dibuat!");
-      loadProducts();
+      fetchProducts(1);
+      setPage(1);
     } catch (err: any) {
       toast.error(err.message || "Gagal membuat tracking");
     } finally {
@@ -394,12 +399,39 @@ function TrackingPage() {
                       <MapPin className="h-3 w-3" /> Serahkan ke Kurir
                     </button>
                   )}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleDelete(p.id); }}
+                    className="p-1.5 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                    title="Hapus riwayat (Sembunyikan)"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
             );
           })
         )}
       </div>
+
+      {products.length > 0 && (
+        <div className="flex items-center justify-center gap-4 mt-6">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="px-4 py-2 text-sm font-medium border border-border rounded-md hover:bg-muted disabled:opacity-50"
+          >
+            Kembali
+          </button>
+          <span className="text-sm font-medium">Halaman {page}</span>
+          <button
+            onClick={() => setPage((p) => p + 1)}
+            disabled={!hasMore}
+            className="px-4 py-2 text-sm font-medium border border-border rounded-md hover:bg-muted disabled:opacity-50"
+          >
+            Berikutnya
+          </button>
+        </div>
+      )}
 
       {/* PRODUCT MODAL */}
       {selectedProduct && (

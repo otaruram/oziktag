@@ -259,11 +259,13 @@ async def get_tracking_data(product_id: str, role: str, pin: str | None = None) 
     }
 
 
-async def get_seller_products(user_id: str) -> list[dict]:
-    """Get all tracking products for a seller."""
+async def get_seller_products(user_id: str, limit: int = 10, offset: int = 0) -> list[dict]:
+    """Get all tracking products for a seller with pagination and filtering hidden."""
     products = await db.trackingproduct.find_many(
-        where={"userId": user_id},
+        where={"userId": user_id, "isHiddenBySeller": False},
         order={"createdAt": "desc"},
+        take=limit,
+        skip=offset,
         include={"history": {"order_by": {"timestamp": "desc"}, "take": 1}},
     )
 
@@ -274,6 +276,45 @@ async def get_seller_products(user_id: str) -> list[dict]:
             "current_status": p.currentStatus,
             "image_url": p.imageUrl,
             "buyer_pin": p.buyerPin,
+            "last_update": p.history[0].statusUpdate if p.history else "Baru dibuat",
+            "created_at": p.createdAt.isoformat(),
+        }
+        for p in products
+    ]
+
+async def hide_tracking_product(product_id: str, user_id: str) -> bool:
+    """Soft delete tracking product for seller."""
+    product = await db.trackingproduct.find_first(
+        where={"id": product_id, "userId": user_id}
+    )
+    if not product:
+        return False
+    
+    await db.trackingproduct.update(
+        where={"id": product_id},
+        data={"isHiddenBySeller": True}
+    )
+    return True
+
+async def get_all_tracking_admin(limit: int = 20, offset: int = 0) -> list[dict]:
+    """Get all tracking activities across all users for Admin."""
+    products = await db.trackingproduct.find_many(
+        order={"createdAt": "desc"},
+        take=limit,
+        skip=offset,
+        include={
+            "user": {"include": {"kyc": True}},
+            "history": {"order_by": {"timestamp": "desc"}, "take": 1}
+        },
+    )
+
+    return [
+        {
+            "id": p.id,
+            "name": p.name,
+            "current_status": p.currentStatus,
+            "seller_email": p.user.email if p.user else "Unknown",
+            "seller_name": (p.user.kyc.namaToko if p.user and p.user.kyc and p.user.kyc.namaToko else p.user.nama) if p.user else "Unknown",
             "last_update": p.history[0].statusUpdate if p.history else "Baru dibuat",
             "created_at": p.createdAt.isoformat(),
         }

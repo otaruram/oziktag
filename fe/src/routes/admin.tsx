@@ -34,6 +34,7 @@ import { AdminApiRequests } from '@/components/admin/AdminApiRequests';
 import { AdminKycRequests } from '@/components/admin/AdminKycRequests';
 import { AdminSupaledger } from '@/components/admin/AdminSupaledger';
 import { AdminActivities } from '@/components/admin/AdminActivities';
+import { AdminTracking } from '@/components/admin/AdminTracking';
 import { Users, Activity, ShieldAlert, CreditCard, ArrowLeft, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
 export const Route = createFileRoute('/admin')({
   component: AdminDashboard,
@@ -249,6 +250,9 @@ function AdminDashboard() {
       
       {/* User Activities (QRs & Credits) */}
       <AdminActivities />
+
+      {/* Tracking Lite Activities */}
+      <AdminTracking />
 
       {/* API Access Requests */}
       <AdminApiRequests />

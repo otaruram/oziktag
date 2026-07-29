@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   ShieldCheck, Package, Truck, CheckCircle2, AlertCircle,
-  MapPin, Clock, Sparkles, Eye, EyeOff, Loader2, KeyRound
+  MapPin, Clock, Sparkles, Eye, EyeOff, Loader2, KeyRound, Copy, Download
 } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
@@ -239,8 +239,49 @@ function TrackingScan() {
 
         {/* Product Image (buyer only) */}
         {role === "buyer" && data.image_url && (
-          <div className="rounded-2xl border border-border overflow-hidden shadow-sm">
+          <div className="rounded-2xl border border-border overflow-hidden shadow-sm relative group">
             <img src={data.image_url} alt={data.name} className="w-full h-56 object-cover" />
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 backdrop-blur-[2px]">
+              <button 
+                onClick={async () => {
+                  try {
+                    const res = await fetch(data.image_url);
+                    const blob = await res.blob();
+                    await navigator.clipboard.write([
+                      new ClipboardItem({ [blob.type]: blob })
+                    ]);
+                    toast.success("Foto berhasil disalin!");
+                  } catch (e) {
+                    toast.error("Gagal menyalin foto");
+                  }
+                }}
+                className="rounded-full bg-white/20 p-2 text-white hover:bg-white/40 backdrop-blur-md"
+                title="Salin Foto"
+              >
+                <Copy className="h-5 w-5" />
+              </button>
+              <button 
+                onClick={async () => {
+                  try {
+                    const res = await fetch(data.image_url);
+                    const blob = await res.blob();
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `Oziktag-QC-${data.name}.jpg`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    toast.success("Foto berhasil diunduh!");
+                  } catch (e) {
+                    toast.error("Gagal mengunduh foto");
+                  }
+                }}
+                className="rounded-full bg-white/20 p-2 text-white hover:bg-white/40 backdrop-blur-md"
+                title="Unduh Foto"
+              >
+                <Download className="h-5 w-5" />
+              </button>
+            </div>
           </div>
         )}
 
