@@ -148,9 +148,20 @@ function TrackingPage() {
       });
 
       toast.success("Produk berhasil diserahkan ke kurir!", { id: "handover" });
-      loadProducts();
+      fetchProducts(page);
     } catch (err: any) {
       toast.error(err.message || "Gagal melakukan handover", { id: "handover" });
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Yakin ingin menghapus riwayat ini? Tautan Tracking untuk pembeli akan tetap aktif.")) return;
+    try {
+      await apiFetch(`/tracking/seller/my-products/${id}`, { method: "DELETE" });
+      toast.success("Riwayat berhasil dihapus!");
+      fetchProducts(page);
+    } catch (err: any) {
+      toast.error(err.message || "Gagal menghapus riwayat");
     }
   };
 
