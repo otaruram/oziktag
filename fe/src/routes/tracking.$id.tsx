@@ -46,12 +46,16 @@ function TrackingScan() {
         setRole(viewRole as any);
         if (viewRole === "buyer") {
           setShowPinModal(false);
+          if (attemptPin) {
+            localStorage.setItem(`tracking_pin_${id}`, attemptPin);
+          }
           toast.success("Akses pembeli berhasil dibuka!");
         }
         setLoaded(true); 
       })
       .catch((err) => { 
         if (viewRole === "buyer") {
+          localStorage.removeItem(`tracking_pin_${id}`);
           toast.error("PIN yang Anda masukkan salah.");
           setLoaded(true);
         } else {
@@ -62,8 +66,15 @@ function TrackingScan() {
   };
 
   useEffect(() => {
-    // Default load as courier (public view)
-    loadData("courier");
+    // Check if we have a saved PIN in localStorage
+    const savedPin = localStorage.getItem(`tracking_pin_${id}`);
+    if (savedPin) {
+      setPin(savedPin);
+      loadData("buyer", savedPin);
+    } else {
+      // Default load as courier (public view)
+      loadData("courier");
+    }
   }, [id]);
 
   const handleCourierConfirm = async () => {
