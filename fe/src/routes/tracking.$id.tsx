@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   ShieldCheck, Package, Truck, CheckCircle2, AlertCircle,
-  MapPin, Clock, Sparkles, Eye, EyeOff, Loader2,
+  MapPin, Clock, Sparkles, Eye, EyeOff, Loader2, KeyRound
 } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
@@ -27,20 +27,44 @@ function TrackingScan() {
   const { id } = Route.useParams();
   const [data, setData] = useState<any>(null);
   const [loaded, setLoaded] = useState(false);
-  const [role, setRole] = useState<"buyer" | "courier">("buyer");
+  const [role, setRole] = useState<"buyer" | "courier">("courier");
+  const [pin, setPin] = useState("");
+  const [showPinModal, setShowPinModal] = useState(false);
+  
   const [showAI, setShowAI] = useState(false);
   const [confirming, setConfirming] = useState(false);
 
-  const loadData = (viewRole: string) => {
+  const loadData = (viewRole: string, attemptPin?: string) => {
     setLoaded(false);
-    apiFetch(`/tracking/${id}?role=${viewRole}`)
-      .then((res) => { setData(res); setLoaded(true); })
-      .catch(() => { setData(null); setLoaded(true); });
+    const url = attemptPin 
+      ? `/tracking/${id}?role=${viewRole}&pin=${attemptPin}`
+      : `/tracking/${id}?role=${viewRole}`;
+
+    apiFetch(url)
+      .then((res) => { 
+        setData(res); 
+        setRole(viewRole as any);
+        if (viewRole === "buyer") {
+          setShowPinModal(false);
+          toast.success("Akses pembeli berhasil dibuka!");
+        }
+        setLoaded(true); 
+      })
+      .catch((err) => { 
+        if (viewRole === "buyer") {
+          toast.error("PIN yang Anda masukkan salah.");
+          setLoaded(true);
+        } else {
+          setData(null); 
+          setLoaded(true); 
+        }
+      });
   };
 
   useEffect(() => {
-    loadData(role);
-  }, [id, role]);
+    // Default load as courier (public view)
+    loadData("courier");
+  }, [id]);
 
   const handleCourierConfirm = async () => {
     setConfirming(true);
@@ -65,7 +89,7 @@ function TrackingScan() {
       });
 
       toast.success("Lokasi kurir berhasil direkam!", { id: "courier-scan" });
-      loadData(role);
+      loadData(role, pin);
     } catch (err: any) {
       toast.error(err.message || "Gagal merekam lokasi", { id: "courier-scan" });
     } finally {
@@ -92,18 +116,25 @@ function TrackingScan() {
         body: JSON.stringify({
           product_id: id,
           role: "buyer",
+          pin: pin,
           lat,
           lng,
         }),
       });
 
       toast.success("Produk dikonfirmasi diterima!", { id: "buyer-scan" });
-      loadData(role);
+      loadData("buyer", pin);
     } catch (err: any) {
       toast.error(err.message || "Gagal konfirmasi", { id: "buyer-scan" });
     } finally {
       setConfirming(false);
     }
+  };
+
+  const handlePinSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (pin.length !== 6) return toast.error("PIN harus 6 digit");
+    loadData("buyer", pin);
   };
 
   if (!loaded) {
@@ -132,70 +163,85 @@ function TrackingScan() {
   const StatusIcon = statusInfo.icon;
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
-          <Link to="/" className="flex items-center gap-2 font-bold text-lg tracking-tight">
-            <ShieldCheck className="h-5 w-5" /> Oziktag
-          </Link>
-          <span className="text-xs text-muted-foreground">Supply Chain Tracking</span>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-2xl px-4 py-6 space-y-5">
-        {/* Role Switcher */}
-        <div className="flex rounded-lg border border-border bg-card p-1 gap-1">
-          <button
-            onClick={() => setRole("buyer")}
-            className={`flex-1 rounded-md py-2 text-sm font-medium transition-colors ${
-              role === "buyer" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
-            }`}
-          >
-            👤 Saya Pembeli
-          </button>
-          <button
-            onClick={() => setRole("courier")}
-            className={`flex-1 rounded-md py-2 text-sm font-medium transition-colors ${
-              role === "courier" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
-            }`}
-          >
-            🚚 Saya Kurir
-          </button>
-        </div>
-
-        {/* Status Card */}
-        <div className="rounded-xl border border-border bg-card p-6 text-center">
-          <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full ${statusInfo.bgColor}`}>
-            <StatusIcon className={`h-8 w-8 ${statusInfo.color}`} />
-          </div>
-          <h1 className="mt-4 text-xl font-bold">{data.name}</h1>
-          <span className={`mt-2 inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-medium ${statusInfo.bgColor} ${statusInfo.color}`}>
-            <StatusIcon className="h-3.5 w-3.5" /> {statusInfo.label}
-          </span>
-          {data.brand && (
-            <p className="mt-2 text-xs text-muted-foreground">
-              oleh <span className="font-medium text-foreground">{data.brand}</span>
+    <div className="min-h-screen bg-background text-foreground relative">
+      {/* PIN Modal Overlay */}
+      {showPinModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="w-full max-w-sm rounded-2xl bg-card border border-border p-6 shadow-2xl animate-in fade-in zoom-in-95">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-orange-500/10 mb-4">
+              <KeyRound className="h-6 w-6 text-orange-600" />
+            </div>
+            <h2 className="text-xl font-bold text-center mb-2">Akses Pembeli</h2>
+            <p className="text-sm text-center text-muted-foreground mb-6">
+              Masukkan 6 digit PIN rahasia yang Anda terima dari penjual untuk menyelesaikan pesanan.
             </p>
-          )}
+            <form onSubmit={handlePinSubmit} className="space-y-4">
+              <input
+                type="text"
+                maxLength={6}
+                value={pin}
+                onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+                placeholder="000000"
+                className="w-full text-center text-3xl font-mono tracking-[0.2em] rounded-xl border border-border bg-input/40 py-3 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none"
+                required
+              />
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowPinModal(false)}
+                  className="flex-1 rounded-xl border border-border py-2.5 font-medium hover:bg-muted"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 rounded-xl bg-orange-600 py-2.5 font-medium text-white hover:bg-orange-700"
+                >
+                  Buka Kunci
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Header Label Style */}
+      <div className="bg-primary pt-12 pb-24 px-4 text-center">
+        <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-1.5 backdrop-blur-md text-white font-medium text-sm mb-4">
+          <ShieldCheck className="h-4 w-4" /> Oziktag Digital Tracking
+        </div>
+        <h1 className="text-2xl font-bold text-white max-w-md mx-auto leading-tight">{data.name}</h1>
+        {data.brand && <p className="text-white/80 mt-2 text-sm">{data.brand}</p>}
+      </div>
+
+      <main className="mx-auto max-w-xl px-4 -mt-16 pb-12 space-y-5">
+        
+        {/* Status Card */}
+        <div className="rounded-2xl border border-border bg-card p-6 text-center shadow-lg">
+          <div className={`mx-auto flex h-20 w-20 items-center justify-center rounded-full ${statusInfo.bgColor} ring-8 ring-background`}>
+            <StatusIcon className={`h-10 w-10 ${statusInfo.color}`} />
+          </div>
+          <span className={`mt-4 inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold ${statusInfo.bgColor} ${statusInfo.color}`}>
+            <StatusIcon className="h-4 w-4" /> {statusInfo.label}
+          </span>
         </div>
 
         {/* Product Image (buyer only) */}
         {role === "buyer" && data.image_url && (
-          <div className="rounded-xl border border-border overflow-hidden">
-            <img src={data.image_url} alt={data.name} className="w-full h-48 object-cover" />
+          <div className="rounded-2xl border border-border overflow-hidden shadow-sm">
+            <img src={data.image_url} alt={data.name} className="w-full h-56 object-cover" />
           </div>
         )}
 
         {/* AI Summary (buyer only) */}
         {role === "buyer" && data.ai_summary && (
-          <div className="rounded-xl border border-primary/20 bg-primary/5 p-5">
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-5 shadow-sm">
             <button
               onClick={() => setShowAI(!showAI)}
               className="flex w-full items-center justify-between text-left"
             >
-              <span className="text-sm font-semibold text-primary flex items-center gap-1.5">
-                <Sparkles className="h-4 w-4" /> Ringkasan AI
+              <span className="text-sm font-semibold text-primary flex items-center gap-2">
+                <Sparkles className="h-4 w-4" /> Ringkasan Kualitas AI
               </span>
               {showAI ? <EyeOff className="h-4 w-4 text-primary" /> : <Eye className="h-4 w-4 text-primary" />}
             </button>
@@ -209,46 +255,41 @@ function TrackingScan() {
 
         {/* Checklist (buyer only) */}
         {role === "buyer" && data.checklist_qc && data.checklist_qc.length > 0 && (
-          <div className="rounded-xl border border-border bg-card p-5">
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
             <h3 className="text-sm font-semibold mb-3">Checklist QC Penjual</h3>
             <div className="space-y-2">
               {data.checklist_qc.map((item: string, i: number) => (
-                <div key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0" />
-                  {item}
+                <div key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                  <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
+                  <span className="leading-tight">{item}</span>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* Seller Notes (buyer only) */}
-        {role === "buyer" && data.seller_notes && (
-          <div className="rounded-xl border border-border bg-card p-5">
-            <h3 className="text-sm font-semibold mb-2">Catatan Penjual</h3>
-            <p className="text-sm text-muted-foreground">{data.seller_notes}</p>
-          </div>
-        )}
-
         {/* Timeline */}
-        <div className="rounded-xl border border-border bg-card p-5">
-          <h3 className="text-sm font-semibold mb-4">Riwayat Perjalanan</h3>
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <h3 className="text-sm font-semibold mb-5 flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-muted-foreground" /> Riwayat Perjalanan
+          </h3>
           {data.history && data.history.length > 0 ? (
-            <div className="space-y-4">
+            <div className="space-y-0">
               {data.history.map((h: any, i: number) => (
-                <div key={h.id} className="flex gap-3">
+                <div key={h.id} className="flex gap-4">
                   <div className="flex flex-col items-center">
-                    <div className={`h-3 w-3 rounded-full flex-shrink-0 ${i === data.history.length - 1 ? "bg-primary" : "bg-muted-foreground/30"}`} />
-                    {i < data.history.length - 1 && <div className="w-0.5 flex-1 bg-border mt-1" />}
+                    <div className={`h-3 w-3 rounded-full flex-shrink-0 z-10 ${i === data.history.length - 1 ? "bg-primary ring-4 ring-primary/20" : "bg-muted-foreground/30"}`} />
+                    {i < data.history.length - 1 && <div className="w-0.5 flex-1 bg-border -my-1" />}
                   </div>
-                  <div className="pb-4 min-w-0">
-                    <p className="text-sm font-medium">{h.status_update}</p>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
+                  <div className="pb-6 min-w-0">
+                    <p className={`text-sm font-medium ${i === data.history.length - 1 ? "text-foreground" : "text-muted-foreground"}`}>
+                      {h.status_update}
+                    </p>
+                    <div className="flex items-center gap-3 mt-1.5 text-[11px] text-muted-foreground">
+                      <span className="flex items-center gap-1 bg-muted px-2 py-0.5 rounded-full">
                         <Clock className="h-3 w-3" />
                         {new Date(h.timestamp).toLocaleString("id-ID", {
-                          day: "numeric", month: "short", year: "numeric",
-                          hour: "2-digit", minute: "2-digit",
+                          day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
                         })}
                       </span>
                       {h.latitude && h.longitude && (
@@ -258,9 +299,6 @@ function TrackingScan() {
                         </span>
                       )}
                     </div>
-                    <span className="inline-block mt-1 rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
-                      {h.scanned_by_role === "seller" ? "Penjual" : h.scanned_by_role === "courier" ? "Kurir" : "Pembeli"}
-                    </span>
                   </div>
                 </div>
               ))}
@@ -273,32 +311,39 @@ function TrackingScan() {
         </div>
 
         {/* Action Buttons */}
-        {role === "courier" && data.current_status !== "DELIVERED" && (
-          <button
-            onClick={handleCourierConfirm}
-            disabled={confirming}
-            className="w-full rounded-xl bg-blue-600 py-3.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            <MapPin className="h-4 w-4" />
-            {confirming ? "Merekam lokasi..." : "Konfirmasi Checkpoint Kurir"}
-          </button>
-        )}
+        <div className="pt-4 pb-8 space-y-3">
+          {role === "courier" && data.current_status !== "DELIVERED" && (
+            <>
+              <button
+                onClick={handleCourierConfirm}
+                disabled={confirming}
+                className="w-full rounded-2xl bg-blue-600 py-4 text-sm font-bold text-white shadow-lg shadow-blue-500/25 hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                <MapPin className="h-5 w-5" />
+                {confirming ? "Merekam lokasi..." : "Konfirmasi Checkpoint Kurir"}
+              </button>
+              
+              <button
+                onClick={() => setShowPinModal(true)}
+                className="w-full rounded-2xl border border-border bg-card py-4 text-sm font-semibold hover:bg-muted transition-colors flex items-center justify-center gap-2"
+              >
+                <KeyRound className="h-4 w-4 text-orange-500" />
+                Selesaikan Pesanan? (Masukkan PIN)
+              </button>
+            </>
+          )}
 
-        {role === "buyer" && data.current_status === "IN_TRANSIT" && (
-          <button
-            onClick={handleBuyerConfirm}
-            disabled={confirming}
-            className="w-full rounded-xl bg-green-600 py-3.5 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            <CheckCircle2 className="h-4 w-4" />
-            {confirming ? "Memproses..." : "Konfirmasi Produk Diterima"}
-          </button>
-        )}
-
-        {/* Footer */}
-        <p className="text-center text-xs text-muted-foreground pt-4 pb-8">
-          Dilindungi oleh <Link to="/" className="font-medium text-foreground hover:underline">Oziktag</Link> — Digital Trust Seal
-        </p>
+          {role === "buyer" && data.current_status === "IN_TRANSIT" && (
+            <button
+              onClick={handleBuyerConfirm}
+              disabled={confirming}
+              className="w-full rounded-2xl bg-green-600 py-4 text-sm font-bold text-white shadow-lg shadow-green-500/25 hover:bg-green-700 disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              <CheckCircle2 className="h-5 w-5" />
+              {confirming ? "Memproses..." : "Konfirmasi Produk Diterima"}
+            </button>
+          )}
+        </div>
       </main>
     </div>
   );

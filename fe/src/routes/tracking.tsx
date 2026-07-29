@@ -32,7 +32,7 @@ function TrackingPage() {
   const [submitting, setSubmitting] = useState(false);
 
   // QR result
-  const [qrResult, setQrResult] = useState<{ url: string; qrDataUrl: string; summary: string } | null>(null);
+  const [qrResult, setQrResult] = useState<{ url: string; qrDataUrl: string; summary: string; buyerPin: string } | null>(null);
 
   const DEFAULT_CHECKS = [
     "Produk sudah diperiksa kondisinya",
@@ -104,6 +104,7 @@ function TrackingPage() {
         url: trackingUrl,
         qrDataUrl,
         summary: res.ai_summary || "",
+        buyerPin: res.buyer_pin || "000000",
       });
 
       toast.success("Tracking product berhasil dibuat!");
@@ -205,6 +206,21 @@ function TrackingPage() {
               <div className="mx-auto max-w-xs">
                 <img src={qrResult.qrDataUrl} alt="QR Code" className="mx-auto w-48 h-48 rounded-lg border border-border" />
               </div>
+              
+              <div className="mx-auto max-w-xs rounded-xl bg-orange-500/10 border border-orange-500/20 p-4">
+                <p className="text-sm text-orange-600 font-medium mb-1">PIN Rahasia Pembeli</p>
+                <div className="flex items-center justify-center gap-2">
+                  <span className="text-3xl font-bold tracking-[0.2em]">{qrResult.buyerPin}</span>
+                  <button 
+                    onClick={() => { navigator.clipboard.writeText(qrResult.buyerPin); toast.success("PIN disalin!"); }}
+                    className="text-orange-600 hover:text-orange-700 p-1"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </button>
+                </div>
+                <p className="text-xs text-orange-600/80 mt-2">Berikan PIN ini kepada pembeli agar mereka bisa mengkonfirmasi pesanan.</p>
+              </div>
+
               <div className="flex items-center justify-center gap-2 text-sm">
                 <span className="text-muted-foreground truncate max-w-xs">{qrResult.url}</span>
                 <button

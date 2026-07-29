@@ -82,6 +82,11 @@ async def create_tracking_product(
     image_url: str | None = None,
 ) -> dict:
     """Create a new tracking product with AI summary."""
+    import random
+    
+    # Generate 6-digit PIN
+    buyer_pin = f"{random.randint(0, 999999):06d}"
+
     # Generate AI summary
     ai_summary = await generate_tracking_summary(checklist, seller_notes, name)
 
@@ -89,6 +94,7 @@ async def create_tracking_product(
         data={
             "userId": user_id,
             "name": name,
+            "buyerPin": buyer_pin,
             "checklistQc": json.dumps(checklist),
             "sellerNotes": seller_notes,
             "aiSummary": ai_summary,
@@ -99,6 +105,7 @@ async def create_tracking_product(
 
     return {
         "id": product.id,
+        "buyer_pin": buyer_pin,
         "ai_summary": ai_summary,
     }
 
@@ -106,6 +113,7 @@ async def create_tracking_product(
 async def process_scan(
     product_id: str,
     role: str,
+    pin: str | None = None,
     lat: float | None = None,
     lng: float | None = None,
 ) -> dict:
@@ -113,11 +121,14 @@ async def process_scan(
     Process a tracking scan based on role.
     - seller: status -> IN_TRANSIT (handover to courier)
     - courier: log location only (blind scan)
-    - buyer: status -> DELIVERED
+    - buyer: status -> DELIVERED (requires PIN validation)
     """
     product = await db.trackingproduct.find_unique(where={"id": product_id})
     if not product:
         raise ValueError("Product not found")
+
+    if role == "buyer" and product.buyerPin != pin:
+        raise ValueError("PIN tidak valid")
 
     new_status = product.currentStatus
     status_update = ""
@@ -166,11 +177,11 @@ async def process_scan(
     }
 
 
-async def get_tracking_data(product_id: str, role: str) -> dict | None:
+async def get_tracking_data(product_id: str, role: str, pin: str | None = None) -> dict | None:
     """
     Get tracking data filtered by role.
     - courier: minimal data (no image, no AI summary)
-    - buyer/seller: full data
+    - buyer/seller: full data (buyer MUST provide correct pin)
     """
     product = await db.trackingproduct.find_unique(
         where={"id": product_id},
@@ -182,6 +193,12 @@ async def get_tracking_data(product_id: str, role: str) -> dict | None:
 
     if not product:
         return None
+
+    # Role-based filtering
+    # If role is buyer but PIN is wrong, gracefully degrade to Courier view (or reject)
+    if role == "buyer" and product.buyerPin != pin:
+        # Give them the courier view instead
+        role = "courier"
 
     # Parse checklist
     checklist = product.checklistQc

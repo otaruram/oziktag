@@ -191,6 +191,7 @@ class TrackingInitRequest(BaseModel):
 class TrackingInitResponse(BaseModel):
     product_id: str
     tracking_url: str
+    buyer_pin: str
     ai_summary: Optional[str] = None
     message: str
 
@@ -198,6 +199,7 @@ class TrackingInitResponse(BaseModel):
 class TrackingScanRequest(BaseModel):
     product_id: str
     role: str  # seller, courier, buyer
+    pin: Optional[str] = None
     lat: Optional[float] = None
     lng: Optional[float] = None
 

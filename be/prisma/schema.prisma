@@ -212,6 +212,7 @@ model TrackingProduct {
   id             String   @id @default(uuid())
   userId         String   @map("user_id")
   name           String
+  buyerPin       String   @default("000000") @map("buyer_pin")
   checklistQc    Json     @default("[]") @map("checklist_qc")
   sellerNotes    String?  @map("seller_notes") @db.Text
   aiSummary      String?  @map("ai_summary") @db.Text
