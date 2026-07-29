@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TrackingRouteImport } from './routes/tracking'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as RegisterRouteImport } from './routes/register'
@@ -23,8 +24,14 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ApiKeysRouteImport } from './routes/api-keys'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TrackingIdRouteImport } from './routes/tracking.$id'
 import { Route as ScanIdRouteImport } from './routes/scan.$id'
 
+const TrackingRoute = TrackingRouteImport.update({
+  id: '/tracking',
+  path: '/tracking',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
@@ -95,6 +102,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TrackingIdRoute = TrackingIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => TrackingRoute,
+} as any)
 const ScanIdRoute = ScanIdRouteImport.update({
   id: '/scan/$id',
   path: '/scan/$id',
@@ -116,7 +128,9 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
+  '/tracking': typeof TrackingRouteWithChildren
   '/scan/$id': typeof ScanIdRoute
+  '/tracking/$id': typeof TrackingIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -133,7 +147,9 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
+  '/tracking': typeof TrackingRouteWithChildren
   '/scan/$id': typeof ScanIdRoute
+  '/tracking/$id': typeof TrackingIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -151,7 +167,9 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
+  '/tracking': typeof TrackingRouteWithChildren
   '/scan/$id': typeof ScanIdRoute
+  '/tracking/$id': typeof TrackingIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -170,7 +188,9 @@ export interface FileRouteTypes {
     | '/register'
     | '/settings'
     | '/terms'
+    | '/tracking'
     | '/scan/$id'
+    | '/tracking/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -187,7 +207,9 @@ export interface FileRouteTypes {
     | '/register'
     | '/settings'
     | '/terms'
+    | '/tracking'
     | '/scan/$id'
+    | '/tracking/$id'
   id:
     | '__root__'
     | '/'
@@ -204,7 +226,9 @@ export interface FileRouteTypes {
     | '/register'
     | '/settings'
     | '/terms'
+    | '/tracking'
     | '/scan/$id'
+    | '/tracking/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -222,11 +246,19 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   SettingsRoute: typeof SettingsRoute
   TermsRoute: typeof TermsRoute
+  TrackingRoute: typeof TrackingRouteWithChildren
   ScanIdRoute: typeof ScanIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/tracking': {
+      id: '/tracking'
+      path: '/tracking'
+      fullPath: '/tracking'
+      preLoaderRoute: typeof TrackingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terms': {
       id: '/terms'
       path: '/terms'
@@ -325,6 +357,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tracking/$id': {
+      id: '/tracking/$id'
+      path: '/$id'
+      fullPath: '/tracking/$id'
+      preLoaderRoute: typeof TrackingIdRouteImport
+      parentRoute: typeof TrackingRoute
+    }
     '/scan/$id': {
       id: '/scan/$id'
       path: '/scan/$id'
@@ -334,6 +373,18 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface TrackingRouteChildren {
+  TrackingIdRoute: typeof TrackingIdRoute
+}
+
+const TrackingRouteChildren: TrackingRouteChildren = {
+  TrackingIdRoute: TrackingIdRoute,
+}
+
+const TrackingRouteWithChildren = TrackingRoute._addFileChildren(
+  TrackingRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -350,6 +401,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   SettingsRoute: SettingsRoute,
   TermsRoute: TermsRoute,
+  TrackingRoute: TrackingRouteWithChildren,
   ScanIdRoute: ScanIdRoute,
 }
 export const routeTree = rootRouteImport
