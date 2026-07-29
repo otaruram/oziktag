@@ -144,8 +144,8 @@ function TrackingScan() {
 
   const handlePinSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (pin.length !== 6) return toast.error("PIN harus 6 digit");
-    loadData("buyer", pin);
+    if (pin.length < 6) return toast.error("PIN terlalu pendek");
+    loadData("buyer", pin.toUpperCase());
   };
 
   if (!loaded) {
@@ -184,16 +184,16 @@ function TrackingScan() {
             </div>
             <h2 className="text-xl font-bold text-center mb-2">Akses Pembeli</h2>
             <p className="text-sm text-center text-muted-foreground mb-6">
-              Masukkan 6 digit PIN rahasia yang Anda terima dari penjual untuk menyelesaikan pesanan.
+              Masukkan PIN rahasia yang Anda terima dari penjual untuk menyelesaikan pesanan.
             </p>
             <form onSubmit={handlePinSubmit} className="space-y-4">
               <input
                 type="text"
-                maxLength={6}
+                maxLength={8}
                 value={pin}
-                onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-                placeholder="000000"
-                className="w-full text-center text-3xl font-mono tracking-[0.2em] rounded-xl border border-border bg-input/40 py-3 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none"
+                onChange={(e) => setPin(e.target.value.toUpperCase())}
+                placeholder="XXXXYYYY"
+                className="w-full text-center text-3xl font-mono tracking-[0.2em] rounded-xl border border-border bg-input/40 py-3 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none uppercase"
                 required
               />
               <div className="flex gap-2">

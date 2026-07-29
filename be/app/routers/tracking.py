@@ -89,6 +89,7 @@ async def scan_tracking(request: TrackingScanRequest):
         result = await process_scan(
             product_id=request.product_id,
             role=request.role,
+            pin=request.pin,
             lat=request.lat,
             lng=request.lng,
         )
@@ -108,6 +109,7 @@ async def get_my_tracking_products(current_user: dict = Depends(get_current_user
 async def get_tracking(
     product_id: str,
     role: str = Query("buyer", description="View role: seller, courier, or buyer"),
+    pin: Optional[str] = Query(None, description="Buyer PIN"),
 ):
     """
     Get tracking data filtered by role (Public).
@@ -121,7 +123,7 @@ async def get_tracking(
             detail=f"Role harus salah satu dari: {', '.join(valid_roles)}",
         )
 
-    data = await get_tracking_data(product_id, role)
+    data = await get_tracking_data(product_id, role, pin)
     if not data:
         raise HTTPException(status_code=404, detail="Tracking product tidak ditemukan")
 

@@ -83,9 +83,10 @@ async def create_tracking_product(
 ) -> dict:
     """Create a new tracking product with AI summary."""
     import random
+    import string
     
-    # Generate 6-digit PIN
-    buyer_pin = f"{random.randint(0, 999999):06d}"
+    # Generate 8-character alphanumeric PIN
+    buyer_pin = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
 
     # Generate AI summary
     ai_summary = await generate_tracking_summary(checklist, seller_notes, name)
