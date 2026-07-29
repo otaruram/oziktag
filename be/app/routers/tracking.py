@@ -97,6 +97,7 @@ async def init_tracking(
     return TrackingInitResponse(
         product_id=result["id"],
         tracking_url=tracking_url,
+        buyer_pin=result["buyer_pin"],
         ai_summary=result["ai_summary"],
         message="Tracking product berhasil dibuat",
     )

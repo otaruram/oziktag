@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { Package, MapPin, Truck, CheckCircle2, Plus, QrCode, Sparkles, Copy, ArrowRight } from "lucide-react";
+import { Package, MapPin, Truck, CheckCircle2, Plus, QrCode, Sparkles, Copy, ArrowRight, X, Loader2 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
 import { generateQrWithLogo } from "@/lib/qr";
@@ -33,6 +34,10 @@ function TrackingPage() {
 
   // QR result
   const [qrResult, setQrResult] = useState<{ url: string; qrDataUrl: string; summary: string; buyerPin: string } | null>(null);
+
+  // Selected product for modal
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
+  const [selectedProductQr, setSelectedProductQr] = useState<string | null>(null);
 
   const DEFAULT_CHECKS = [
     "Produk sudah diperiksa kondisinya",
@@ -357,7 +362,16 @@ function TrackingPage() {
             const statusInfo = STATUS_MAP[p.current_status] || STATUS_MAP.PACKED;
             const StatusIcon = statusInfo.icon;
             return (
-              <div key={p.id} className="rounded-xl border border-border bg-card p-5 flex items-center justify-between gap-4">
+              <div 
+                key={p.id} 
+                className="rounded-xl border border-border bg-card p-5 flex items-center justify-between gap-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                onClick={async () => {
+                  setSelectedProduct(p);
+                  const url = `${window.location.origin}/tracking/${p.id}`;
+                  const qr = await generateQrWithLogo(url);
+                  setSelectedProductQr(qr);
+                }}
+              >
                 <div className="flex items-center gap-4 min-w-0">
                   <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-muted">
                     <QrCode className="h-5 w-5 text-muted-foreground" />
@@ -374,7 +388,7 @@ function TrackingPage() {
                   </span>
                   {p.current_status === "PACKED" && (
                     <button
-                      onClick={() => handleHandover(p.id)}
+                      onClick={(e) => { e.stopPropagation(); handleHandover(p.id); }}
                       className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
                     >
                       <MapPin className="h-3 w-3" /> Serahkan ke Kurir
@@ -386,6 +400,66 @@ function TrackingPage() {
           })
         )}
       </div>
+
+      {/* PRODUCT MODAL */}
+      {selectedProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="w-full max-w-md rounded-2xl bg-card border border-border p-6 shadow-2xl animate-in fade-in zoom-in-95 relative max-h-[90vh] overflow-y-auto">
+            <button 
+              onClick={() => { setSelectedProduct(null); setSelectedProductQr(null); }}
+              className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            
+            <h3 className="text-xl font-bold mb-6 text-center">{selectedProduct.name}</h3>
+            
+            <div className="space-y-6 text-center">
+              {selectedProductQr ? (
+                <img src={selectedProductQr} alt="QR Code" className="mx-auto w-48 h-48 rounded-lg border border-border" />
+              ) : (
+                <div className="w-48 h-48 mx-auto flex items-center justify-center bg-muted rounded-lg">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              )}
+              
+              <div className="mx-auto max-w-xs rounded-xl bg-orange-500/10 border border-orange-500/20 p-4">
+                <p className="text-sm text-orange-600 font-medium mb-1">PIN Rahasia Pembeli</p>
+                <div className="flex items-center justify-center gap-2">
+                  <span className="text-3xl font-bold tracking-[0.2em]">{selectedProduct.buyer_pin || "000000"}</span>
+                  <button 
+                    onClick={() => { navigator.clipboard.writeText(selectedProduct.buyer_pin || "000000"); toast.success("PIN disalin!"); }}
+                    className="text-orange-600 hover:text-orange-700 p-1"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-center gap-2 text-sm bg-muted p-3 rounded-lg">
+                <span className="text-muted-foreground truncate flex-1 text-left text-xs">
+                  {`${window.location.origin}/tracking/${selectedProduct.id}`}
+                </span>
+                <button
+                  onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/tracking/${selectedProduct.id}`); toast.success("URL disalin!"); }}
+                  className="text-primary hover:opacity-80 flex-shrink-0"
+                >
+                  <Copy className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="pt-2">
+                <Link
+                  to={`/tracking/${selectedProduct.id}`}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-4 py-3 text-sm font-semibold text-primary hover:bg-primary/20 transition-colors"
+                >
+                  Buka Halaman Tracking <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }

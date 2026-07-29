@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { ShieldCheck, QrCode, CheckCircle2, ArrowRight, Bot, Store, Camera, Database } from "lucide-react";
+import { ShieldCheck, QrCode, CheckCircle2, ArrowRight, Bot, Store, Camera, Database, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 
@@ -148,6 +148,13 @@ function Landing() {
                   <div>
                     <strong className="block text-foreground">Verifikasi KYC Terpusat</strong>
                     <span className="text-sm text-muted-foreground">Setiap toko divalidasi keasliannya mencegah pemalsuan produk.</span>
+                  </div>
+                </li>
+                <li className="flex items-start gap-4">
+                  <div className="mt-1 bg-muted p-2 rounded-md"><MapPin className="h-5 w-5" /></div>
+                  <div>
+                    <strong className="block text-foreground">Tracking Lite dengan GPS</strong>
+                    <span className="text-sm text-muted-foreground">Lacak resi perjalanan logistik yang aman dengan konfirmasi PIN Pembeli.</span>
                   </div>
                 </li>
               </ul>

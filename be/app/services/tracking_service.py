@@ -273,6 +273,7 @@ async def get_seller_products(user_id: str) -> list[dict]:
             "name": p.name,
             "current_status": p.currentStatus,
             "image_url": p.imageUrl,
+            "buyer_pin": p.buyerPin,
             "last_update": p.history[0].statusUpdate if p.history else "Baru dibuat",
             "created_at": p.createdAt.isoformat(),
         }

@@ -29,6 +29,7 @@ const PACKAGES: Pkg[] = [
 
 const BENEFITS = [
   "Akses penuh Dashboard QC",
+  "Akses fitur Tracking Lite",
   "Integrasi AI Scanner",
   "QR aktif selamanya",
   "Halaman scan publik tanpa iklan",
@@ -97,7 +98,7 @@ function Pricing() {
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Top-Up Kredit QR</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            1 Kredit = 1× Generate QR Code QC & Analisis AI. Bayar sesuai pemakaian (Pay-As-You-Go).
+            1 Kredit = 1× Generate QR QC atau 1× Tracking Lite. Bayar sesuai pemakaian (Pay-As-You-Go).
           </p>
         </div>
         <button
