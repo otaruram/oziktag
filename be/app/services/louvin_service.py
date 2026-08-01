@@ -28,31 +28,32 @@ async def create_transaction(
     reference: str,
 ) -> dict:
     """
-    Create a payment transaction by proxying to the Node.js microservice.
+    Create a payment transaction by calling SumoPod API directly.
     """
     settings = get_settings()
-    node_url = settings.node_backend_url
-
-    if not node_url:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Node backend URL not configured"
-        )
 
     pkg = get_package(paket)
     
-    # Payload expected by Node.js SumoPod controller
+    # Payload expected by SumoPod API
     payload = {
         "order_id": reference,
         "amount": pkg["price"],
         "currency": "IDR",
         "expires_in_hours": 24,
         "payment_method_type_code": payment_type,
+        "success_return_url": f"{settings.frontend_url}/pricing?payment=success",
+        "cancel_return_url": f"{settings.frontend_url}/pricing?payment=cancelled"
+    }
+
+    url = "https://api-pay.sumopod.com/api/v1/payments"
+    headers = {
+        "Content-Type": "application/json",
+        "X-Api-Key": settings.louvin_api_key, # Repurposing louvin_api_key config for SumoPod API Key
     }
 
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.post(f"{node_url}/api/payment/create", json=payload, timeout=15.0)
+            response = await client.post(url, json=payload, headers=headers, timeout=15.0)
             response.raise_for_status()
             return response.json()
     except httpx.HTTPStatusError as e:
@@ -74,26 +75,23 @@ async def create_transaction(
 
 
 async def check_status(transaction_id: str) -> dict:
-    """Check payment status via Louvin API."""
+    """Check payment status via SumoPod API."""
     settings = get_settings()
 
-    url = f"{settings.louvin_base_url}/check-status"
+    # Using SumoPod get payment API
+    url = f"https://api-pay.sumopod.com/api/v1/payments/{transaction_id}"
 
     headers = {
         "Content-Type": "application/json",
-        "x-api-key": settings.louvin_api_key,
+        "X-Api-Key": settings.louvin_api_key,
     }
 
-    params = {"id": transaction_id}
-
     async with httpx.AsyncClient(timeout=15.0) as client:
-        response = await client.get(url, headers=headers, params=params)
-
+        response = await client.get(url, headers=headers)
+        if response.status_code != 200:
+            raise Exception(f"Payment check error: {response.text}")
+            
     data = response.json()
-
-    if not data.get("success"):
-        raise Exception(f"Louvin check-status error: {data.get('error', 'Unknown')}")
-
     return data
 
 

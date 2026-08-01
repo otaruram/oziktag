@@ -17,8 +17,17 @@ class Settings(BaseSettings):
     imagekit_public_key: str
     imagekit_url_endpoint: str
 
-    # Node Microservice
-    node_backend_url: str = "http://localhost:3000"
+    # SumoPod Payment API (reusing louvin env vars for backwards compatibility)
+    louvin_api_key: str = ""
+    louvin_base_url: str = "https://api-pay.sumopod.com"
+
+    # SMTP Email
+    smtp_host: str = ""
+    smtp_port: int = 465
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from_email: str = "support@oziktag.my.id"
+    smtp_from_name: str = "Oziktag"
 
     # Gemini AI
     gemini_api_key: str

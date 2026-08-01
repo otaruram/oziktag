@@ -47,8 +47,9 @@ async def create_topup(
             detail=f"Gagal membuat transaksi pembayaran: {str(e)}",
         )
 
-    txn = louvin_response.get("transaction", {})
-    payment = louvin_response.get("payment", {})
+    txn_data = louvin_response
+    payment_link = txn_data.get("payment_link_url")
+    sumopod_txn_id = txn_data.get("payment_id", "")
 
     # Save to database (Prisma)
     await db.topuptransaction.create(
@@ -60,21 +61,21 @@ async def create_topup(
             "credits": pkg["credits"],
             "status": "pending",
             "louvinRef": reference,
-            "louvinTransactionId": txn.get("id", ""),
+            "louvinTransactionId": sumopod_txn_id,
             "paymentType": request.payment_type,
         }
     )
 
     return TopUpCreateResponse(
         transaction_id=reference,
-        louvin_transaction_id=txn.get("id", ""),
+        louvin_transaction_id=sumopod_txn_id,
         amount=pkg["price"],
         payment_type=request.payment_type,
-        qr_string=payment.get("qr_string"),
-        va_number=payment.get("va_number"),
-        deeplink_url=payment.get("deeplink_url"),
-        expired_at=payment.get("expired_at"),
-        total_payment=payment.get("total_payment", pkg["price"]),
+        qr_string=payment_link, # For SumoPod, this acts as the payment URL
+        va_number=None,
+        deeplink_url=payment_link,
+        expired_at=None,
+        total_payment=pkg["price"],
     )
 
 

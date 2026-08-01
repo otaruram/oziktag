@@ -50,38 +50,5 @@ services:
         sync: false
       - key: PRICE_BUFFER_PERCENT
         sync: false
-      - key: NODE_BACKEND_URL
-        fromService:
-          type: web
-          name: oziktag-node-backend
-          envVarKey: RENDER_EXTERNAL_URL
 
-  - type: web
-    name: oziktag-node-backend
-    env: node
-    region: singapore
-    buildCommand: "cd be-node && npm install"
-    startCommand: "cd be-node && node index.js"
-    envVars:
-      - key: PYTHON_BACKEND_URL
-        fromService:
-          type: web
-          name: oziktag-backend
-          envVarKey: RENDER_EXTERNAL_URL
-      - key: SUMOPOD_API_KEY
-        sync: false
-      - key: WEBHOOK_TOKEN
-        sync: false
-      - key: SMTP_HOST
-        sync: false
-      - key: SMTP_PORT
-        sync: false
-      - key: SMTP_USER
-        sync: false
-      - key: SMTP_PASSWORD
-        sync: false
-      - key: SMTP_FROM_EMAIL
-        sync: false
-      - key: SMTP_FROM_NAME
-        sync: false
 

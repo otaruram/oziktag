@@ -1,35 +1,46 @@
 """Email service — SMTP email sending for Oziktag notifications."""
 
-import httpx
+import smtplib
+import ssl
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
 from app.config import get_settings
 
 
 async def send_email(to_email: str, subject: str, html_body: str) -> bool:
     """
-    Send an HTML email by proxying to the Node.js backend.
+    Send an HTML email directly using Python's smtplib.
     Returns True on success, False on failure.
     """
     settings = get_settings()
-    node_url = settings.node_backend_url
-
-    if not node_url:
-        print("[Email] Node backend URL not configured, skipping email.")
+    
+    if not settings.smtp_host or not settings.smtp_user:
+        print("[Email] SMTP not configured, skipping.")
         return False
+        
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = subject
+    msg["From"] = f"{settings.smtp_from_name} <{settings.smtp_from_email}>"
+    msg["To"] = to_email
 
-    payload = {
-        "to": to_email,
-        "subject": subject,
-        "html": html_body
-    }
+    part_html = MIMEText(html_body, "html")
+    msg.attach(part_html)
 
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(f"{node_url}/api/email/send", json=payload, timeout=10.0)
-            response.raise_for_status()
-            print(f"[Email] Successfully sent via Node backend to {to_email}")
-            return True
+        context = ssl.create_default_context()
+        # SumoPod uses port 465 with implicit SSL/TLS
+        with smtplib.SMTP_SSL(settings.smtp_host, settings.smtp_port, context=context) as server:
+            server.login(settings.smtp_user, settings.smtp_password)
+            server.sendmail(
+                settings.smtp_from_email,
+                to_email,
+                msg.as_string()
+            )
+        print(f"[Email] Successfully sent to {to_email}")
+        return True
     except Exception as e:
-        print(f"[Email] Failed to send via Node backend to {to_email}: {e}")
+        print(f"[Email] Failed to send to {to_email}: {e}")
         return False
 
 
