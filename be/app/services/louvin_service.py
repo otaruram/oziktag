@@ -41,8 +41,8 @@ async def create_transaction(
         "currency": "IDR",
         "expires_in_hours": 24,
         "payment_method_type_code": payment_type,
-        "success_return_url": f"{settings.frontend_url}/pricing?payment=success",
-        "cancel_return_url": f"{settings.frontend_url}/pricing?payment=cancelled"
+        "success_return_url": f"{settings.frontend_url}/payment/success",
+        "cancel_return_url": f"{settings.frontend_url}/payment/cancel"
     }
 
     url = "https://api-pay.sumopod.com/api/v1/payments"
