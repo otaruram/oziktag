@@ -9,7 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TrackingRouteImport } from './routes/tracking'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as RegisterRouteImport } from './routes/register'
@@ -24,14 +23,12 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ApiKeysRouteImport } from './routes/api-keys'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TrackingIndexRouteImport } from './routes/tracking.index'
 import { Route as TrackingIdRouteImport } from './routes/tracking.$id'
 import { Route as ScanIdRouteImport } from './routes/scan.$id'
+import { Route as PaymentSuccessRouteImport } from './routes/payment.success'
+import { Route as PaymentCancelRouteImport } from './routes/payment.cancel'
 
-const TrackingRoute = TrackingRouteImport.update({
-  id: '/tracking',
-  path: '/tracking',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
@@ -102,14 +99,29 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TrackingIndexRoute = TrackingIndexRouteImport.update({
+  id: '/tracking/',
+  path: '/tracking/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TrackingIdRoute = TrackingIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => TrackingRoute,
+  id: '/tracking/$id',
+  path: '/tracking/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ScanIdRoute = ScanIdRouteImport.update({
   id: '/scan/$id',
   path: '/scan/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaymentSuccessRoute = PaymentSuccessRouteImport.update({
+  id: '/payment/success',
+  path: '/payment/success',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaymentCancelRoute = PaymentCancelRouteImport.update({
+  id: '/payment/cancel',
+  path: '/payment/cancel',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -128,9 +140,11 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
-  '/tracking': typeof TrackingRouteWithChildren
+  '/payment/cancel': typeof PaymentCancelRoute
+  '/payment/success': typeof PaymentSuccessRoute
   '/scan/$id': typeof ScanIdRoute
   '/tracking/$id': typeof TrackingIdRoute
+  '/tracking/': typeof TrackingIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -147,9 +161,11 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
-  '/tracking': typeof TrackingRouteWithChildren
+  '/payment/cancel': typeof PaymentCancelRoute
+  '/payment/success': typeof PaymentSuccessRoute
   '/scan/$id': typeof ScanIdRoute
   '/tracking/$id': typeof TrackingIdRoute
+  '/tracking': typeof TrackingIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -167,9 +183,11 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
-  '/tracking': typeof TrackingRouteWithChildren
+  '/payment/cancel': typeof PaymentCancelRoute
+  '/payment/success': typeof PaymentSuccessRoute
   '/scan/$id': typeof ScanIdRoute
   '/tracking/$id': typeof TrackingIdRoute
+  '/tracking/': typeof TrackingIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -188,9 +206,11 @@ export interface FileRouteTypes {
     | '/register'
     | '/settings'
     | '/terms'
-    | '/tracking'
+    | '/payment/cancel'
+    | '/payment/success'
     | '/scan/$id'
     | '/tracking/$id'
+    | '/tracking/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -207,9 +227,11 @@ export interface FileRouteTypes {
     | '/register'
     | '/settings'
     | '/terms'
-    | '/tracking'
+    | '/payment/cancel'
+    | '/payment/success'
     | '/scan/$id'
     | '/tracking/$id'
+    | '/tracking'
   id:
     | '__root__'
     | '/'
@@ -226,9 +248,11 @@ export interface FileRouteTypes {
     | '/register'
     | '/settings'
     | '/terms'
-    | '/tracking'
+    | '/payment/cancel'
+    | '/payment/success'
     | '/scan/$id'
     | '/tracking/$id'
+    | '/tracking/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -246,19 +270,15 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   SettingsRoute: typeof SettingsRoute
   TermsRoute: typeof TermsRoute
-  TrackingRoute: typeof TrackingRouteWithChildren
+  PaymentCancelRoute: typeof PaymentCancelRoute
+  PaymentSuccessRoute: typeof PaymentSuccessRoute
   ScanIdRoute: typeof ScanIdRoute
+  TrackingIdRoute: typeof TrackingIdRoute
+  TrackingIndexRoute: typeof TrackingIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/tracking': {
-      id: '/tracking'
-      path: '/tracking'
-      fullPath: '/tracking'
-      preLoaderRoute: typeof TrackingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/terms': {
       id: '/terms'
       path: '/terms'
@@ -357,12 +377,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tracking/': {
+      id: '/tracking/'
+      path: '/tracking'
+      fullPath: '/tracking/'
+      preLoaderRoute: typeof TrackingIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tracking/$id': {
       id: '/tracking/$id'
-      path: '/$id'
+      path: '/tracking/$id'
       fullPath: '/tracking/$id'
       preLoaderRoute: typeof TrackingIdRouteImport
-      parentRoute: typeof TrackingRoute
+      parentRoute: typeof rootRouteImport
     }
     '/scan/$id': {
       id: '/scan/$id'
@@ -371,20 +398,22 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ScanIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/payment/success': {
+      id: '/payment/success'
+      path: '/payment/success'
+      fullPath: '/payment/success'
+      preLoaderRoute: typeof PaymentSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payment/cancel': {
+      id: '/payment/cancel'
+      path: '/payment/cancel'
+      fullPath: '/payment/cancel'
+      preLoaderRoute: typeof PaymentCancelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
-
-interface TrackingRouteChildren {
-  TrackingIdRoute: typeof TrackingIdRoute
-}
-
-const TrackingRouteChildren: TrackingRouteChildren = {
-  TrackingIdRoute: TrackingIdRoute,
-}
-
-const TrackingRouteWithChildren = TrackingRoute._addFileChildren(
-  TrackingRouteChildren,
-)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -401,8 +430,11 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   SettingsRoute: SettingsRoute,
   TermsRoute: TermsRoute,
-  TrackingRoute: TrackingRouteWithChildren,
+  PaymentCancelRoute: PaymentCancelRoute,
+  PaymentSuccessRoute: PaymentSuccessRoute,
   ScanIdRoute: ScanIdRoute,
+  TrackingIdRoute: TrackingIdRoute,
+  TrackingIndexRoute: TrackingIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

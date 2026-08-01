@@ -48,6 +48,7 @@ async def _retention_loop():
     """Daily check for inactive users to send warnings and deactivate QR codes."""
     from datetime import datetime, timezone, timedelta
     from app.services.email_service import send_email
+    from app.database import db
     
     while True:
         try:

@@ -8,7 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { generateQrWithLogo } from "@/lib/qr";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/tracking")({
+export const Route = createFileRoute("/tracking/")({
   head: () => ({ meta: [{ title: "Tracking — Oziktag" }] }),
   component: TrackingPage,
 });

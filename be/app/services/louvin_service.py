@@ -1,4 +1,4 @@
-"""Louvin payment gateway service."""
+"""SumoPod payment gateway service."""
 
 import httpx
 from fastapi import HTTPException, status
@@ -15,9 +15,16 @@ PACKAGES = {
 
 
 def get_package(paket_id: str) -> dict:
+    """Get package details by ID."""
     if paket_id not in PACKAGES:
         raise ValueError(f"Paket {paket_id} tidak valid")
     return PACKAGES[paket_id]
+
+
+def _get_api_key() -> str:
+    """Get the SumoPod API key, falling back to louvin_api_key for backwards compat."""
+    settings = get_settings()
+    return settings.sumopod_api_key or settings.louvin_api_key
 
 
 async def create_transaction(
@@ -31,6 +38,13 @@ async def create_transaction(
     Create a payment transaction by calling SumoPod API directly.
     """
     settings = get_settings()
+    api_key = _get_api_key()
+
+    if not api_key:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Payment API key not configured",
+        )
 
     pkg = get_package(paket)
     
@@ -42,13 +56,13 @@ async def create_transaction(
         "expires_in_hours": 24,
         "payment_method_type_code": payment_type,
         "success_return_url": f"{settings.frontend_url}/payment/success",
-        "cancel_return_url": f"{settings.frontend_url}/payment/cancel"
+        "cancel_return_url": f"{settings.frontend_url}/payment/cancel",
     }
 
     url = "https://api-pay.sumopod.com/api/v1/payments"
     headers = {
         "Content-Type": "application/json",
-        "X-Api-Key": settings.louvin_api_key, # Repurposing louvin_api_key config for SumoPod API Key
+        "X-Api-Key": api_key,
     }
 
     try:
@@ -61,7 +75,7 @@ async def create_transaction(
         try:
             error_data = e.response.json()
             error_detail = error_data.get("details", error_data.get("error", str(e)))
-        except:
+        except Exception:
             pass
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
@@ -76,14 +90,12 @@ async def create_transaction(
 
 async def check_status(transaction_id: str) -> dict:
     """Check payment status via SumoPod API."""
-    settings = get_settings()
+    api_key = _get_api_key()
 
-    # Using SumoPod get payment API
     url = f"https://api-pay.sumopod.com/api/v1/payments/{transaction_id}"
-
     headers = {
         "Content-Type": "application/json",
-        "X-Api-Key": settings.louvin_api_key,
+        "X-Api-Key": api_key,
     }
 
     async with httpx.AsyncClient(timeout=15.0) as client:
@@ -93,10 +105,3 @@ async def check_status(transaction_id: str) -> dict:
             
     data = response.json()
     return data
-
-
-def get_package(paket: str) -> dict:
-    """Get package details by name."""
-    if paket not in PACKAGES:
-        raise ValueError(f"Invalid paket: {paket}")
-    return PACKAGES[paket]

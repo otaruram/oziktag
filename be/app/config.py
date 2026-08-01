@@ -17,8 +17,9 @@ class Settings(BaseSettings):
     imagekit_public_key: str
     imagekit_url_endpoint: str
 
-    # SumoPod Payment API (reusing louvin env vars for backwards compatibility)
-    louvin_api_key: str = ""
+    # SumoPod Payment API
+    sumopod_api_key: str = ""
+    louvin_api_key: str = ""  # Legacy, kept for backwards compat
     louvin_base_url: str = "https://api-pay.sumopod.com"
 
     # SMTP Email
