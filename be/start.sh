@@ -5,7 +5,7 @@ echo "==> Step 1: Generating Prisma client and fetching engines..."
 MAX_RETRIES=3
 RETRY_COUNT=0
 while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-    prisma generate && break
+    python -m prisma generate && break
     RETRY_COUNT=$((RETRY_COUNT+1))
     echo "==> prisma generate failed, retrying ($RETRY_COUNT/$MAX_RETRIES)..."
     sleep 5

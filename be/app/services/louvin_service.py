@@ -1,6 +1,7 @@
 """Louvin payment gateway service."""
 
 import httpx
+from fastapi import HTTPException, status
 from app.config import get_settings
 
 
