@@ -17,22 +17,13 @@ class Settings(BaseSettings):
     imagekit_public_key: str
     imagekit_url_endpoint: str
 
-    # Louvin Payment Gateway
-    louvin_api_key: str = ""
-    louvin_base_url: str = "https://api.louvin.dev"
+    # Node Microservice
+    node_backend_url: str = "http://localhost:3000"
 
     # Gemini AI
     gemini_api_key: str
     gemini_base_url: str = "https://ai.sumopod.com"
     gemini_model: str = "gemini/gemini-2.5-flash-lite"
-
-    # SMTP Email
-    smtp_host: str = "smtp.sumopod.com"
-    smtp_port: int = 465
-    smtp_user: str = ""
-    smtp_password: str = ""
-    smtp_from_email: str = "support@oziktag.my.id"
-    smtp_from_name: str = "Oziktag"
 
     # Admin
     admin_email: str = "okitr52@gmail.com"

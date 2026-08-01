@@ -1,39 +1,35 @@
 """Email service — SMTP email sending for Oziktag notifications."""
 
-import smtplib
-import ssl
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-
+import httpx
 from app.config import get_settings
 
 
 async def send_email(to_email: str, subject: str, html_body: str) -> bool:
     """
-    Send an HTML email via SMTP (SSL).
+    Send an HTML email by proxying to the Node.js backend.
     Returns True on success, False on failure.
     """
     settings = get_settings()
+    node_url = settings.node_backend_url
 
-    if not settings.smtp_user or not settings.smtp_password:
-        print("[Email] SMTP credentials not configured, skipping email.")
+    if not node_url:
+        print("[Email] Node backend URL not configured, skipping email.")
         return False
 
-    msg = MIMEMultipart("alternative")
-    msg["From"] = f"{settings.smtp_from_name} <{settings.smtp_from_email}>"
-    msg["To"] = to_email
-    msg["Subject"] = subject
-    msg.attach(MIMEText(html_body, "html", "utf-8"))
+    payload = {
+        "to": to_email,
+        "subject": subject,
+        "html": html_body
+    }
 
     try:
-        context = ssl.create_default_context()
-        with smtplib.SMTP_SSL(settings.smtp_host, settings.smtp_port, context=context) as server:
-            server.login(settings.smtp_user, settings.smtp_password)
-            server.sendmail(settings.smtp_from_email, to_email, msg.as_string())
-        print(f"[Email] Sent to {to_email}: {subject}")
-        return True
+        async with httpx.AsyncClient() as client:
+            response = await client.post(f"{node_url}/api/email/send", json=payload, timeout=10.0)
+            response.raise_for_status()
+            print(f"[Email] Successfully sent via Node backend to {to_email}")
+            return True
     except Exception as e:
-        print(f"[Email] Failed to send to {to_email}: {e}")
+        print(f"[Email] Failed to send via Node backend to {to_email}: {e}")
         return False
 
 

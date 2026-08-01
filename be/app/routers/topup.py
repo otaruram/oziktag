@@ -78,25 +78,22 @@ async def create_topup(
     )
 
 
-@router.post("/webhook")
-async def louvin_webhook(request: Request):
+@router.post("/webhook-internal")
+async def payment_webhook(request: Request):
     """
-    Webhook handler for Louvin payment notifications.
-    Updates transaction status and adds credits on successful payment.
-    IMPORTANT: Always return HTTP 200.
+    Internal webhook received from our Node.js microservice.
+    Node.js has already verified the SumoPod token.
     """
-    try:
-        body = await request.json()
-    except Exception:
+    payload = await request.json()
+
+    event = payload.get("event_type")
+    data = payload.get("data", {})
+    order_id = data.get("order_id")
+
+    if not order_id:
         return {"received": True}
 
-    event = body.get("event", "")
-    data = body.get("data", {})
-
-    order_id = data.get("order_id", "")
-    transaction_status = data.get("status", "")
-
-    if event == "payment.settled" and transaction_status == "settled":
+    if event == "payment.completed":
         # Find the transaction by louvin_ref (our reference = order_id)
         txn = await db.topuptransaction.find_first(
             where={"louvinRef": order_id}
@@ -275,8 +272,9 @@ async def subscribe_elite(
             detail=f"Gagal membuat transaksi: {str(e)}",
         )
 
-    txn_data = louvin_response.get("transaction", {})
-    payment = louvin_response.get("payment", {})
+    # SumoPod doesn't use these exact fields in the response, we map them
+    txn_data = louvin_response
+    payment_link = txn_data.get("payment_link_url")
 
     # Save transaction
     await db.topuptransaction.create(
@@ -288,7 +286,7 @@ async def subscribe_elite(
             "credits": 0,
             "status": "pending",
             "louvinRef": reference,
-            "louvinTransactionId": txn_data.get("id", ""),
+            "louvinTransactionId": txn_data.get("payment_id", ""),
             "paymentType": payment_type,
         }
     )
@@ -297,8 +295,8 @@ async def subscribe_elite(
         "transaction_id": reference,
         "amount": elite_price,
         "payment_type": payment_type,
-        "qr_string": payment.get("qr_string"),
-        "deeplink_url": payment.get("deeplink_url"),
+        "qr_string": payment_link,
+        "deeplink_url": payment_link,
     }
 
 

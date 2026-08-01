@@ -13,56 +13,63 @@ PACKAGES = {
 }
 
 
+def get_package(paket_id: str) -> dict:
+    if paket_id not in PACKAGES:
+        raise ValueError(f"Paket {paket_id} tidak valid")
+    return PACKAGES[paket_id]
+
+
 async def create_transaction(
     paket: str,
     payment_type: str,
-    customer_name: str = "",
-    customer_email: str = "",
-    reference: str = "",
+    customer_name: str,
+    customer_email: str,
+    reference: str,
 ) -> dict:
     """
-    Create a Louvin payment transaction.
-    Returns the full Louvin API response.
+    Create a payment transaction by proxying to the Node.js microservice.
     """
     settings = get_settings()
+    node_url = settings.node_backend_url
 
-    if paket not in PACKAGES:
-        raise ValueError(f"Invalid paket: {paket}. Must be one of {list(PACKAGES.keys())}")
+    if not node_url:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Node backend URL not configured"
+        )
 
-    pkg = PACKAGES[paket]
-
-    url = f"{settings.louvin_base_url}/create-transaction"
-
-    headers = {
-        "Content-Type": "application/json",
-        "x-api-key": settings.louvin_api_key,
-    }
-
+    pkg = get_package(paket)
+    
+    # Payload expected by Node.js SumoPod controller
     payload = {
+        "order_id": reference,
         "amount": pkg["price"],
-        "payment_type": payment_type,
-        "customer_name": customer_name,
-        "customer_email": customer_email,
-        "description": f"Oziktag Top-Up Paket {pkg['name']} ({pkg['credits']} kredit)",
+        "currency": "IDR",
+        "expires_in_hours": 24,
+        "payment_method_type_code": payment_type,
     }
 
-    if reference:
-        payload["reference"] = reference
-
-    # Add source_url for tracking
-    payload["source_url"] = settings.app_url
-
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        response = await client.post(url, headers=headers, json=payload)
-
-    data = response.json()
-
-    if response.status_code not in (200, 201) or not data.get("success"):
-        error_msg = data.get("error", "Unknown Louvin error")
-        details = data.get("details", "")
-        raise Exception(f"Louvin API error: {error_msg} {details}")
-
-    return data
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(f"{node_url}/api/payment/create", json=payload, timeout=15.0)
+            response.raise_for_status()
+            return response.json()
+    except httpx.HTTPStatusError as e:
+        error_detail = "Failed to create payment"
+        try:
+            error_data = e.response.json()
+            error_detail = error_data.get("details", error_data.get("error", str(e)))
+        except:
+            pass
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Payment Gateway Error: {error_detail}",
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Failed to communicate with payment service: {str(e)}",
+        )
 
 
 async def check_status(transaction_id: str) -> dict:
