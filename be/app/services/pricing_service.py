@@ -3,44 +3,53 @@ Dynamic Pricing Service — handles exchange rate risk and cost calculation.
 
 Pricing Strategy:
 - All USD costs converted to IDR using configurable EXCHANGE_RATE
-- Buffer applied on top to handle kurs fluctuation (default 20%)
+- Buffer applied on top to handle kurs fluctuation (default 25%)
 - Package prices are pre-calculated but can be auto-adjusted
 
 Cost Breakdown per QR Generate:
-- Gemini AI: ~800 input tokens + ~400 output tokens
-  - Input:  800/1M * $0.10 = $0.00008
-  - Output: 400/1M * $0.40 = $0.00016
-  - Total:  $0.00024 per request
-- ImageKit: ~2.5MB per request (5 images)
-  - Negligible on free tier, ~$0.04/GB after = ~Rp 1
-- Estimated variable cost: ~Rp 5/QR at Rp 16,500/USD
+- Gemini Flash Lite: ~1500 input tokens + ~500 output tokens
+  - Input:  1500/1M * $0.025 = $0.0000375
+  - Output: 500/1M  * $1.50  = $0.00075
+  - Total:  ~$0.0008 per request
+- Backup Claude Haiku 4.5: ~$0.0027 per request (fallback only)
+- ImageKit: ~2.5MB per request — covered under Pro plan
+- Estimated variable cost: ~Rp 14/QR at Rp 17,000/USD
+
+Payment Gateway Fee: 0.7% + Rp 300 per transaction
 
 Fixed Monthly Costs:
-- Supabase Pro: $25 = Rp 412,500
-- VPS: Rp 60,000
-- Domain (.my.id): Rp 458/month (Rp 5,500/year)
-- Total Fixed: ~Rp 472,958/month
-- With 20% buffer: ~Rp 567,550/month
+- Supabase Pro: Rp 550,000
+- ImageKit Pro: Rp 200,000
+- VPS Cloudeka: Rp 95,000
+- Domain (.my.id): Rp 15,000/year = Rp 1,250/month
+- Total Fixed: ~Rp 846,250/month
+- With 25% buffer: ~Rp 1,057,813/month
 """
 
 from app.config import get_settings
 
 
-# ──────────────────────── Cost Constants (USD) ────────────────────────
+# ──────────────────────── Cost Constants ────────────────────────
 
-# Gemini AI cost per request
-GEMINI_INPUT_TOKENS_PER_REQUEST = 800
-GEMINI_OUTPUT_TOKENS_PER_REQUEST = 400
-GEMINI_INPUT_PRICE_PER_1M = 0.10   # $0.10 per 1M tokens
-GEMINI_OUTPUT_PRICE_PER_1M = 0.40  # $0.40 per 1M tokens
+# Primary LLM: Gemini Flash Lite (USD)
+GEMINI_INPUT_TOKENS_PER_REQUEST = 1500
+GEMINI_OUTPUT_TOKENS_PER_REQUEST = 500
+GEMINI_INPUT_PRICE_PER_1M = 0.025    # $0.025 per 1M input tokens
+GEMINI_OUTPUT_PRICE_PER_1M = 1.50    # $1.50 per 1M output tokens
 
-# ImageKit cost per request (minimal)
-IMAGEKIT_COST_PER_REQUEST_IDR = 1.0
+# Backup LLM: Claude Haiku 4.5 (USD) — for reference only
+CLAUDE_INPUT_PRICE_PER_1M = 0.10
+CLAUDE_OUTPUT_PRICE_PER_1M = 5.00
 
-# Fixed monthly costs
-SUPABASE_PRO_MONTHLY_USD = 25.0
-VPS_MONTHLY_IDR = 60000.0
-DOMAIN_YEARLY_IDR = 5500.0
+# Fixed monthly costs (IDR)
+SUPABASE_PRO_MONTHLY_IDR = 550_000.0
+IMAGEKIT_PRO_MONTHLY_IDR = 200_000.0
+VPS_CLOUDEKA_MONTHLY_IDR = 95_000.0
+DOMAIN_YEARLY_IDR = 15_000.0
+
+# Payment Gateway Fee
+GATEWAY_FEE_PERCENT = 0.007   # 0.7%
+GATEWAY_FEE_FLAT_IDR = 300.0  # Rp 300 per transaction
 
 
 def get_exchange_rate() -> float:
@@ -49,12 +58,12 @@ def get_exchange_rate() -> float:
 
 
 def get_buffer_multiplier() -> float:
-    """Get buffer multiplier (e.g., 1.20 for 20% buffer)."""
+    """Get buffer multiplier (e.g., 1.25 for 25% buffer)."""
     return 1 + (get_settings().price_buffer_percent / 100)
 
 
 def calculate_ai_cost_per_request_idr() -> float:
-    """Calculate Gemini AI cost per QR generation in IDR."""
+    """Calculate Gemini Flash Lite AI cost per QR generation in IDR."""
     rate = get_exchange_rate()
     buffer = get_buffer_multiplier()
 
@@ -62,18 +71,25 @@ def calculate_ai_cost_per_request_idr() -> float:
     output_cost = (GEMINI_OUTPUT_TOKENS_PER_REQUEST / 1_000_000) * GEMINI_OUTPUT_PRICE_PER_1M
     total_usd = input_cost + output_cost
 
-    return (total_usd * rate * buffer) + IMAGEKIT_COST_PER_REQUEST_IDR
+    return total_usd * rate * buffer
+
+
+def calculate_gateway_fee(price: int) -> float:
+    """Calculate payment gateway fee for a given price."""
+    return (price * GATEWAY_FEE_PERCENT) + GATEWAY_FEE_FLAT_IDR
 
 
 def calculate_fixed_costs_monthly_idr() -> float:
     """Calculate total fixed costs per month in IDR."""
-    rate = get_exchange_rate()
     buffer = get_buffer_multiplier()
+    domain_monthly = DOMAIN_YEARLY_IDR / 12
 
-    supabase_idr = SUPABASE_PRO_MONTHLY_USD * rate
-    domain_monthly_idr = DOMAIN_YEARLY_IDR / 12
-
-    total = (supabase_idr * buffer) + (VPS_MONTHLY_IDR * buffer) + domain_monthly_idr
+    total = (
+        (SUPABASE_PRO_MONTHLY_IDR * buffer)
+        + (IMAGEKIT_PRO_MONTHLY_IDR * buffer)
+        + (VPS_CLOUDEKA_MONTHLY_IDR * buffer)
+        + domain_monthly
+    )
     return total
 
 
@@ -162,21 +178,36 @@ def get_cost_analysis() -> dict:
         "variable_cost_per_qr_idr": round(variable_cost, 2),
         "fixed_cost_monthly_idr": round(fixed_cost),
         "fixed_cost_breakdown": {
-            "supabase_pro": round(SUPABASE_PRO_MONTHLY_USD * rate * buffer),
-            "vps": round(VPS_MONTHLY_IDR * buffer),
+            "supabase_pro": round(SUPABASE_PRO_MONTHLY_IDR * buffer),
+            "imagekit_pro": round(IMAGEKIT_PRO_MONTHLY_IDR * buffer),
+            "vps_cloudeka": round(VPS_CLOUDEKA_MONTHLY_IDR * buffer),
             "domain_monthly": round(DOMAIN_YEARLY_IDR / 12),
+        },
+        "gateway_fee": {
+            "percent": f"{GATEWAY_FEE_PERCENT * 100}%",
+            "flat_idr": GATEWAY_FEE_FLAT_IDR,
         },
         "packages": {},
     }
 
     for key, pkg in packages.items():
-        margin = pkg["price_per_qr"] - variable_cost
-        bep = fixed_cost / margin if margin > 0 else float("inf")
-        analysis["packages"][key] = {
-            **pkg,
-            "margin_per_qr": round(margin, 2),
-            "bep_units_monthly": round(bep),
-            "monthly_revenue_if_sold_100pct": pkg["price"] * 10,  # assume 10 sales
-        }
+        if pkg.get("is_subscription"):
+            gateway_fee = calculate_gateway_fee(pkg["price"])
+            analysis["packages"][key] = {
+                **pkg,
+                "gateway_fee": round(gateway_fee),
+                "net_revenue": round(pkg["price"] - gateway_fee),
+            }
+        else:
+            margin = pkg["price_per_qr"] - variable_cost
+            gateway_fee = calculate_gateway_fee(pkg["price"])
+            bep = fixed_cost / margin if margin > 0 else float("inf")
+            analysis["packages"][key] = {
+                **pkg,
+                "margin_per_qr": round(margin, 2),
+                "gateway_fee": round(gateway_fee),
+                "net_revenue": round(pkg["price"] - gateway_fee),
+                "bep_units_monthly": round(bep),
+            }
 
     return analysis

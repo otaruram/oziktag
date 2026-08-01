@@ -4,11 +4,12 @@ import httpx
 from app.config import get_settings
 
 
-# Package definitions
+# Package definitions (synced with pricing_service.py)
 PACKAGES = {
-    "starter": {"name": "Starter", "price": 20000, "credits": 50},
-    "growth": {"name": "Growth", "price": 50000, "credits": 150},
-    "pro": {"name": "Pro", "price": 100000, "credits": 400},
+    "starter": {"name": "Starter", "price": 15000, "credits": 50},
+    "growth": {"name": "Growth", "price": 35000, "credits": 150},
+    "pro": {"name": "Pro", "price": 79000, "credits": 400},
+    "elite_monthly": {"name": "Artisan Elite", "price": 49900, "credits": 0},
 }
 
 

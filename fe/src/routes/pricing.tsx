@@ -22,9 +22,9 @@ type Pkg = {
 };
 
 const PACKAGES: Pkg[] = [
-  { id: "starter", name: "Starter", price: 20000, credits: 50, tagline: "Cocok untuk UMKM pemula" },
-  { id: "growth", name: "Growth", price: 50000, credits: 150, tagline: "Pilihan paling populer", highlight: true },
-  { id: "pro", name: "Pro", price: 100000, credits: 400, tagline: "Harga per-QR termurah" },
+  { id: "starter", name: "Starter", price: 15000, credits: 50, tagline: "Cocok untuk UMKM pemula" },
+  { id: "growth", name: "Growth", price: 35000, credits: 150, tagline: "Pilihan paling populer — hemat 22%", highlight: true },
+  { id: "pro", name: "Pro", price: 79000, credits: 400, tagline: "Harga termurah per QR — hemat 34%" },
 ];
 
 const BENEFITS = [

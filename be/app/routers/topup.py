@@ -6,6 +6,7 @@ from app.database import db
 from app.dependencies import get_current_user
 from app.services.louvin_service import create_transaction, get_package
 from app.services.credit_service import add_credits
+from app.services.email_service import send_email, build_topup_success_email
 from app.models.schemas import TopUpCreateRequest, TopUpCreateResponse, TopUpHistoryItem
 
 router = APIRouter(prefix="/api/topup", tags=["Top-Up & Payment"])
@@ -114,6 +115,20 @@ async def louvin_webhook(request: Request):
                 await add_credits(txn.userId, txn.credits, txn.tipeKredit, desc, tx_client=tx)
 
             print(f"[Webhook] Payment settled: {order_id}, +{txn.credits} credits to user {txn.userId}")
+
+            # Send email notification (fire-and-forget)
+            try:
+                user = await db.user.find_unique(where={"id": txn.userId})
+                if user and user.email:
+                    subject, html = build_topup_success_email(
+                        user_name=user.nama or user.email.split("@")[0],
+                        paket=txn.paket,
+                        credits=txn.credits,
+                        amount=txn.amount,
+                    )
+                    await send_email(user.email, subject, html)
+            except Exception as email_err:
+                print(f"[Webhook] Email notification failed: {email_err}")
 
     elif event == "payment.failed":
         # Update transaction status to failed

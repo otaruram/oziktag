@@ -36,23 +36,23 @@ export function PricingModal({ onClose }: { onClose: () => void }) {
           <div className="space-y-3">
             <h5 className="text-sm font-semibold">Pilih Paket Kredit API</h5>
             <ul className="space-y-2">
-              <button onClick={() => setSelectedPkg({ id: "api_starter", name: "Starter API", price: 20000, credits: 50 })} className="w-full flex items-center justify-between text-sm rounded-md border border-border bg-card p-3 hover:bg-secondary transition-colors text-left">
+              <button onClick={() => setSelectedPkg({ id: "api_starter", name: "Starter API", price: 15000, credits: 50 })} className="w-full flex items-center justify-between text-sm rounded-md border border-border bg-card p-3 hover:bg-secondary transition-colors text-left">
                 <span><span className="font-medium">Starter</span> (50 kredit API)</span>
-                <span className="font-mono text-muted-foreground">Rp 400 / req</span>
+                <span className="font-mono text-muted-foreground">Rp 300 / req</span>
               </button>
-              <button onClick={() => setSelectedPkg({ id: "api_growth", name: "Growth API", price: 50000, credits: 150 })} className="w-full flex items-center justify-between text-sm rounded-md border border-primary/40 bg-primary/5 p-3 hover:bg-primary/10 transition-colors text-left">
+              <button onClick={() => setSelectedPkg({ id: "api_growth", name: "Growth API", price: 35000, credits: 150 })} className="w-full flex items-center justify-between text-sm rounded-md border border-primary/40 bg-primary/5 p-3 hover:bg-primary/10 transition-colors text-left">
                 <span><span className="font-medium text-primary">Growth</span> (150 kredit API)</span>
-                <span className="font-mono text-muted-foreground">Rp 333 / req</span>
+                <span className="font-mono text-muted-foreground">Rp 233 / req</span>
               </button>
-              <button onClick={() => setSelectedPkg({ id: "api_pro", name: "Pro API", price: 100000, credits: 400 })} className="w-full flex items-center justify-between text-sm rounded-md border border-border bg-card p-3 hover:bg-secondary transition-colors text-left">
+              <button onClick={() => setSelectedPkg({ id: "api_pro", name: "Pro API", price: 79000, credits: 400 })} className="w-full flex items-center justify-between text-sm rounded-md border border-border bg-card p-3 hover:bg-secondary transition-colors text-left">
                 <span><span className="font-medium">Pro</span> (400 kredit API)</span>
-                <span className="font-mono text-muted-foreground">Rp 250 / req</span>
+                <span className="font-mono text-muted-foreground">Rp 198 / req</span>
               </button>
             </ul>
           </div>
           
           <div className="rounded-lg bg-muted p-4 text-xs text-muted-foreground">
-            <span className="font-medium text-foreground">Catatan:</span> Klik salah satu paket di atas untuk memulai transaksi riil menggunakan Louvin Payment.
+            <span className="font-medium text-foreground">Catatan:</span> Klik salah satu paket di atas untuk memulai transaksi pembayaran.
           </div>
         </div>
       </div>
