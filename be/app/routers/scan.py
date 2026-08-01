@@ -21,7 +21,19 @@ async def scan_product(product_id: str):
     )
 
     if not product:
-        raise HTTPException(status_code=404, detail="QR tidak ditemukan atau sudah dinonaktifkan.")
+        raise HTTPException(status_code=404, detail="QR tidak ditemukan.")
+
+    user = product.user
+    
+    # Check Inactive User Policy (90 days inactive & 0 credit)
+    if user.lastSeenAt and user.sisaKredit <= 0:
+        from datetime import datetime, timezone
+        days_inactive = (datetime.now(timezone.utc) - user.lastSeenAt).days
+        if days_inactive >= 90:
+            raise HTTPException(
+                status_code=403, 
+                detail="QR Code ini dinonaktifkan sementara karena pemilik tidak aktif. Pemilik dapat mengaktifkannya kembali dengan Top-Up saldo Oziktag."
+            )
 
     # Record the scan
     try:

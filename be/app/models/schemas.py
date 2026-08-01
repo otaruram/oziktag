@@ -40,6 +40,7 @@ class UserProfile(BaseModel):
     can_view_credit_score: bool = False
     is_elite: bool = False
     elite_expires_at: Optional[str] = None
+    receivesPromoEmails: bool = True
 
 # ──────────────────────── QC Products ────────────────────────
 

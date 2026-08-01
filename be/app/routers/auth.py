@@ -46,6 +46,23 @@ async def request_credit_score_access(current_user: dict = Depends(get_current_u
     return {"message": "Permintaan akses terkirim"}
 
 
+from pydantic import BaseModel
+
+class EmailPreferenceUpdate(BaseModel):
+    receives_promo_emails: bool
+
+@router.post("/email-preferences")
+async def update_email_preferences(request: EmailPreferenceUpdate, current_user: dict = Depends(get_current_user)):
+    """Update user email preferences."""
+    user_id = current_user["id"]
+    await db.user.update(
+        where={"id": user_id},
+        data={"receivesPromoEmails": request.receives_promo_emails}
+    )
+    return {"message": "Preferensi email diperbarui", "receivesPromoEmails": request.receives_promo_emails}
+
+
+
 @router.post("/kyc", response_model=KYCResponse)
 async def submit_kyc(request: KYCRequest, current_user: dict = Depends(get_current_user)):
     """

@@ -107,6 +107,15 @@ async def get_user_profile_data(user_id: str) -> UserProfile:
     score += min(db_user.sisaKredit * 2, 100)
     score = min(score, 850)
 
+    # Update lastSeenAt silently to track active users (for retention checking)
+    try:
+        await db.user.update(
+            where={"id": user_id},
+            data={"lastSeenAt": datetime.now(timezone.utc)}
+        )
+    except Exception as e:
+        print(f"[User Service] Failed to update lastSeenAt: {e}")
+
     return UserProfile(
         id=db_user.id,
         nama=db_user.nama,
@@ -123,6 +132,7 @@ async def get_user_profile_data(user_id: str) -> UserProfile:
         can_view_credit_score=db_user.canViewCreditScore,
         is_elite=db_user.isElite,
         elite_expires_at=db_user.eliteExpiresAt.isoformat() if db_user.eliteExpiresAt else None,
+        receivesPromoEmails=db_user.receivesPromoEmails,
     )
 
 

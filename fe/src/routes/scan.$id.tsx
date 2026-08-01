@@ -18,16 +18,18 @@ export const Route = createFileRoute("/scan/$id")({
 function Scan() {
   const { id } = Route.useParams();
   const [tag, setTag] = useState<Qrtag | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    apiFetch(`/qc/scan/${id}`)
+    apiFetch(`/scan/${id}`)
       .then((data) => {
         setTag(data);
         setLoaded(true);
       })
       .catch((err) => {
         console.error("Failed to load tag", err);
+        setErrorMsg(err.message);
         setTag(null);
         setLoaded(true);
       });
@@ -35,19 +37,22 @@ function Scan() {
 
   if (!loaded) return null;
 
-  if (!tag) {
+  if (errorMsg) {
+    const isDeactivated = errorMsg.includes("dinonaktifkan sementara");
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
-        <div className="max-w-sm rounded-2xl border border-border bg-card p-8 text-center">
-          <AlertCircle className="mx-auto h-10 w-10 text-destructive" />
-          <h1 className="mt-4 text-lg font-semibold">QR Tidak Ditemukan</h1>
+        <div className="max-w-sm rounded-2xl border border-border bg-card p-8 text-center shadow-[var(--shadow-elegant)]">
+          <AlertCircle className={`mx-auto h-12 w-12 ${isDeactivated ? 'text-amber-500' : 'text-destructive'}`} />
+          <h1 className="mt-4 text-xl font-semibold">{isDeactivated ? 'QR Dinonaktifkan' : 'QR Tidak Ditemukan'}</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Label ini belum terdaftar atau sudah dinonaktifkan.
+            {errorMsg}
           </p>
         </div>
       </div>
     );
   }
+
+  if (!tag) return null;
 
   return (
     <div className="min-h-screen bg-background px-4 py-8 text-foreground">
