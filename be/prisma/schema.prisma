@@ -134,8 +134,8 @@ model TopupTransaction {
   amount              Int
   credits             Int      @default(0)
   status              String   @default("pending")
-  louvinRef           String?  @map("louvin_ref")
-  louvinTransactionId String?  @map("louvin_transaction_id")
+  sumopodRef           String?  @map("sumopod_ref")
+  sumopodTransactionId String?  @map("sumopod_transaction_id")
   paymentType         String?  @map("payment_type")
   createdAt           DateTime @default(now()) @map("created_at")
   updatedAt           DateTime @updatedAt @map("updated_at")

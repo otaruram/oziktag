@@ -19,8 +19,6 @@ class Settings(BaseSettings):
 
     # SumoPod Payment API
     sumopod_api_key: str = ""
-    louvin_api_key: str = ""  # Legacy, kept for backwards compat
-    louvin_base_url: str = "https://api-pay.sumopod.com"
 
     # SMTP Email
     smtp_host: str = ""

@@ -91,7 +91,7 @@ class TopUpCreateRequest(BaseModel):
 
 class TopUpCreateResponse(BaseModel):
     transaction_id: str
-    louvin_transaction_id: str
+    sumopod_transaction_id: str
     amount: int
     payment_type: str
     qr_string: Optional[str] = None

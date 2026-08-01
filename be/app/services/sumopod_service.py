@@ -22,9 +22,9 @@ def get_package(paket_id: str) -> dict:
 
 
 def _get_api_key() -> str:
-    """Get the SumoPod API key, falling back to louvin_api_key for backwards compat."""
+    """Get the SumoPod API key."""
     settings = get_settings()
-    return settings.sumopod_api_key or settings.louvin_api_key
+    return settings.sumopod_api_key
 
 
 async def create_transaction(

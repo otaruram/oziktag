@@ -4,7 +4,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from app.database import db
 from app.dependencies import get_current_user
-from app.services.louvin_service import create_transaction, get_package
+from app.services.sumopod_service import create_transaction, get_package
 from app.services.credit_service import add_credits
 from app.services.email_service import send_email, build_topup_success_email
 from app.models.schemas import TopUpCreateRequest, TopUpCreateResponse, TopUpHistoryItem
@@ -18,7 +18,7 @@ async def create_topup(
     current_user: dict = Depends(get_current_user),
 ):
     """
-    Create a top-up transaction via Louvin.
+    Create a top-up transaction via SumoPod.
     Returns QR string / VA number for payment.
     """
     user_id = current_user["id"]
@@ -32,9 +32,9 @@ async def create_topup(
     # Generate unique reference
     reference = f"oziktag-{uuid.uuid4().hex[:12]}"
 
-    # Call Louvin API
+    # Call SumoPod API
     try:
-        louvin_response = await create_transaction(
+        sumopod_response = await create_transaction(
             paket=request.paket,
             payment_type=request.payment_type,
             customer_name=current_user.get("name", ""),
@@ -47,7 +47,7 @@ async def create_topup(
             detail=f"Gagal membuat transaksi pembayaran: {str(e)}",
         )
 
-    txn_data = louvin_response
+    txn_data = sumopod_response
     payment_link = txn_data.get("payment_link_url")
     sumopod_txn_id = txn_data.get("payment_id", "")
 
@@ -60,15 +60,15 @@ async def create_topup(
             "amount": pkg["price"],
             "credits": pkg["credits"],
             "status": "pending",
-            "louvinRef": reference,
-            "louvinTransactionId": sumopod_txn_id,
+            "sumopodRef": reference,
+            "sumopodTransactionId": sumopod_txn_id,
             "paymentType": request.payment_type,
         }
     )
 
     return TopUpCreateResponse(
         transaction_id=reference,
-        louvin_transaction_id=sumopod_txn_id,
+        sumopod_transaction_id=sumopod_txn_id,
         amount=pkg["price"],
         payment_type=request.payment_type,
         qr_string=payment_link, # For SumoPod, this acts as the payment URL
@@ -95,9 +95,9 @@ async def payment_webhook(request: Request):
         return {"received": True}
 
     if event == "payment.completed":
-        # Find the transaction by louvin_ref (our reference = order_id)
+        # Find the transaction by sumopodRef (our reference = order_id)
         txn = await db.topuptransaction.find_first(
-            where={"louvinRef": order_id}
+            where={"sumopodRef": order_id}
         )
 
         if txn and txn.status != "settled":
@@ -131,7 +131,7 @@ async def payment_webhook(request: Request):
     elif event == "payment.failed":
         # Update transaction status to failed
         txn = await db.topuptransaction.find_first(
-            where={"louvinRef": order_id}
+            where={"sumopodRef": order_id}
         )
         if txn:
             await db.topuptransaction.update(
@@ -189,7 +189,7 @@ async def simulate_demo_payment(request: TopUpCreateRequest, current_user: dict 
                 "amount": pkg["price"],
                 "credits": pkg["credits"],
                 "status": "settled",
-                "louvinRef": reference,
+                "sumopodRef": reference,
                 "paymentType": request.payment_type or "QRIS",
             }
         )
@@ -249,10 +249,10 @@ async def subscribe_elite(
     elite_price = 49900
     reference = f"elite-{uuid.uuid4().hex[:12]}"
 
-    # Create transaction via Louvin
+    # Create transaction via SumoPod
     try:
-        from app.services.louvin_service import create_elite_transaction
-        louvin_response = await create_elite_transaction(
+        from app.services.sumopod_service import create_elite_transaction
+        sumopod_response = await create_elite_transaction(
             payment_type=payment_type,
             customer_name=current_user.get("name", ""),
             customer_email=current_user.get("email", ""),
@@ -260,7 +260,7 @@ async def subscribe_elite(
         )
     except ImportError:
         # Fallback: If create_elite_transaction doesn't exist, use generic
-        louvin_response = await create_transaction(
+        sumopod_response = await create_transaction(
             paket="elite_monthly",
             payment_type=payment_type,
             customer_name=current_user.get("name", ""),
@@ -274,7 +274,7 @@ async def subscribe_elite(
         )
 
     # SumoPod doesn't use these exact fields in the response, we map them
-    txn_data = louvin_response
+    txn_data = sumopod_response
     payment_link = txn_data.get("payment_link_url")
 
     # Save transaction
@@ -286,8 +286,8 @@ async def subscribe_elite(
             "amount": elite_price,
             "credits": 0,
             "status": "pending",
-            "louvinRef": reference,
-            "louvinTransactionId": txn_data.get("payment_id", ""),
+            "sumopodRef": reference,
+            "sumopodTransactionId": txn_data.get("payment_id", ""),
             "paymentType": payment_type,
         }
     )
