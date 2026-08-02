@@ -215,6 +215,12 @@ async def get_tracking_data(product_id: str, role: str, pin: str | None = None) 
         "brand": brand,
         "history": history,
         "created_at": product.createdAt.isoformat(),
+        
+        # Escrow fields
+        "is_escrow": product.isEscrow,
+        "price": product.price,
+        "escrow_fee": product.escrowFee,
+        "payment_url": product.paymentUrl,
     }
 
 
