@@ -88,9 +88,12 @@ Tambahkan saran bisnis singkat di dalam SOLUSI: apakah margin sehat, tips efisie
             "Authorization": f"Bearer {settings.gemini_api_key}",
         }
 
-        content = [{"type": "text", "text": prompt}]
-        for img_url in image_urls:
-            content.append({"type": "image_url", "image_url": {"url": img_url}})
+        if image_urls:
+            content = [{"type": "text", "text": prompt}]
+            for img_url in image_urls:
+                content.append({"type": "image_url", "image_url": {"url": img_url}})
+        else:
+            content = prompt
 
         payload = {
             "model": settings.gemini_model,
@@ -181,9 +184,13 @@ Gunakan bahasa yang profesional, ramah, dan meyakinkan. Jangan gunakan format he
             "Authorization": f"Bearer {settings.gemini_api_key}",
         }
 
-        content = [{"type": "text", "text": prompt}]
         if image_url:
-            content.append({"type": "image_url", "image_url": {"url": image_url}})
+            content = [
+                {"type": "text", "text": prompt},
+                {"type": "image_url", "image_url": {"url": image_url}}
+            ]
+        else:
+            content = prompt
 
         payload = {
             "model": settings.gemini_model,
