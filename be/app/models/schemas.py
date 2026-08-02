@@ -17,6 +17,10 @@ class KYCRequest(BaseModel):
     npwp: Optional[str] = None
     foto_ktp: Optional[str] = None
     foto_npwp: Optional[str] = None
+    website: Optional[str] = None
+    foto_produk_1: str
+    foto_produk_2: str
+    deskripsi_produk: str
 
 
 class KYCResponse(BaseModel):
@@ -177,6 +181,10 @@ class AdminKycItem(BaseModel):
     npwp: Optional[str] = None
     foto_ktp: Optional[str] = None
     foto_npwp: Optional[str] = None
+    website: Optional[str] = None
+    foto_produk_1: Optional[str] = None
+    foto_produk_2: Optional[str] = None
+    deskripsi_produk: Optional[str] = None
     status: str
     created_at: datetime
 

@@ -107,8 +107,24 @@ export function TrackingCreateForm({ onSuccess, onCancel }: TrackingCreateFormPr
     toast.success("Dummy data tracking diisi otomatis!");
   };
 
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData.items;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf("image") !== -1) {
+        const file = items[i].getAsFile();
+        if (file) {
+          setImageFile(file);
+          setImagePreview(URL.createObjectURL(file));
+          toast.success("Gambar berhasil dipaste!");
+          e.preventDefault();
+          break;
+        }
+      }
+    }
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} onPaste={handlePaste} className="space-y-5">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Buat Tracking Produk Baru</h2>
         <button
@@ -173,13 +189,16 @@ export function TrackingCreateForm({ onSuccess, onCancel }: TrackingCreateFormPr
 
       <div>
         <label className="block text-sm font-medium mb-1.5">Foto Produk <span className="text-destructive">*</span></label>
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleImageChange}
-          required
-          className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
-        />
+        <div className="relative">
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            required={!imageFile}
+            className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+          />
+          <p className="text-xs text-muted-foreground mt-1">Atau cukup paste (Ctrl+V) gambar di mana saja di area form ini.</p>
+        </div>
         {imagePreview && (
           <img src={imagePreview} alt="Preview" className="mt-2 w-32 h-32 rounded-lg object-cover border border-border" />
         )}

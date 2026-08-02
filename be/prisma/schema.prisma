@@ -75,16 +75,20 @@ model ApiAccessRequest {
 
 // ──────────────────────── KYC ────────────────────────
 model Kyc {
-  id        String   @id @default(uuid())
-  userId    String   @unique @map("user_id")
-  namaToko  String   @default("") @map("nama_toko")
-  nik       String   @unique
-  npwp      String?  @unique
-  fotoKtp   String?  @map("foto_ktp")
-  fotoNpwp  String?  @map("foto_npwp")
-  status    String   @default("verified")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id              String   @id @default(uuid())
+  userId          String   @unique @map("user_id")
+  namaToko        String   @default("") @map("nama_toko")
+  nik             String   @unique
+  npwp            String?  @unique
+  fotoKtp         String?  @map("foto_ktp")
+  fotoNpwp        String?  @map("foto_npwp")
+  website         String?
+  fotoProduk1     String?  @map("foto_produk_1")
+  fotoProduk2     String?  @map("foto_produk_2")
+  deskripsiProduk String?  @map("deskripsi_produk")
+  status          String   @default("verified")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

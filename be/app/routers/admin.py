@@ -248,6 +248,10 @@ async def get_kyc_requests(admin: dict = Depends(get_admin_user)):
             npwp=r.npwp,
             foto_ktp=r.fotoKtp,
             foto_npwp=r.fotoNpwp,
+            website=r.website,
+            foto_produk_1=r.fotoProduk1,
+            foto_produk_2=r.fotoProduk2,
+            deskripsi_produk=r.deskripsiProduk,
             status=r.status,
             created_at=r.createdAt
         )

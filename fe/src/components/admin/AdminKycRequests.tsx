@@ -94,26 +94,38 @@ export function AdminKycRequests() {
                       <div className="font-medium">{req.nama}</div>
                       <div className="text-xs text-muted-foreground">{req.email}</div>
                     </TableCell>
-                    <TableCell className="font-medium">{req.nama_toko}</TableCell>
+                    <TableCell>
+                      <div className="font-medium">{req.nama_toko}</div>
+                      {req.website && <div className="text-xs text-blue-500 hover:underline"><a href={req.website.startsWith('http') ? req.website : `https://${req.website}`} target="_blank" rel="noreferrer">{req.website}</a></div>}
+                    </TableCell>
                     <TableCell>
                       <div className="text-xs">NIK: <span className="font-medium">{req.nik}</span></div>
                       {req.npwp && <div className="text-xs mt-1">NPWP: <span className="font-medium">{req.npwp}</span></div>}
+                      {req.deskripsi_produk && <div className="text-xs mt-2 text-muted-foreground line-clamp-2" title={req.deskripsi_produk}>{req.deskripsi_produk}</div>}
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col gap-2">
                         {req.foto_ktp ? (
                           <a href={req.foto_ktp} target="_blank" rel="noreferrer" className="inline-flex items-center text-xs text-blue-500 hover:underline">
-                            <FileText className="mr-1 h-3 w-3" /> Lihat KTP
+                            <FileText className="mr-1 h-3 w-3" /> KTP
                           </a>
                         ) : (
                           <span className="text-xs text-muted-foreground italic">KTP -</span>
                         )}
-                        {req.foto_npwp ? (
+                        {req.foto_npwp && (
                           <a href={req.foto_npwp} target="_blank" rel="noreferrer" className="inline-flex items-center text-xs text-blue-500 hover:underline">
-                            <FileText className="mr-1 h-3 w-3" /> Lihat NPWP
+                            <FileText className="mr-1 h-3 w-3" /> NPWP
                           </a>
-                        ) : (
-                          <span className="text-xs text-muted-foreground italic">NPWP -</span>
+                        )}
+                        {req.foto_produk_1 && (
+                          <a href={req.foto_produk_1} target="_blank" rel="noreferrer" className="inline-flex items-center text-xs text-blue-500 hover:underline">
+                            <FileText className="mr-1 h-3 w-3" /> Prod 1
+                          </a>
+                        )}
+                        {req.foto_produk_2 && (
+                          <a href={req.foto_produk_2} target="_blank" rel="noreferrer" className="inline-flex items-center text-xs text-blue-500 hover:underline">
+                            <FileText className="mr-1 h-3 w-3" /> Prod 2
+                          </a>
                         )}
                       </div>
                     </TableCell>

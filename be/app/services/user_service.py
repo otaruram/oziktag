@@ -150,7 +150,18 @@ async def _ensure_unique_field(field: str, value: str) -> str:
     return value
 
 
-async def process_kyc_submission(user_id: str, nama_toko: str, nik: str, npwp: str, foto_ktp: str, foto_npwp: str):
+async def process_kyc_submission(
+    user_id: str, 
+    nama_toko: str, 
+    nik: str, 
+    npwp: str, 
+    foto_ktp: str, 
+    foto_npwp: str,
+    website: str | None = None,
+    foto_produk_1: str | None = None,
+    foto_produk_2: str | None = None,
+    deskripsi_produk: str | None = None,
+):
     # Check if user already has KYC
     existing_kyc = await db.kyc.find_unique(where={"userId": user_id})
     if existing_kyc:
@@ -179,6 +190,10 @@ async def process_kyc_submission(user_id: str, nama_toko: str, nik: str, npwp: s
                 "npwp": npwp,
                 "fotoKtp": foto_ktp,
                 "fotoNpwp": foto_npwp,
+                "website": website,
+                "fotoProduk1": foto_produk_1,
+                "fotoProduk2": foto_produk_2,
+                "deskripsiProduk": deskripsi_produk,
                 "status": "verified",
             }
         )

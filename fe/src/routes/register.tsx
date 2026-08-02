@@ -25,11 +25,15 @@ function Register() {
     password: "",
     ktp: "",
     npwp: "",
+    website: "",
+    deskripsi_produk: "",
     foto_ktp: null as File | null,
     foto_npwp: null as File | null,
+    foto_produk_1: null as File | null,
+    foto_produk_2: null as File | null,
   });
 
-  const update = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
+  const update = (k: string, v: any) => setForm((f) => ({ ...f, [k]: v }));
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
@@ -87,30 +91,55 @@ function Register() {
   }
 
   const DUMMIES = [
-    { brand: "Kopi Senja Nusantara", email: "owner@kopisenja.id", ktp: "3174051203900001", npwp: "09.876.543.2-901.000" },
-    { brand: "Batik Sekar Wangi", email: "hello@batiksekar.com", ktp: "3274051203900002", npwp: "09.876.543.2-901.001" },
-    { brand: "Sambal Bu Rudi Jkt", email: "admin@sambalburudi.id", ktp: "3374051203900003", npwp: "09.876.543.2-901.002" },
-    { brand: "Kerajinan Kayu Jati", email: "craft@kayujati.id", ktp: "3474051203900004", npwp: "09.876.543.2-901.003" },
+    { brand: "Kopi Senja Nusantara", email: "owner@kopisenja.id", ktp: "3174051203900001", npwp: "09.876.543.2-901.000", web: "www.kopisenja.id", desc: "Kopi gayo premium dengan rasa terbaik." },
+    { brand: "Batik Sekar Wangi", email: "hello@batiksekar.com", ktp: "3274051203900002", npwp: "09.876.543.2-901.001", web: "sekarwangi.com", desc: "Batik tulis khas pekalongan." },
+    { brand: "Sambal Bu Rudi Jkt", email: "admin@sambalburudi.id", ktp: "3374051203900003", npwp: "09.876.543.2-901.002", web: "", desc: "Sambal bawang bu rudi terpedas." },
+    { brand: "Kerajinan Kayu Jati", email: "craft@kayujati.id", ktp: "3474051203900004", npwp: "09.876.543.2-901.003", web: "kayucraft.id", desc: "Kerajinan ukiran dari kayu jati asli." },
   ];
 
-  const autofill = () => {
+  const autofill = async () => {
     const d = DUMMIES[Math.floor(Math.random() * DUMMIES.length)];
+    
+    // Create dummy image files
+    const createDummyImage = async (text: string, color: string) => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 400; canvas.height = 400;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.fillStyle = color;
+        ctx.fillRect(0, 0, 400, 400);
+        ctx.fillStyle = "white";
+        ctx.font = "24px sans-serif";
+        ctx.fillText(text, 110, 200);
+      }
+      return new Promise<File>((resolve) => {
+        canvas.toBlob((b) => resolve(new File([b!], `${text.replace(/\s+/g, '-')}.jpg`, { type: "image/jpeg" })));
+      });
+    };
+    
+    const fotoProduk1 = await createDummyImage("Foto Produk 1", "#4f46e5");
+    const fotoProduk2 = await createDummyImage("Foto Produk 2", "#10b981");
+
     setForm({
       brand: d.brand,
       email: d.email,
       password: "demo-password-" + Math.floor(Math.random() * 1000),
       ktp: d.ktp,
       npwp: d.npwp,
+      website: d.web,
+      deskripsi_produk: d.desc,
       foto_ktp: null,
       foto_npwp: null,
+      foto_produk_1: fotoProduk1,
+      foto_produk_2: fotoProduk2,
     });
     toast.success("Data KYC dummy berhasil diisi");
   };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.brand || !form.ktp) {
-      toast.error("Nama brand dan KTP wajib diisi");
+    if (!form.brand || !form.ktp || !form.deskripsi_produk || !form.foto_produk_1 || !form.foto_produk_2) {
+      toast.error("Nama brand, KTP, Deskripsi, dan Foto Produk wajib diisi");
       return;
     }
 
@@ -119,26 +148,38 @@ function Register() {
 
       let ktpUrl = undefined;
       let npwpUrl = undefined;
+      let foto1Url = "";
+      let foto2Url = "";
 
-      if (form.foto_ktp || form.foto_npwp) {
-        toast.loading("Mengunggah foto dokumen...", { id: "kyc" });
+      const imagesToUpload = [];
+      if (form.foto_ktp) imagesToUpload.push({ key: "ktp", file: form.foto_ktp });
+      if (form.foto_npwp) imagesToUpload.push({ key: "npwp", file: form.foto_npwp });
+      if (form.foto_produk_1) imagesToUpload.push({ key: "foto1", file: form.foto_produk_1 });
+      if (form.foto_produk_2) imagesToUpload.push({ key: "foto2", file: form.foto_produk_2 });
+
+      if (imagesToUpload.length > 0) {
+        toast.loading(`Mengunggah ${imagesToUpload.length} foto...`, { id: "kyc" });
         const formData = new FormData();
-        if (form.foto_ktp) formData.append("images", form.foto_ktp);
-        if (form.foto_npwp) formData.append("images", form.foto_npwp);
+        for (const item of imagesToUpload) {
+          formData.append("images", item.file);
+        }
 
         const uploadData = await apiFetch("/qc/upload", {
           method: "POST",
           body: formData,
         });
 
-        if (form.foto_ktp && form.foto_npwp) {
-          ktpUrl = uploadData.urls[0];
-          npwpUrl = uploadData.urls[1];
-        } else if (form.foto_ktp) {
-          ktpUrl = uploadData.urls[0];
-        } else if (form.foto_npwp) {
-          npwpUrl = uploadData.urls[0];
-        }
+        const urls = uploadData.urls || [];
+        imagesToUpload.forEach((item, index) => {
+          if (item.key === "ktp") ktpUrl = urls[index];
+          if (item.key === "npwp") npwpUrl = urls[index];
+          if (item.key === "foto1") foto1Url = urls[index];
+          if (item.key === "foto2") foto2Url = urls[index];
+        });
+      }
+
+      if (!foto1Url || !foto2Url) {
+        throw new Error("Gagal mengunggah foto produk.");
       }
 
       const res = await apiFetch("/auth/kyc", {
@@ -149,6 +190,10 @@ function Register() {
           npwp: form.npwp || "",
           foto_ktp: ktpUrl,
           foto_npwp: npwpUrl,
+          website: form.website || "",
+          foto_produk_1: foto1Url,
+          foto_produk_2: foto2Url,
+          deskripsi_produk: form.deskripsi_produk,
         }),
       });
       setBrand(form.brand || "Brand UMKM");
@@ -228,6 +273,42 @@ function Register() {
                   onChange={(e) => update("npwp", e.target.value)}
                   className={inputCls}
                   placeholder="00.000.000.0-000.000"
+                />
+              </Field>
+              <Field label={<>Website Toko <span className="text-muted-foreground">(opsional)</span></>}>
+                <input
+                  value={form.website}
+                  onChange={(e) => update("website", e.target.value)}
+                  className={inputCls}
+                  placeholder="www.tokosaya.com"
+                />
+              </Field>
+              <Field label="Deskripsi Produk">
+                <textarea
+                  required
+                  value={form.deskripsi_produk}
+                  onChange={(e) => update("deskripsi_produk", e.target.value)}
+                  className={inputCls}
+                  rows={3}
+                  placeholder="Ceritakan tentang produk Anda secara detail..."
+                />
+              </Field>
+              <Field label="Foto Produk 1">
+                <input
+                  required
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => update("foto_produk_1", e.target.files?.[0] as any)}
+                  className={inputCls + " file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"}
+                />
+              </Field>
+              <Field label="Foto Produk 2">
+                <input
+                  required
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => update("foto_produk_2", e.target.files?.[0] as any)}
+                  className={inputCls + " file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"}
                 />
               </Field>
               <Field label={<>Foto KTP <span className="text-muted-foreground">(opsional)</span></>}>

@@ -86,7 +86,11 @@ async def submit_kyc(request: KYCRequest, current_user: dict = Depends(get_curre
         request.nik,
         request.npwp,
         request.foto_ktp,
-        request.foto_npwp
+        request.foto_npwp,
+        request.website,
+        request.foto_produk_1,
+        request.foto_produk_2,
+        request.deskripsi_produk
     )
 
     return KYCResponse(
