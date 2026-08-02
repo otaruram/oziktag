@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -6,9 +7,12 @@ import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api';
+import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationNext } from '@/components/ui/pagination';
 
 export function AdminApiRequests() {
   const queryClient = useQueryClient();
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const { data: apiRequests, isLoading: apiRequestsLoading } = useQuery({
     queryKey: ['admin-api-requests'],
@@ -17,6 +21,10 @@ export function AdminApiRequests() {
       return data;
     },
   });
+
+  const currentRequests = apiRequests ? apiRequests.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage) : [];
+  const totalPages = apiRequests ? Math.ceil(apiRequests.length / itemsPerPage) : 1;
+
 
   const approveApiRequestMutation = useMutation({
     mutationFn: async (requestId: string) => {
@@ -81,14 +89,14 @@ export function AdminApiRequests() {
                     Memuat data...
                   </TableCell>
                 </TableRow>
-              ) : !apiRequests || apiRequests.length === 0 ? (
+              ) : currentRequests.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                     Belum ada permintaan API.
                   </TableCell>
                 </TableRow>
               ) : (
-                apiRequests.map((req: any) => (
+                currentRequests.map((req: any) => (
                   <TableRow key={req.id}>
                     <TableCell className="font-medium">{req.nama}</TableCell>
                     <TableCell>{req.email}</TableCell>
@@ -133,6 +141,35 @@ export function AdminApiRequests() {
             </TableBody>
           </Table>
         </div>
+        {totalPages > 1 && (
+          <Pagination className="mt-4 pb-4">
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious 
+                  href="#" 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (currentPage > 1) setCurrentPage(p => p - 1);
+                  }}
+                  className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+              <span className="text-sm text-muted-foreground mx-4">
+                Halaman {currentPage} dari {totalPages}
+              </span>
+              <PaginationItem>
+                <PaginationNext 
+                  href="#" 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (currentPage < totalPages) setCurrentPage(p => p + 1);
+                  }}
+                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        )}
       </CardContent>
     </Card>
   );

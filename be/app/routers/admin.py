@@ -164,7 +164,7 @@ async def fetch_tracking_activities(
     admin: dict = Depends(get_admin_user)
 ):
     """Fetch global Tracking Lite activities across all users."""
-    limit = 20
+    limit = 10
     offset = (page - 1) * limit
     return await get_all_tracking_admin(limit, offset)
 

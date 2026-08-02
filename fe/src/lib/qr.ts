@@ -67,3 +67,90 @@ export async function generateQrWithLogo(url: string, size = 512): Promise<strin
     qrImg.src = qrUrl;
   });
 }
+
+/**
+ * Generate a high-definition, ready-to-print Tracking Label (PNG Data URL)
+ * It contains the QR Code, Product Name, and a SHA256-like identifier.
+ */
+export async function generateHDTrackingLabel(
+  url: string,
+  productName: string,
+  id: string
+): Promise<string> {
+  const qrSize = 1024; // High definition QR
+  const qrDataUrl = await generateQrWithLogo(url, qrSize);
+
+  // Generate a mock SHA256 hash from the ID to satisfy user requirement for "SHA256" code
+  const encoder = new TextEncoder();
+  const data = encoder.encode(id);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const sha256Hex = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+  const displayHash = sha256Hex.substring(0, 16).toUpperCase(); // Show first 16 chars
+
+  return new Promise((resolve) => {
+    // Label dimensions (Portrait card)
+    const canvas = document.createElement("canvas");
+    const width = 1200;
+    const height = 1500;
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d")!;
+
+    // Background
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, width, height);
+
+    // Draw QR Code centered at top
+    const qrImg = new Image();
+    qrImg.onload = () => {
+      const qrX = (width - qrSize) / 2;
+      const qrY = 100;
+      ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+
+      // Draw Product Name
+      ctx.fillStyle = "#0f172a";
+      ctx.font = "bold 64px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      
+      // Basic text wrap for product name
+      const words = (productName || "Tracking Product").split(" ");
+      let line = "";
+      let y = qrY + qrSize + 60;
+      for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + " ";
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > width - 200 && n > 0) {
+          ctx.fillText(line, width / 2, y);
+          line = words[n] + " ";
+          y += 80;
+        } else {
+          line = testLine;
+        }
+      }
+      ctx.fillText(line, width / 2, y);
+
+      // Draw "Verified by Oziktag"
+      y += 120;
+      ctx.fillStyle = "#64748b";
+      ctx.font = "500 42px sans-serif";
+      ctx.fillText("Verified by Oziktag", width / 2, y);
+
+      // Draw URL
+      y += 60;
+      ctx.fillStyle = "#94a3b8";
+      ctx.font = "400 32px monospace";
+      ctx.fillText(url, width / 2, y);
+
+      // Draw SHA256 Hash
+      y += 60;
+      ctx.fillStyle = "#cbd5e1";
+      ctx.font = "400 28px monospace";
+      ctx.fillText(`SHA256: ${displayHash}`, width / 2, y);
+
+      resolve(canvas.toDataURL("image/png", 1.0));
+    };
+    qrImg.src = qrDataUrl;
+  });
+}

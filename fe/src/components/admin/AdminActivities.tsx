@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
 import {
@@ -18,14 +19,27 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@tanstack/react-router";
 import { ExternalLink } from "lucide-react";
+import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationNext } from '@/components/ui/pagination';
 
 export function AdminActivities() {
+  const [qrPage, setQrPage] = useState(1);
+  const [logPage, setLogPage] = useState(1);
+  const itemsPerPage = 10;
+
   const { data, isLoading } = useQuery({
     queryKey: ["admin-activities"],
     queryFn: async () => {
       return await apiFetch("/admin/activities");
     },
   });
+
+  const qrs = data?.qrs || [];
+  const currentQrs = qrs.slice((qrPage - 1) * itemsPerPage, qrPage * itemsPerPage);
+  const qrTotalPages = Math.ceil(qrs.length / itemsPerPage) || 1;
+
+  const logs = data?.credit_logs || [];
+  const currentLogs = logs.slice((logPage - 1) * itemsPerPage, logPage * itemsPerPage);
+  const logTotalPages = Math.ceil(logs.length / itemsPerPage) || 1;
 
   return (
     <div className="grid gap-6 lg:grid-cols-2 mb-8 min-w-0 w-full">
@@ -48,9 +62,9 @@ export function AdminActivities() {
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow><TableCell colSpan={3} className="text-center">Memuat...</TableCell></TableRow>
-                ) : data?.qrs?.length > 0 ? (
-                  data.qrs.slice(0, 10).map((qr: any) => (
+                  <TableRow><TableCell colSpan={4} className="text-center">Memuat...</TableCell></TableRow>
+                ) : currentQrs.length > 0 ? (
+                  currentQrs.map((qr: any) => (
                     <TableRow key={qr.id}>
                       <TableCell className="text-xs whitespace-nowrap">{qr.user_email}</TableCell>
                       <TableCell className="font-medium text-xs">
@@ -79,6 +93,35 @@ export function AdminActivities() {
               </TableBody>
             </Table>
           </div>
+          {qrTotalPages > 1 && (
+            <Pagination className="mt-4 pb-4">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious 
+                    href="#" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (qrPage > 1) setQrPage(p => p - 1);
+                    }}
+                    className={qrPage === 1 ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+                <span className="text-xs text-muted-foreground mx-4">
+                  {qrPage} / {qrTotalPages}
+                </span>
+                <PaginationItem>
+                  <PaginationNext 
+                    href="#" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (qrPage < qrTotalPages) setQrPage(p => p + 1);
+                    }}
+                    className={qrPage === qrTotalPages ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          )}
         </CardContent>
       </Card>
 
@@ -101,8 +144,8 @@ export function AdminActivities() {
               <TableBody>
                 {isLoading ? (
                   <TableRow><TableCell colSpan={3} className="text-center">Memuat...</TableCell></TableRow>
-                ) : data?.credit_logs?.length > 0 ? (
-                  data.credit_logs.slice(0, 10).map((log: any) => (
+                ) : currentLogs.length > 0 ? (
+                  currentLogs.map((log: any) => (
                     <TableRow key={log.id}>
                       <TableCell className="text-xs whitespace-nowrap">{log.user_email}</TableCell>
                       <TableCell className="whitespace-nowrap">
@@ -121,6 +164,35 @@ export function AdminActivities() {
               </TableBody>
             </Table>
           </div>
+          {logTotalPages > 1 && (
+            <Pagination className="mt-4 pb-4">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious 
+                    href="#" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (logPage > 1) setLogPage(p => p - 1);
+                    }}
+                    className={logPage === 1 ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+                <span className="text-xs text-muted-foreground mx-4">
+                  {logPage} / {logTotalPages}
+                </span>
+                <PaginationItem>
+                  <PaginationNext 
+                    href="#" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (logPage < logTotalPages) setLogPage(p => p + 1);
+                    }}
+                    className={logPage === logTotalPages ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          )}
         </CardContent>
       </Card>
     </div>

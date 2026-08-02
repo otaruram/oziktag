@@ -28,16 +28,9 @@ export function TrackingResult({ qrResult, onClose }: TrackingResultProps) {
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: [80, 100] });
       pdf.setFillColor(255, 255, 255);
       pdf.rect(0, 0, 80, 100, "F");
-      pdf.addImage(qrResult.qrDataUrl, "PNG", 10, 8, 60, 60);
-      pdf.setFontSize(9);
-      pdf.setTextColor(40, 40, 40);
-      pdf.text("Tracking QR", 40, 74, { align: "center" });
-      pdf.setFontSize(6.5);
-      pdf.setTextColor(120, 120, 120);
-      pdf.text("Verified by Oziktag", 40, 82, { align: "center" });
-      pdf.text(qrResult.url, 40, 86, { align: "center" });
+      pdf.addImage(qrResult.qrDataUrl, "PNG", 0, 0, 80, 100);
       pdf.save(`qr-${slug}.pdf`);
-      toast.success("QR Code diunduh sebagai PDF");
+      toast.success("QR Code diunduh sebagai PDF (HD)");
     } catch {
       toast.error("Gagal membuat PDF");
     } finally {

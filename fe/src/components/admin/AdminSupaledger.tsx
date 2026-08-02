@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
 import {
@@ -18,14 +19,21 @@ import {
 import { Button } from "@/components/ui/button";
 import { FileText } from "lucide-react";
 import { toast } from "sonner";
+import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationNext } from '@/components/ui/pagination';
 
 export function AdminSupaledger() {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   const { data: dataset, isLoading } = useQuery({
     queryKey: ["admin-dataset"],
     queryFn: async () => {
       return await apiFetch("/admin/dataset/export");
     },
   });
+
+  const currentData = dataset ? dataset.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage) : [];
+  const totalPages = dataset ? Math.ceil(dataset.length / itemsPerPage) : 1;
 
   const handleExportDataset = () => {
     if (!dataset || dataset.length === 0) {
@@ -81,8 +89,8 @@ export function AdminSupaledger() {
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-4">Memuat data...</TableCell>
                 </TableRow>
-              ) : dataset && dataset.length > 0 ? (
-                dataset.slice(0, 10).map((row: any, i: number) => (
+              ) : currentData.length > 0 ? (
+                currentData.map((row: any, i: number) => (
                   <TableRow key={i}>
                     <TableCell className="font-medium">{row.kategori}</TableCell>
                     <TableCell>{row.kyc_status}</TableCell>
@@ -99,8 +107,34 @@ export function AdminSupaledger() {
               )}
             </TableBody>
           </Table>
-          {dataset && dataset.length > 10 && (
-            <p className="text-xs text-center p-2 text-muted-foreground">Menampilkan 10 data terbaru. Download CSV untuk melihat semua data.</p>
+          {totalPages > 1 && (
+            <Pagination className="mt-4 pb-4">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious 
+                    href="#" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (currentPage > 1) setCurrentPage(p => p - 1);
+                    }}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+                <span className="text-sm text-muted-foreground mx-4">
+                  Halaman {currentPage} dari {totalPages}
+                </span>
+                <PaginationItem>
+                  <PaginationNext 
+                    href="#" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (currentPage < totalPages) setCurrentPage(p => p + 1);
+                    }}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           )}
         </div>
       </CardContent>

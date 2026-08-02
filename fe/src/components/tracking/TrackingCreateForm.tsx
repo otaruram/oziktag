@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
-import { generateQrWithLogo } from "@/lib/qr";
+import { generateHDTrackingLabel } from "@/lib/qr";
 
 interface TrackingCreateFormProps {
   onSuccess: (qrResult: any) => void;
@@ -67,7 +67,7 @@ export function TrackingCreateForm({ onSuccess, onCancel }: TrackingCreateFormPr
       });
 
       const trackingUrl = `${window.location.origin}/tracking/${res.product_id}`;
-      const qrDataUrl = await generateQrWithLogo(trackingUrl);
+      const qrDataUrl = await generateHDTrackingLabel(trackingUrl, res.product.name, res.product.id);
 
       onSuccess({
         url: trackingUrl,

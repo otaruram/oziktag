@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/table";
 import { Link } from "@tanstack/react-router";
 import { ExternalLink, MapPin } from "lucide-react";
+import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationNext } from '@/components/ui/pagination';
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
   PACKED: { label: "Dikemas", color: "bg-yellow-500/15 text-yellow-600 border-yellow-500/20" },
@@ -100,23 +101,33 @@ export function AdminTracking() {
         </div>
 
         {activities?.length > 0 && (
-          <div className="flex items-center justify-center gap-4 mt-6 p-4">
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="px-3 py-1.5 text-xs font-medium border border-border rounded-md hover:bg-muted disabled:opacity-50"
-            >
-              Kembali
-            </button>
-            <span className="text-xs font-medium">Halaman {page}</span>
-            <button
-              onClick={() => setPage((p) => p + 1)}
-              disabled={activities.length < 20}
-              className="px-3 py-1.5 text-xs font-medium border border-border rounded-md hover:bg-muted disabled:opacity-50"
-            >
-              Berikutnya
-            </button>
-          </div>
+          <Pagination className="mt-4 pb-4">
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious 
+                  href="#" 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (page > 1) setPage(p => p - 1);
+                  }}
+                  className={page === 1 ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+              <span className="text-xs text-muted-foreground mx-4">
+                Halaman {page}
+              </span>
+              <PaginationItem>
+                <PaginationNext 
+                  href="#" 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (activities.length === 10) setPage(p => p + 1);
+                  }}
+                  className={activities.length < 10 ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         )}
       </CardContent>
     </Card>

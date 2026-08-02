@@ -52,20 +52,15 @@ export function TrackingProductModal({ product, qrDataUrl, onClose }: ProductMod
     setPdfLoading(true);
     try {
       const { jsPDF } = await import("jspdf");
+      // The HD label is 1200x1500, ratio is 1:1.25. 
+      // We will make the PDF 80x100mm.
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: [80, 100] });
       pdf.setFillColor(255, 255, 255);
       pdf.rect(0, 0, 80, 100, "F");
-      pdf.addImage(qrDataUrl, "PNG", 10, 8, 60, 60);
-      pdf.setFontSize(9);
-      pdf.setTextColor(40, 40, 40);
-      const lines = pdf.splitTextToSize(product.name || "Tracking QR", 60) as string[];
-      pdf.text(lines, 40, 74, { align: "center" });
-      pdf.setFontSize(6.5);
-      pdf.setTextColor(120, 120, 120);
-      pdf.text("Verified by Oziktag", 40, 82, { align: "center" });
-      pdf.text(scanUrl, 40, 86, { align: "center" });
+      // The image takes the full card
+      pdf.addImage(qrDataUrl, "PNG", 0, 0, 80, 100);
       pdf.save(`qr-${slug}.pdf`);
-      toast.success("QR Code diunduh sebagai PDF");
+      toast.success("QR Code diunduh sebagai PDF (HD)");
     } catch {
       toast.error("Gagal membuat PDF");
     } finally {

@@ -2,7 +2,7 @@ import { Package, MapPin, Truck, CheckCircle2, QrCode, ArrowRight, X } from "luc
 import { Link } from "@tanstack/react-router";
 import { apiFetch } from "@/lib/api";
 import { toast } from "sonner";
-import { generateQrWithLogo } from "@/lib/qr";
+import { generateHDTrackingLabel } from "@/lib/qr";
 
 interface TrackingListProps {
   products: any[];
@@ -64,7 +64,7 @@ export function TrackingList({
 
   const handleProductClick = async (p: any) => {
     const url = `${window.location.origin}/tracking/${p.id}`;
-    const qr = await generateQrWithLogo(url);
+    const qr = await generateHDTrackingLabel(url, p.name, p.id);
     onProductClick(p, qr);
   };
 
