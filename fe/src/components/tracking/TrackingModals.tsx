@@ -83,7 +83,8 @@ export function TrackingProductModal({ product, qrDataUrl, onClose }: ProductMod
 
           <div className="pt-2">
             <Link
-              to={`/tracking/${product.id}`}
+              to="/tracking/$id"
+              params={{ id: product.id }}
               className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-4 py-3 text-sm font-semibold text-primary hover:bg-primary/20 transition-colors"
             >
               Buka Halaman Tracking <ArrowRight className="h-4 w-4" />
