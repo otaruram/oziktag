@@ -148,14 +148,20 @@ async def get_kyc_user(current_user: dict = Depends(get_current_user)):
     is_admin = current_user.get("email", "").lower() in admin_emails
     
     if not is_admin and (not db_user.kyc or db_user.kyc.status not in ["verified", "approved"]):
-        # BYPASS DETECTED! Instaban the user.
-        await db.user.update(
-            where={"id": user_id},
-            data={"isBanned": True}
-        )
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Mencoba bypass sistem KYC. Akun Anda telah diblokir permanen."
-        )
+        # Cek apakah ini user lama (dibuat sebelum 2 Agustus 2026)
+        # User lama dibebaskan dari kewajiban KYC
+        kyc_enforcement_date = datetime(2026, 8, 2, tzinfo=timezone.utc)
+        is_old_user = db_user.createdAt < kyc_enforcement_date
+
+        if not is_old_user:
+            # BYPASS DETECTED UNTUK USER BARU! Instaban the user.
+            await db.user.update(
+                where={"id": user_id},
+                data={"isBanned": True}
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Mencoba bypass sistem KYC. Akun Anda telah diblokir permanen."
+            )
         
     return current_user
