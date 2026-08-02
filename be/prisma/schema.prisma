@@ -23,6 +23,7 @@ model User {
   email      String    @unique
   sisaKredit Int       @default(0) @map("sisa_kredit")
   apiKredit  Int       @default(0) @map("api_kredit")
+  escrowBalance Int    @default(0) @map("escrow_balance")
   isAdmin    Boolean   @default(false) @map("is_admin")
   hasApiAccess Boolean @default(false) @map("has_api_access")
   isBanned   Boolean   @default(false) @map("is_banned")
@@ -30,6 +31,8 @@ model User {
   eliteExpiresAt DateTime? @map("elite_expires_at")
   creditScoreRequested Boolean @default(false) @map("credit_score_requested")
   canViewCreditScore   Boolean @default(false) @map("can_view_credit_score")
+  escrowRequested      Boolean @default(false) @map("escrow_requested")
+  canUseEscrow         Boolean @default(false) @map("can_use_escrow")
   receivesPromoEmails  Boolean @default(false) @map("receives_promo_emails")
   lastSeenAt DateTime? @default(now()) @map("last_seen_at")
   createdAt  DateTime  @default(now()) @map("created_at")
@@ -43,6 +46,7 @@ model User {
   creditLogs         CreditLog[]
   apiAccessRequests  ApiAccessRequest[]
   trackingProducts   TrackingProduct[]
+  withdrawRequests   WithdrawRequest[]
 
   @@map("users")
 }
@@ -224,6 +228,15 @@ model TrackingProduct {
   imageUrl       String?  @map("image_url")
   currentStatus  String   @default("PACKED") @map("current_status")
   isHiddenBySeller Boolean @default(false) @map("is_hidden_by_seller")
+  
+  // Escrow Fields
+  isEscrow       Boolean  @default(false) @map("is_escrow")
+  price          Int      @default(0)
+  escrowFee      Int      @default(0) @map("escrow_fee")
+  netAmount      Int      @default(0) @map("net_amount")
+  sumopodRef     String?  @map("sumopod_ref")
+  paymentUrl     String?  @map("payment_url")
+  
   escrowStatus   String   @default("HELD") @map("escrow_status")
   deliveredAt    DateTime? @map("delivered_at")
   payoutReleasedAt DateTime? @map("payout_released_at")
@@ -233,6 +246,23 @@ model TrackingProduct {
   history TrackingHistory[]
 
   @@map("tracking_products")
+}
+
+// ──────────────────────── Withdraw Requests ────────────────────────
+model WithdrawRequest {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+  amount        Int
+  bankName      String   @map("bank_name")
+  bankAccount   String   @map("bank_account")
+  accountName   String   @map("account_name")
+  status        String   @default("pending") // pending, completed, rejected
+  createdAt     DateTime @default(now()) @map("created_at")
+  completedAt   DateTime? @map("completed_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("withdraw_requests")
 }
 
 // ──────────────────────── Tracking History ────────────────────────

@@ -15,6 +15,12 @@ async def create_tracking_product(
     checklist: list[str],
     seller_notes: str,
     image_url: str | None = None,
+    is_escrow: bool = False,
+    price: int = 0,
+    escrow_fee: int = 0,
+    net_amount: int = 0,
+    sumopod_ref: str | None = None,
+    payment_url: str | None = None,
 ) -> dict:
     """Create a new tracking product with AI summary."""
     import random
@@ -40,7 +46,13 @@ async def create_tracking_product(
             "sellerNotes": seller_notes,
             "aiSummary": ai_summary,
             "imageUrl": image_url,
-            "currentStatus": "PACKED",
+            "currentStatus": "PENDING_PAYMENT" if is_escrow else "PACKED",
+            "isEscrow": is_escrow,
+            "price": price,
+            "escrowFee": escrow_fee,
+            "netAmount": net_amount,
+            "sumopodRef": sumopod_ref,
+            "paymentUrl": payment_url,
         }
     )
 

@@ -88,6 +88,64 @@ async def create_transaction(
             detail=f"Failed to communicate with payment service: {str(e)}",
         )
 
+async def create_escrow_transaction(
+    amount: int,
+    payment_type: str,
+    customer_name: str,
+    customer_email: str,
+    reference: str,
+) -> dict:
+    """
+    Create a payment transaction for physical goods escrow.
+    """
+    settings = get_settings()
+    api_key = _get_api_key()
+
+    if not api_key:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Payment API key not configured",
+        )
+
+    # Payload expected by SumoPod API
+    payload = {
+        "order_id": reference,
+        "amount": amount,
+        "currency": "IDR",
+        "expires_in_hours": 24,
+        "payment_method_type_code": payment_type,
+        "success_return_url": f"{settings.frontend_url}/payment/success",
+        "cancel_return_url": f"{settings.frontend_url}/payment/cancel",
+    }
+
+    url = "https://api-pay.sumopod.com/api/v1/payments"
+    headers = {
+        "Content-Type": "application/json",
+        "X-Api-Key": api_key,
+    }
+
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(url, json=payload, headers=headers, timeout=15.0)
+            response.raise_for_status()
+            return response.json()
+    except httpx.HTTPStatusError as e:
+        error_detail = "Failed to create payment"
+        try:
+            error_data = e.response.json()
+            error_detail = error_data.get("details", error_data.get("error", str(e)))
+        except Exception:
+            pass
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Payment Gateway Error: {error_detail}",
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Failed to communicate with payment service: {str(e)}",
+        )
+
 
 async def check_status(transaction_id: str) -> dict:
     """Check payment status via SumoPod API."""

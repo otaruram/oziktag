@@ -131,6 +131,8 @@ async def get_user_profile_data(user_id: str) -> UserProfile:
         credit_score=score,
         credit_score_requested=db_user.creditScoreRequested,
         can_view_credit_score=db_user.canViewCreditScore,
+        escrow_requested=db_user.escrowRequested,
+        can_use_escrow=db_user.canUseEscrow,
         is_elite=db_user.isElite,
         elite_expires_at=db_user.eliteExpiresAt.isoformat() if db_user.eliteExpiresAt else None,
         receivesPromoEmails=db_user.receivesPromoEmails,

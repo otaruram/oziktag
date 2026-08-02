@@ -34,7 +34,30 @@ async def approve_credit_score(user_id: str, admin: dict = Depends(get_admin_use
         }
     )
     return {"message": "Akses fitur Credit Score telah diberikan"}
+@router.get("/escrow-requests")
+async def get_escrow_requests(admin: dict = Depends(get_admin_user)):
+    """Get all users requesting Escrow access."""
+    users = await db.user.find_many(
+        where={"escrowRequested": True, "canUseEscrow": False},
+        order={"createdAt": "desc"}
+    )
+    return users
 
+@router.post("/approve-escrow/{user_id}")
+async def approve_escrow(user_id: str, admin: dict = Depends(get_admin_user)):
+    """Approve escrow access for a user."""
+    target_user = await db.user.find_unique(where={"id": user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    await db.user.update(
+        where={"id": user_id},
+        data={
+            "canUseEscrow": True,
+            "escrowRequested": False
+        }
+    )
+    return {"message": "Akses pembayaran Escrow telah diberikan"}
 
 @router.post("/toggle-elite/{user_id}")
 async def toggle_elite(user_id: str, admin: dict = Depends(get_admin_user)):

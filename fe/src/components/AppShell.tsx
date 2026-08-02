@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, QrCode, User, ShieldCheck, LogOut, Coins, Code2, Settings, Crown, MapPin } from "lucide-react";
+import { LayoutDashboard, QrCode, User, ShieldCheck, LogOut, Coins, Code2, Settings, Crown, MapPin, Wallet } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { getCredits } from "@/lib/oziktag-store";
 import { supabase } from "@/lib/supabase";
@@ -12,6 +12,7 @@ const nav = [
   { to: "/api-keys", label: "API (Beta)", icon: Code2 },
   { to: "/elite-hub", label: "Elite Hub", icon: Crown },
   { to: "/pricing", label: "Top-Up", icon: Coins },
+  { to: "/wallet", label: "Dompet", icon: Wallet },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {

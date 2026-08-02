@@ -18,6 +18,7 @@ export const Route = createFileRoute("/tracking/$id")({
 });
 
 const STATUS_MAP: Record<string, { label: string; color: string; icon: any; bgColor: string }> = {
+  PENDING_PAYMENT: { label: "Menunggu Pembayaran", color: "text-orange-600", icon: Clock, bgColor: "bg-orange-500/15" },
   PACKED: { label: "Dikemas", color: "text-yellow-600", icon: Package, bgColor: "bg-yellow-500/15" },
   IN_TRANSIT: { label: "Dalam Perjalanan", color: "text-blue-600", icon: Truck, bgColor: "bg-blue-500/15" },
   DELIVERED: { label: "Diterima", color: "text-green-600", icon: CheckCircle2, bgColor: "bg-green-500/15" },
@@ -235,6 +236,19 @@ function TrackingScan() {
           <span className={`mt-4 inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold ${statusInfo.bgColor} ${statusInfo.color}`}>
             <StatusIcon className="h-4 w-4" /> {statusInfo.label}
           </span>
+          
+          {data.current_status === "PENDING_PAYMENT" && data.is_escrow && (
+            <div className="mt-6 border-t border-border pt-6">
+              <h3 className="font-semibold text-lg mb-1">Total Pembayaran</h3>
+              <p className="text-3xl font-bold text-orange-600 mb-4">Rp {data.price.toLocaleString("id-ID")}</p>
+              <p className="text-sm text-muted-foreground mb-6">Pembayaran Anda aman dijamin oleh sistem Escrow Oziktag. Dana diteruskan ke penjual hanya jika barang sampai.</p>
+              {data.payment_url && (
+                <a href={data.payment_url} target="_blank" rel="noopener noreferrer" className="block w-full rounded-xl bg-orange-600 py-3.5 font-semibold text-white hover:bg-orange-700 shadow-md">
+                  Bayar Sekarang
+                </a>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Product Image (buyer only) */}

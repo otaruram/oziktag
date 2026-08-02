@@ -35,6 +35,8 @@ import { AdminKycRequests } from '@/components/admin/AdminKycRequests';
 import { AdminSupaledger } from '@/components/admin/AdminSupaledger';
 import { AdminActivities } from '@/components/admin/AdminActivities';
 import { AdminTracking } from '@/components/admin/AdminTracking';
+import { AdminEscrowWithdrawals } from '@/components/admin/AdminEscrowWithdrawals';
+import { AdminEscrowRequests } from '@/components/admin/AdminEscrowRequests';
 import { Users, Activity, ShieldAlert, CreditCard, ArrowLeft, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
 export const Route = createFileRoute('/admin')({
   component: AdminDashboard,
@@ -259,6 +261,12 @@ function AdminDashboard() {
 
       {/* KYC Verification Requests */}
       <AdminKycRequests />
+
+      {/* Escrow Access Requests */}
+      <AdminEscrowRequests />
+
+      {/* Escrow Withdrawals */}
+      <AdminEscrowWithdrawals />
 
       {/* Users Table */}
       <Card>

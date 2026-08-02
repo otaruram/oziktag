@@ -26,6 +26,16 @@ from app.config import get_settings
 
 router = APIRouter(prefix="/api/tracking", tags=["Tracking"])
 
+@router.post("/request-escrow")
+async def request_escrow_access(current_user: dict = Depends(get_kyc_user)):
+    """Request access to Escrow feature."""
+    user_id = current_user["id"]
+    await db.user.update(
+        where={"id": user_id},
+        data={"escrowRequested": True}
+    )
+    return {"message": "Permintaan akses Escrow berhasil dikirim"}
+
 
 @router.post("/init", response_model=TrackingInitResponse)
 async def init_tracking(
@@ -33,6 +43,8 @@ async def init_tracking(
     checklist_qc: str = Form("[]"),
     seller_notes: str = Form(""),
     image: UploadFile = File(...),
+    is_escrow: bool = Form(False),
+    price: int = Form(0),
     current_user: dict = Depends(get_kyc_user),
 ):
     """
@@ -42,6 +54,8 @@ async def init_tracking(
     - Returns product ID for QR code generation
     """
     import json
+    import uuid
+    from app.services.sumopod_service import create_escrow_transaction
 
     try:
         checklist = json.loads(checklist_qc)
@@ -88,6 +102,33 @@ async def init_tracking(
                 detail=f"Gagal upload gambar: {str(e)}",
             )
 
+    escrow_fee = 0
+    net_amount = 0
+    sumopod_ref = None
+    payment_url = None
+
+    if is_escrow and price > 0:
+        escrow_fee = int((price * 0.015) + 1000)
+        net_amount = price - escrow_fee
+        sumopod_ref = f"ESC-TRACK-{uuid.uuid4()}"
+        
+        try:
+            # We use QRIS as default for Escrow checkout
+            res = await create_escrow_transaction(
+                amount=price,
+                payment_type="qris",
+                customer_name="Oziktag Buyer",
+                customer_email="buyer@oziktag.com",
+                reference=sumopod_ref
+            )
+            payment_url = res.get("payment_url")
+            # If no payment_url, maybe it returns qris_string, but SumoPod's new API might return payment_url for checkout
+            if not payment_url and "payment" in res and "payment_url" in res["payment"]:
+                payment_url = res["payment"]["payment_url"]
+        except Exception as e:
+            # If payment gateway fails, fallback to standard tracking or raise
+            raise HTTPException(status_code=500, detail=f"Gagal membuat link pembayaran: {str(e)}")
+
     # Create tracking product
     try:
         result = await create_tracking_product(
@@ -96,6 +137,12 @@ async def init_tracking(
             checklist=checklist,
             seller_notes=seller_notes,
             image_url=image_url,
+            is_escrow=is_escrow,
+            price=price,
+            escrow_fee=escrow_fee,
+            net_amount=net_amount,
+            sumopod_ref=sumopod_ref,
+            payment_url=payment_url,
         )
     except Exception as e:
         await refund_qr_credit(current_user["id"], is_admin, credits, "Refund Gagal Generate Tracking")

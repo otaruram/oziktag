@@ -42,6 +42,8 @@ class UserProfile(BaseModel):
     credit_score: int = 300
     credit_score_requested: bool = False
     can_view_credit_score: bool = False
+    escrow_requested: bool = False
+    can_use_escrow: bool = False
     is_elite: bool = False
     elite_expires_at: Optional[str] = None
     receivesPromoEmails: bool = True
@@ -195,6 +197,8 @@ class TrackingInitRequest(BaseModel):
     name: str
     checklist_qc: list[str] = []
     seller_notes: str = ""
+    is_escrow: bool = False
+    price: int = 0
 
 
 class TrackingInitResponse(BaseModel):
@@ -238,3 +242,31 @@ class TrackingDetailResponse(BaseModel):
     brand: Optional[str] = None
     history: list[TrackingHistoryItem] = []
     created_at: str
+    
+    # Escrow Fields
+    is_escrow: bool = False
+    price: int = 0
+    escrow_fee: int = 0
+    net_amount: int = 0
+    payment_url: Optional[str] = None
+    escrow_status: str = "HELD"
+
+
+# ──────────────────────── Wallet / Escrow ────────────────────────
+
+class WalletWithdrawRequest(BaseModel):
+    amount: int
+    bank_name: str
+    bank_account: str
+    account_name: str
+
+
+class WithdrawRequestResponse(BaseModel):
+    id: str
+    amount: int
+    bank_name: str
+    bank_account: str
+    account_name: str
+    status: str
+    created_at: str
+    completed_at: Optional[str] = None

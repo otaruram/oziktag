@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
@@ -18,6 +19,7 @@ const DEFAULT_CHECKS = [
 ];
 
 export function TrackingCreateForm({ onSuccess, onCancel }: TrackingCreateFormProps) {
+  const queryClient = useQueryClient();
   const [name, setName] = useState("");
   const [checklist, setChecklist] = useState<string[]>([]);
   const [customCheck, setCustomCheck] = useState("");
@@ -25,6 +27,28 @@ export function TrackingCreateForm({ onSuccess, onCancel }: TrackingCreateFormPr
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  
+  const [isEscrow, setIsEscrow] = useState(false);
+  const [price, setPrice] = useState<number | "">("");
+
+  const { data: user } = useQuery({
+    queryKey: ['auth-me'],
+    queryFn: async () => {
+      const data = await apiFetch('/auth/me');
+      return data;
+    },
+  });
+
+  const requestEscrowMutation = useMutation({
+    mutationFn: () => apiFetch('/tracking/request-escrow', { method: 'POST' }),
+    onSuccess: () => {
+      toast.success("Permintaan akses Escrow berhasil dikirim!");
+      queryClient.invalidateQueries({ queryKey: ['auth-me'] });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Gagal mengirim permintaan akses");
+    }
+  });
 
   const toggleCheck = (item: string) => {
     setChecklist((prev) =>
@@ -60,6 +84,11 @@ export function TrackingCreateForm({ onSuccess, onCancel }: TrackingCreateFormPr
       formData.append("checklist_qc", JSON.stringify(checklist));
       formData.append("seller_notes", notes.trim());
       if (imageFile) formData.append("image", imageFile);
+      
+      if (isEscrow && price) {
+        formData.append("is_escrow", "true");
+        formData.append("price", price.toString());
+      }
 
       const res = await apiFetch("/tracking/init", {
         method: "POST",
@@ -175,6 +204,64 @@ export function TrackingCreateForm({ onSuccess, onCancel }: TrackingCreateFormPr
           </button>
         </div>
       </div>
+      
+      {(user?.is_admin || user?.can_use_escrow) ? (
+        <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-4">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isEscrow}
+              onChange={(e) => setIsEscrow(e.target.checked)}
+              className="h-5 w-5 rounded border-primary accent-primary"
+            />
+            <div>
+              <p className="text-sm font-semibold text-primary">Aktifkan Pembayaran Aman (Escrow) [BETA]</p>
+              <p className="text-xs text-muted-foreground">Pembeli bayar via link, dana cair setelah barang diterima.</p>
+            </div>
+          </label>
+          
+          {isEscrow && (
+            <div>
+              <label className="block text-sm font-medium mb-1.5">Harga Barang (Rp)</label>
+              <input
+                type="number"
+                value={price}
+                onChange={(e) => setPrice(e.target.value ? parseInt(e.target.value) : "")}
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+                placeholder="Contoh: 150000"
+                required={isEscrow}
+                min={10000}
+              />
+              <p className="text-xs text-muted-foreground mt-1.5">
+                Biaya transaksi 1.5% + Rp 1.000 akan dipotong otomatis.
+              </p>
+            </div>
+          )}
+        </div>
+      ) : user?.escrow_requested ? (
+        <div className="rounded-lg border border-yellow-500/20 bg-yellow-500/5 p-4 flex items-start gap-3">
+          <div className="mt-0.5"><Sparkles className="h-5 w-5 text-yellow-600" /></div>
+          <div>
+            <p className="text-sm font-semibold text-yellow-600">Pengajuan Escrow Sedang Direview</p>
+            <p className="text-xs text-muted-foreground mt-1">Kami sedang meninjau akun Anda untuk mendapatkan akses pembayaran Escrow. Harap tunggu.</p>
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-lg border border-border bg-card p-4 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold">Aktifkan Pembayaran Aman (Escrow) [BETA]</p>
+            <p className="text-xs text-muted-foreground mt-1">Gunakan link Tracking ini sebagai payment link yang aman untuk pembeli.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => requestEscrowMutation.mutate()}
+            disabled={requestEscrowMutation.isPending}
+            className="shrink-0 rounded-md bg-primary/10 px-3 py-2 text-xs font-medium text-primary hover:bg-primary/20 disabled:opacity-50"
+          >
+            {requestEscrowMutation.isPending ? "Loading..." : "Ajukan Akses"}
+          </button>
+        </div>
+      )}
 
       <div>
         <label className="block text-sm font-medium mb-1.5">Catatan Penjual</label>

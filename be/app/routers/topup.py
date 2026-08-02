@@ -108,6 +108,24 @@ async def payment_webhook(request: Request):
         return {"received": True}
 
     if event == "payment.completed":
+        if order_id.startswith("ESC-"):
+            # Escrow transaction for physical goods
+            product = await db.trackingproduct.find_first(where={"sumopodRef": order_id})
+            if product and product.currentStatus == "PENDING_PAYMENT":
+                await db.trackingproduct.update(
+                    where={"id": product.id},
+                    data={"currentStatus": "PACKED"}
+                )
+                await db.trackinghistory.create(
+                    data={
+                        "productId": product.id,
+                        "statusUpdate": "Pembayaran berhasil diverifikasi. Pesanan sedang dikemas.",
+                        "scannedByRole": "system",
+                    }
+                )
+            return {"status": "ok"}
+            
+        # Standard topup transaction
         # Find the transaction by sumopodRef (our reference = order_id)
         txn = await db.topuptransaction.find_first(
             where={"sumopodRef": order_id}
