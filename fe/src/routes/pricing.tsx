@@ -157,9 +157,12 @@ function Pricing() {
              <p className="text-3xl font-bold tracking-tight">Rp 499.000</p>
              <p className="text-sm text-muted-foreground mt-1">/ tahun</p>
              {isElite ? (
-                <div className="mt-6 w-full rounded-md bg-secondary py-2.5 text-center text-sm font-medium text-foreground opacity-80 cursor-not-allowed">
-                  Member Aktif
-                </div>
+                <button
+                  onClick={() => setShowEliteCheckout(true)}
+                  className="mt-6 w-full rounded-md border border-primary text-primary hover:bg-primary/10 py-2.5 text-center text-sm font-medium transition-colors"
+                >
+                  Perpanjang Langganan
+                </button>
              ) : (
                 <button
                   onClick={() => setShowEliteCheckout(true)}

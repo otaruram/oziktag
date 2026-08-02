@@ -229,13 +229,10 @@ async def subscribe_elite(
     """
     user_id = current_user["id"]
 
-    # Check if already elite
+    # Check if user exists
     user = await db.user.find_unique(where={"id": user_id})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-
-    if user.isElite:
-        raise HTTPException(status_code=400, detail="Anda sudah menjadi member Artisan Elite")
 
     elite_price = 499000
     reference = f"elite-{uuid.uuid4().hex[:12]}"
