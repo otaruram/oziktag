@@ -1,0 +1,202 @@
+import { useState } from "react";
+import { Sparkles } from "lucide-react";
+import { toast } from "sonner";
+import { apiFetch } from "@/lib/api";
+import { generateQrWithLogo } from "@/lib/qr";
+
+interface TrackingCreateFormProps {
+  onSuccess: (qrResult: any) => void;
+  onCancel: () => void;
+}
+
+const DEFAULT_CHECKS = [
+  "Produk sudah diperiksa kondisinya",
+  "Kemasan rapi dan aman",
+  "Label dan segel utuh",
+  "Jumlah sesuai pesanan",
+  "Foto kondisi produk sudah diambil",
+];
+
+export function TrackingCreateForm({ onSuccess, onCancel }: TrackingCreateFormProps) {
+  const [name, setName] = useState("");
+  const [checklist, setChecklist] = useState<string[]>([]);
+  const [customCheck, setCustomCheck] = useState("");
+  const [notes, setNotes] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const toggleCheck = (item: string) => {
+    setChecklist((prev) =>
+      prev.includes(item) ? prev.filter((c) => c !== item) : [...prev, item]
+    );
+  };
+
+  const addCustomCheck = () => {
+    if (customCheck.trim() && !checklist.includes(customCheck.trim())) {
+      setChecklist((prev) => [...prev, customCheck.trim()]);
+      setCustomCheck("");
+    }
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) return toast.error("Nama produk wajib diisi");
+    if (checklist.length === 0) return toast.error("Pilih minimal 1 checklist");
+    if (!imageFile) return toast.error("Foto produk wajib di-upload");
+
+    setSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append("name", name.trim());
+      formData.append("checklist_qc", JSON.stringify(checklist));
+      formData.append("seller_notes", notes.trim());
+      if (imageFile) formData.append("image", imageFile);
+
+      const res = await apiFetch("/tracking/init", {
+        method: "POST",
+        body: formData,
+      });
+
+      const trackingUrl = `${window.location.origin}/tracking/${res.product_id}`;
+      const qrDataUrl = await generateQrWithLogo(trackingUrl);
+
+      onSuccess({
+        url: trackingUrl,
+        qrDataUrl,
+        summary: res.ai_summary || "",
+        buyerPin: res.buyer_pin || "000000",
+      });
+    } catch (err: any) {
+      toast.error(err.message || "Gagal membuat tracking");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const autoFill = async () => {
+    setName("Kopi Gayo Premium 250gr (Tracking)");
+    setChecklist([DEFAULT_CHECKS[0], DEFAULT_CHECKS[1], DEFAULT_CHECKS[2]]);
+    setNotes("Tolong jangan dibanting ya mas kurir, kemasan rentan bocor. Pastikan disimpan di tempat kering.");
+    
+    // Create dummy image file
+    const canvas = document.createElement("canvas");
+    canvas.width = 400; canvas.height = 400;
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      ctx.fillStyle = "#8b5a2b";
+      ctx.fillRect(0, 0, 400, 400);
+      ctx.fillStyle = "white";
+      ctx.font = "24px sans-serif";
+      ctx.fillText("Foto Kopi Gayo", 110, 200);
+    }
+    const file = await new Promise<File>((resolve) => {
+      canvas.toBlob((b) => resolve(new File([b!], `kopi-gayo.jpg`, { type: "image/jpeg" })));
+    });
+
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+    toast.success("Dummy data tracking diisi otomatis!");
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Buat Tracking Produk Baru</h2>
+        <button
+          type="button"
+          onClick={autoFill}
+          className="inline-flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20"
+        >
+          <Sparkles className="h-3.5 w-3.5" /> Auto-Fill Dummy Data
+        </button>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-1.5">Nama Produk</label>
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="w-full rounded-md border border-border bg-input/40 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+          placeholder="Contoh: Kopi Arabika Gayo 250gr"
+          required
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-1.5">Checklist QC</label>
+        <div className="space-y-2">
+          {DEFAULT_CHECKS.map((item) => (
+            <label key={item} className="flex items-center gap-2 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={checklist.includes(item)}
+                onChange={() => toggleCheck(item)}
+                className="accent-primary"
+              />
+              {item}
+            </label>
+          ))}
+        </div>
+        <div className="flex gap-2 mt-2">
+          <input
+            value={customCheck}
+            onChange={(e) => setCustomCheck(e.target.value)}
+            className="flex-1 rounded-md border border-border bg-input/40 px-3 py-1.5 text-sm focus:border-primary focus:outline-none"
+            placeholder="Tambah checklist kustom..."
+            onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCustomCheck())}
+          />
+          <button type="button" onClick={addCustomCheck} className="text-xs text-primary font-medium px-3">
+            Tambah
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-1.5">Catatan Penjual</label>
+        <textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          rows={3}
+          className="w-full rounded-md border border-border bg-input/40 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+          placeholder="Kondisi barang, tips penyimpanan, dll..."
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-1.5">Foto Produk <span className="text-destructive">*</span></label>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleImageChange}
+          required
+          className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+        />
+        {imagePreview && (
+          <img src={imagePreview} alt="Preview" className="mt-2 w-32 h-32 rounded-lg object-cover border border-border" />
+        )}
+      </div>
+
+      <div className="flex gap-3">
+        <button
+          type="submit"
+          disabled={submitting}
+          className="flex-1 rounded-md bg-primary py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+        >
+          {submitting ? "Membuat..." : "Buat & Generate QR"}
+        </button>
+        <button type="button" onClick={onCancel} className="rounded-md border border-border px-4 py-2.5 text-sm hover:bg-muted">
+          Batal
+        </button>
+      </div>
+    </form>
+  );
+}
