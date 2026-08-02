@@ -104,22 +104,6 @@ async def init_tracking(
         net_amount = price - escrow_fee
         sumopod_ref = f"ESC-TRACK-{uuid.uuid4()}"
         
-        try:
-            # We use QRIS as default for Escrow checkout
-            res = await create_escrow_transaction(
-                amount=price,
-                payment_type="qris",
-                customer_name="Oziktag Buyer",
-                customer_email="buyer@oziktag.com",
-                reference=sumopod_ref
-            )
-            payment_url = res.get("payment_link_url", res.get("payment_url"))
-            if not payment_url and "payment" in res:
-                payment_url = res["payment"].get("payment_link_url", res["payment"].get("payment_url"))
-        except Exception as e:
-            # If payment gateway fails, fallback to standard tracking or raise
-            raise HTTPException(status_code=500, detail=f"Gagal membuat link pembayaran: {str(e)}")
-
     # Create tracking product
     try:
         result = await create_tracking_product(
@@ -133,7 +117,7 @@ async def init_tracking(
             escrow_fee=escrow_fee,
             net_amount=net_amount,
             sumopod_ref=sumopod_ref,
-            payment_url=payment_url,
+            payment_url=None,
         )
     except Exception as e:
         await refund_qr_credit(current_user["id"], is_admin, credits, "Refund Gagal Generate Tracking")
@@ -144,6 +128,31 @@ async def init_tracking(
 
     settings = get_settings()
     tracking_url = f"{settings.frontend_url}/tracking/{result['id']}"
+    
+    payment_url = None
+    if is_escrow and price > 0:
+        try:
+            # We use QRIS as default for Escrow checkout
+            res = await create_escrow_transaction(
+                amount=price,
+                payment_type="qris",
+                customer_name="Oziktag Buyer",
+                customer_email="buyer@oziktag.com",
+                reference=sumopod_ref,
+                return_url=tracking_url
+            )
+            payment_url = res.get("payment_link_url", res.get("payment_url"))
+            if not payment_url and "payment" in res:
+                payment_url = res["payment"].get("payment_link_url", res["payment"].get("payment_url"))
+                
+            if payment_url:
+                await db.trackingproduct.update(
+                    where={"id": result["id"]},
+                    data={"paymentUrl": payment_url}
+                )
+        except Exception as e:
+            # If payment gateway fails, fallback to standard tracking or raise
+            raise HTTPException(status_code=500, detail=f"Gagal membuat link pembayaran: {str(e)}")
 
     return TrackingInitResponse(
         product_id=result["id"],

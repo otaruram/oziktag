@@ -94,6 +94,7 @@ async def create_escrow_transaction(
     customer_name: str,
     customer_email: str,
     reference: str,
+    return_url: str = None,
 ) -> dict:
     """
     Create a payment transaction for physical goods escrow.
@@ -114,8 +115,8 @@ async def create_escrow_transaction(
         "currency": "IDR",
         "expires_in_hours": 24,
         "payment_method_type_code": payment_type,
-        "success_return_url": f"{settings.frontend_url}/payment/success",
-        "cancel_return_url": f"{settings.frontend_url}/payment/cancel",
+        "success_return_url": return_url if return_url else f"{settings.frontend_url}/payment/success",
+        "cancel_return_url": return_url if return_url else f"{settings.frontend_url}/payment/cancel",
     }
 
     url = "https://api-pay.sumopod.com/api/v1/payments"
