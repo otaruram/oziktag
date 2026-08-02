@@ -229,7 +229,7 @@ export function TrackingCreateForm({ onSuccess, onCancel }: TrackingCreateFormPr
                 className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
                 placeholder="Contoh: 150000"
                 required={isEscrow}
-                min={1000}
+                min={10000}
                 max={10000000}
               />
               <p className="text-xs text-muted-foreground mt-1.5">
