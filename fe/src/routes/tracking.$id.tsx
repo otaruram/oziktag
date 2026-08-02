@@ -170,6 +170,63 @@ function TrackingScan() {
       </div>
     );
   }
+  if (data.current_status === "PENDING_PAYMENT" && data.is_escrow) {
+    return (
+      <div className="min-h-screen bg-zinc-50 text-foreground flex flex-col items-center justify-center p-4 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-64 bg-orange-600 rounded-b-[40px] -z-10" />
+        
+        <div className="w-full max-w-sm rounded-3xl bg-white shadow-2xl p-8 relative text-center border border-border/50">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-orange-100 mb-6">
+            <Clock className="h-8 w-8 text-orange-600" />
+          </div>
+          
+          <h2 className="text-xl font-bold mb-1">Tagihan Pembayaran</h2>
+          <p className="text-sm text-muted-foreground mb-8">
+            Silakan selesaikan pembayaran untuk pesanan Anda.
+          </p>
+
+          <div className="bg-zinc-50 rounded-xl p-4 mb-8 text-left border border-border/50">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Total Tagihan</p>
+            <p className="text-3xl font-bold text-orange-600 mb-4">
+              Rp {data.price?.toLocaleString("id-ID") || 0}
+            </p>
+            
+            <div className="border-t border-border/50 pt-4 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Barang</span>
+                <span className="font-medium text-right line-clamp-1">{data.name}</span>
+              </div>
+              {data.brand && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Toko</span>
+                  <span className="font-medium">{data.brand}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="text-xs text-muted-foreground mb-6 leading-relaxed">
+            <ShieldCheck className="h-4 w-4 inline-block mr-1 -mt-0.5 text-orange-600" />
+            Pembayaran dijamin aman oleh sistem Escrow Oziktag. Uang diteruskan ke penjual setelah barang diterima.
+          </div>
+
+          {data.payment_url ? (
+            <a href={data.payment_url} className="block w-full rounded-2xl bg-orange-600 py-4 font-bold text-white shadow-lg shadow-orange-500/25 hover:bg-orange-700 transition-colors">
+              Bayar Sekarang
+            </a>
+          ) : (
+            <button disabled className="w-full rounded-2xl bg-muted py-4 font-bold text-muted-foreground cursor-not-allowed">
+              Menunggu Link Pembayaran...
+            </button>
+          )}
+        </div>
+        
+        <p className="text-center text-xs text-white/80 mt-8 font-medium">
+          Secure Payment by Oziktag
+        </p>
+      </div>
+    );
+  }
 
   const statusInfo = STATUS_MAP[data.current_status] || STATUS_MAP.PACKED;
   const StatusIcon = statusInfo.icon;
@@ -237,18 +294,6 @@ function TrackingScan() {
             <StatusIcon className="h-4 w-4" /> {statusInfo.label}
           </span>
           
-          {data.current_status === "PENDING_PAYMENT" && data.is_escrow && (
-            <div className="mt-6 border-t border-border pt-6">
-              <h3 className="font-semibold text-lg mb-1">Total Pembayaran</h3>
-              <p className="text-3xl font-bold text-orange-600 mb-4">Rp {data.price.toLocaleString("id-ID")}</p>
-              <p className="text-sm text-muted-foreground mb-6">Pembayaran Anda aman dijamin oleh sistem Escrow Oziktag. Dana diteruskan ke penjual hanya jika barang sampai.</p>
-              {data.payment_url && (
-                <a href={data.payment_url} target="_blank" rel="noopener noreferrer" className="block w-full rounded-xl bg-orange-600 py-3.5 font-semibold text-white hover:bg-orange-700 shadow-md">
-                  Bayar Sekarang
-                </a>
-              )}
-            </div>
-          )}
         </div>
 
         {/* Product Image (buyer only) */}

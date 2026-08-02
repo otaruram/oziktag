@@ -229,7 +229,8 @@ export function TrackingCreateForm({ onSuccess, onCancel }: TrackingCreateFormPr
                 className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
                 placeholder="Contoh: 150000"
                 required={isEscrow}
-                min={10000}
+                min={1000}
+                max={10000000}
               />
               <p className="text-xs text-muted-foreground mt-1.5">
                 Biaya transaksi 1.5% + Rp 1.000 akan dipotong otomatis.
