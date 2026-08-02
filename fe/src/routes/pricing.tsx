@@ -50,6 +50,7 @@ function Pricing() {
   const [isElite, setIsElite] = useState(false);
   const [eliteExpires, setEliteExpires] = useState<string | null>(null);
   const [eliteLoading, setEliteLoading] = useState(false);
+  const [showEliteCheckout, setShowEliteCheckout] = useState(false);
 
   const fetchAll = async () => {
     try {
@@ -137,11 +138,54 @@ function Pricing() {
         </ul>
       </div>
 
+      {/* NEW SECTION: ARTISAN ELITE */}
+      <div className="mt-16">
+        <div className="mb-6">
+          <h2 className="text-2xl font-semibold tracking-tight">Artisan Elite Membership</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Akses penuh ke Elite Hub, prioritas dukungan, dan badge khusus pada halaman scan.</p>
+        </div>
+        <div className="rounded-2xl border border-primary/40 bg-gradient-to-br from-primary/10 via-background to-background p-8 md:flex md:items-center md:justify-between md:gap-8 shadow-[var(--shadow-elegant)]">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-4">
+               <Crown className="h-6 w-6 text-primary" />
+               <h3 className="text-xl font-bold">Artisan Elite</h3>
+            </div>
+            <p className="text-sm text-muted-foreground mb-6">Tingkatkan level bisnis Anda dengan panduan eksklusif, forum, dan badge verified.</p>
+            <ul className="grid gap-3 sm:grid-cols-2">
+              <li className="flex items-center gap-2 text-sm"><Check className="h-4 w-4 text-primary" /> Akses Penuh Elite Hub</li>
+              <li className="flex items-center gap-2 text-sm"><Check className="h-4 w-4 text-primary" /> Badge "Verified Artisan Elite"</li>
+              <li className="flex items-center gap-2 text-sm"><Check className="h-4 w-4 text-primary" /> Video Pelatihan Eksklusif</li>
+              <li className="flex items-center gap-2 text-sm"><Check className="h-4 w-4 text-primary" /> Dukungan Prioritas 24/7</li>
+            </ul>
+          </div>
+          <div className="mt-8 md:mt-0 flex flex-col items-center justify-center rounded-xl bg-card border border-border p-6 shadow-sm min-w-[250px] shrink-0">
+             <p className="text-3xl font-bold tracking-tight">Rp 49.900</p>
+             <p className="text-sm text-muted-foreground mt-1">/ bulan</p>
+             {isElite ? (
+                <div className="mt-6 w-full rounded-md bg-secondary py-2.5 text-center text-sm font-medium text-foreground opacity-80 cursor-not-allowed">
+                  Member Aktif
+                </div>
+             ) : (
+                <button
+                  onClick={() => setShowEliteCheckout(true)}
+                  className="mt-6 w-full rounded-md bg-primary py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90 shadow-sm"
+                >
+                  Berlangganan Sekarang
+                </button>
+             )}
+          </div>
+        </div>
+      </div>
+
       {selected && (
         <CheckoutModal
           pkg={selected}
           onClose={() => setSelected(null)}
         />
+      )}
+
+      {showEliteCheckout && (
+        <EliteCheckoutModal onClose={() => setShowEliteCheckout(false)} />
       )}
 
       {showHistory && (
@@ -343,6 +387,107 @@ function HistoryModal({ history, onClose }: { history: any[]; onClose: () => voi
             </ul>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function EliteCheckoutModal({ onClose }: { onClose: () => void }) {
+  const [method, setMethod] = useState<"QRIS" | "GoPay">("QRIS");
+  const [processing, setProcessing] = useState(false);
+
+  const createSubscription = async () => {
+    setProcessing(true);
+    try {
+      const paymentType = method === "QRIS" ? "qris" : "gopay";
+      const res = await apiFetch(`/topup/subscribe-elite?payment_type=${paymentType}`, {
+        method: "POST"
+      });
+      
+      if (res.qr_string) {
+        window.location.href = res.qr_string;
+      } else if (res.deeplink_url) {
+        window.location.href = res.deeplink_url;
+      } else {
+        toast.error("Tidak ada link pembayaran dari server");
+        setProcessing(false);
+      }
+    } catch (e: any) {
+      toast.error(e.message || "Gagal membuat transaksi langganan");
+      setProcessing(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 px-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-elegant)]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Checkout</p>
+            <h3 className="mt-1 text-lg font-semibold flex items-center gap-2">
+               <Crown className="h-5 w-5 text-primary" /> Artisan Elite
+            </h3>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-md p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="mt-4 flex items-center justify-between rounded-lg border border-border bg-background/40 px-4 py-3 text-sm">
+          <span className="text-muted-foreground">Total tagihan bulanan</span>
+          <span className="text-lg font-semibold">Rp 49.900</span>
+        </div>
+
+        {processing ? (
+          <div className="mt-5 flex flex-col items-center rounded-lg border border-dashed border-border bg-background/40 p-6 text-center">
+            <div className="mt-2 flex flex-col items-center gap-1.5">
+              <span className="relative flex h-3 w-3">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
+                <span className="relative inline-flex h-3 w-3 rounded-full bg-primary"></span>
+              </span>
+              <p className="text-sm font-medium mt-2">Mengarahkan ke Halaman Pembayaran...</p>
+              <p className="text-[11px] text-muted-foreground mt-1">Mohon tunggu sebentar.</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            <p className="mt-5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Metode pembayaran
+            </p>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              {(["QRIS", "GoPay"] as const).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setMethod(m)}
+                  className={`rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
+                    method === m
+                      ? "border-primary/60 bg-primary/10 text-foreground"
+                      : "border-border bg-background text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={createSubscription}
+              disabled={processing}
+              className="mt-6 w-full rounded-md bg-primary py-2.5 text-sm font-medium text-primary-foreground shadow-[var(--shadow-elegant)] hover:opacity-90 disabled:opacity-60 flex items-center justify-center gap-2"
+            >
+              Berlangganan
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
