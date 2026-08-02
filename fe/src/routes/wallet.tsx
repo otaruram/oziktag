@@ -5,7 +5,6 @@ import { Wallet, ArrowDownRight, Clock, CheckCircle2, AlertCircle, Loader2 } fro
 import { AppShell } from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
 import { toast } from "sonner";
-import { useAuth } from "@/components/AuthProvider";
 import { EscrowRequestForm } from "@/components/escrow/EscrowRequestForm";
 
 export const Route = createFileRoute("/wallet")({
@@ -23,7 +22,10 @@ function WalletPage() {
   // Need Admin status? No, this is for Sellers. Wait, the user asked to restrict this to admin for now?
   // User request: "atau diimplementasi hanya admin yg bisa akses gitu"
   // So we will just show it to everyone, but the user is admin anyway.
-  const { user: me } = useAuth();
+  const { data: me } = useQuery({
+    queryKey: ['auth-me'],
+    queryFn: () => apiFetch('/auth/me'),
+  });
   
   const { data: balanceData, isLoading } = useQuery({
     queryKey: ["wallet-balance"],
