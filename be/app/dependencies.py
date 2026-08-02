@@ -147,7 +147,7 @@ async def get_kyc_user(current_user: dict = Depends(get_current_user)):
     admin_emails = ["okitr52@gmail.com", "adzikrim701@gmail.com"]
     is_admin = current_user.get("email", "").lower() in admin_emails
     
-    if not is_admin and (not db_user.kyc or db_user.kyc.status != "verified"):
+    if not is_admin and (not db_user.kyc or db_user.kyc.status not in ["verified", "approved"]):
         # BYPASS DETECTED! Instaban the user.
         await db.user.update(
             where={"id": user_id},
