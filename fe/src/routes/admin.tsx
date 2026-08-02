@@ -304,7 +304,7 @@ function AdminDashboard() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  users?.slice((currentPage - 1) * USERS_PER_PAGE, currentPage * USERS_PER_PAGE).map((usr: any) => (
+                  users?.data?.map((usr: any) => (
                     <TableRow key={usr.id}>
                       <TableCell className="font-medium whitespace-nowrap">{usr.nama}</TableCell>
                       <TableCell>{usr.email}</TableCell>
@@ -379,12 +379,12 @@ function AdminDashboard() {
             </Table>
           </div>
           {/* Pagination Controls */}
-          {users && users.length > USERS_PER_PAGE && (
+          {users && (users?.total || 0) > USERS_PER_PAGE && (
             <div className="flex items-center justify-between px-4 py-4 border-t border-border">
               <span className="text-sm text-muted-foreground">
-                Menampilkan {(currentPage - 1) * USERS_PER_PAGE + 1} - {Math.min(currentPage * USERS_PER_PAGE, users.length)} dari {users.length} user
+                Menampilkan {(currentPage - 1) * USERS_PER_PAGE + 1} - {Math.min(currentPage * USERS_PER_PAGE, (users?.total || 0))} dari {(users?.total || 0)} user
               </span>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -393,11 +393,12 @@ function AdminDashboard() {
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
+                <span className="text-sm font-medium">Page {currentPage} of {Math.ceil((users?.total || 0) / USERS_PER_PAGE) || 1}</span>
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => setCurrentPage(prev => Math.min(Math.ceil(users.length / USERS_PER_PAGE), prev + 1))}
-                  disabled={currentPage === Math.ceil(users.length / USERS_PER_PAGE)}
+                  onClick={() => setCurrentPage(prev => Math.min(Math.ceil((users?.total || 0) / USERS_PER_PAGE), prev + 1))}
+                  disabled={currentPage === Math.ceil((users?.total || 0) / USERS_PER_PAGE)}
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Wallet, ArrowDownRight, Clock, CheckCircle2, AlertCircle } from "lucide-react";
+import { Wallet, ArrowDownRight, Clock, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
 import { toast } from "sonner";
