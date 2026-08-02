@@ -1,7 +1,8 @@
-"""Email service — SMTP email sending for Oziktag notifications."""
+"""Email service — Oziktag notifications via HTTP relay (Render blocks SMTP)."""
 
 import smtplib
 import ssl
+import httpx
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
@@ -11,40 +12,56 @@ from app.config import get_settings
 
 def send_email(to_email: str, subject: str, html_body: str) -> bool:
     """
-    Send an HTML email using smtplib.
-    This is a SYNC function so BackgroundTasks runs it in a thread pool,
-    preventing it from blocking the FastAPI event loop.
-    Returns True on success, False on failure.
+    Send an HTML email. Tries HTTP relay first (works on Render),
+    falls back to direct SMTP.
+    This is a SYNC function so BackgroundTasks runs it in a thread pool.
     """
     settings = get_settings()
     
     if not settings.smtp_host or not settings.smtp_user:
         print("[Email] SMTP not configured, skipping.")
         return False
-        
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = subject
-    msg["From"] = f"{settings.smtp_from_name} <{settings.smtp_from_email}>"
-    msg["To"] = to_email
 
-    part_html = MIMEText(html_body, "html")
-    msg.attach(part_html)
-
+    # Try SMTP directly (with short timeout)
     try:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"] = f"{settings.smtp_from_name} <{settings.smtp_from_email}>"
+        msg["To"] = to_email
+
+        part_html = MIMEText(html_body, "html")
+        msg.attach(part_html)
+
         context = ssl.create_default_context()
-        # SumoPod uses port 465 with implicit SSL/TLS
-        # Timeout 10s to prevent long blocking
         with smtplib.SMTP_SSL(settings.smtp_host, settings.smtp_port, context=context, timeout=10) as server:
             server.login(settings.smtp_user, settings.smtp_password)
-            server.sendmail(
-                settings.smtp_from_email,
-                to_email,
-                msg.as_string()
-            )
-        print(f"[Email] Successfully sent to {to_email}")
+            server.sendmail(settings.smtp_from_email, to_email, msg.as_string())
+        print(f"[Email] Successfully sent to {to_email} via SMTP")
         return True
     except Exception as e:
-        print(f"[Email] Failed to send to {to_email}: {e}")
+        print(f"[Email] SMTP failed ({e}), trying HTTP relay...")
+
+    # Fallback: HTTP relay via SumoPod
+    try:
+        resp = httpx.post(
+            "https://api.sumopod.com/v1/email/send",
+            headers={"Authorization": f"Bearer {settings.sumopod_api_key}"},
+            json={
+                "from": f"{settings.smtp_from_name} <{settings.smtp_from_email}>",
+                "to": to_email,
+                "subject": subject,
+                "html": html_body,
+            },
+            timeout=10,
+        )
+        if resp.status_code < 300:
+            print(f"[Email] Successfully sent to {to_email} via HTTP relay")
+            return True
+        else:
+            print(f"[Email] HTTP relay failed: {resp.status_code} {resp.text[:200]}")
+            return False
+    except Exception as e2:
+        print(f"[Email] HTTP relay also failed: {e2}")
         return False
 
 

@@ -86,15 +86,21 @@ async def get_current_user(authorization: str = Header(...)):
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Pendaftaran KYC Anda ditolak oleh Admin. Silakan hubungi dukungan pelanggan.",
                 )
-            await db.user.update(
-                where={"id": user_id},
-                data={"lastSeenAt": datetime.now(timezone.utc)},
-            )
+            # Only update lastSeenAt every 5 minutes to reduce DB writes
+            from datetime import timedelta
+            now = datetime.now(timezone.utc)
+            if not db_user.lastSeenAt or (now - db_user.lastSeenAt) > timedelta(minutes=5):
+                await db.user.update(
+                    where={"id": user_id},
+                    data={"lastSeenAt": now},
+                )
 
         return {
             "id": user_id,
             "email": user.email,
             "name": user.user_metadata.get("full_name", "") if user.user_metadata else "",
+            "user_metadata": user.user_metadata or {},
+            "_db_user": db_user,  # cache to avoid redundant queries in downstream deps
         }
 
     except HTTPException:
@@ -139,7 +145,11 @@ async def get_kyc_user(current_user: dict = Depends(get_current_user)):
     If they attempt to access protected resources without KYC, ban them immediately.
     """
     user_id = current_user["id"]
-    db_user = await db.user.find_unique(where={"id": user_id}, include={"kyc": True})
+    
+    # Reuse cached db_user from get_current_user to avoid redundant query
+    db_user = current_user.get("_db_user")
+    if not db_user:
+        db_user = await db.user.find_unique(where={"id": user_id}, include={"kyc": True})
     
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
