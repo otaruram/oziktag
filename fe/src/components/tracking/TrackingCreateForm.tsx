@@ -95,7 +95,7 @@ export function TrackingCreateForm({ onSuccess, onCancel }: TrackingCreateFormPr
       });
 
       const trackingUrl = `${window.location.origin}/tracking/${res.product_id}`;
-      const qrDataUrl = await generateHDTrackingLabel(trackingUrl, res.product.name, res.product.id);
+      const qrDataUrl = await generateHDTrackingLabel(trackingUrl, name.trim(), res.product_id);
 
       onSuccess({
         url: trackingUrl,
