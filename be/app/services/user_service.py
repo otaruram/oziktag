@@ -94,7 +94,10 @@ async def get_user_profile_data(user_id: str) -> UserProfile:
     # Get user and KYC data in one query using include
     db_user = await db.user.find_unique(
         where={"id": user_id},
-        include={"kyc": True}
+        include={
+            "kyc": True,
+            "escrowRequest": True
+        }
     )
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -132,6 +135,7 @@ async def get_user_profile_data(user_id: str) -> UserProfile:
         credit_score_requested=db_user.creditScoreRequested,
         can_view_credit_score=db_user.canViewCreditScore,
         escrow_requested=db_user.escrowRequested,
+        escrow_request_status=db_user.escrowRequest.status if db_user.escrowRequest else None,
         can_use_escrow=db_user.canUseEscrow,
         is_elite=db_user.isElite,
         elite_expires_at=db_user.eliteExpiresAt.isoformat() if db_user.eliteExpiresAt else None,

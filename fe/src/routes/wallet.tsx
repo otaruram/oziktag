@@ -5,6 +5,8 @@ import { Wallet, ArrowDownRight, Clock, CheckCircle2, AlertCircle, Loader2 } fro
 import { AppShell } from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
 import { toast } from "sonner";
+import { useAuth } from "@/components/AuthProvider";
+import { EscrowRequestForm } from "@/components/escrow/EscrowRequestForm";
 
 export const Route = createFileRoute("/wallet")({
   head: () => ({ meta: [{ title: "Dompet — Oziktag" }] }),
@@ -21,7 +23,8 @@ function WalletPage() {
   // Need Admin status? No, this is for Sellers. Wait, the user asked to restrict this to admin for now?
   // User request: "atau diimplementasi hanya admin yg bisa akses gitu"
   // So we will just show it to everyone, but the user is admin anyway.
-
+  const { user: me } = useAuth();
+  
   const { data: balanceData, isLoading } = useQuery({
     queryKey: ["wallet-balance"],
     queryFn: () => apiFetch("/wallet/balance"),
@@ -67,6 +70,45 @@ function WalletPage() {
       default: return status;
     }
   };
+
+  if (me && !me.can_use_escrow) {
+    return (
+      <AppShell>
+        <div className="max-w-xl mx-auto py-12 space-y-6">
+          <div className="text-center space-y-2 mb-8">
+            <h1 className="text-3xl font-semibold tracking-tight">Akses Escrow [BETA]</h1>
+            <p className="text-muted-foreground">
+              Fitur Escrow saat ini dibatasi. Silakan ajukan akses dengan mengisi form di bawah ini.
+            </p>
+          </div>
+          
+          <div className="p-6 rounded-2xl border bg-card shadow-sm">
+            {me.escrow_request_status === "pending" ? (
+              <div className="text-center py-8 space-y-4">
+                <Clock className="h-12 w-12 text-yellow-500 mx-auto opacity-80" />
+                <div>
+                  <h3 className="text-lg font-medium">Pengajuan Sedang Direview</h3>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Tim kami sedang meninjau permintaan Anda. Mohon tunggu maksimal 1x24 jam.
+                  </p>
+                </div>
+              </div>
+            ) : me.escrow_request_status === "rejected" ? (
+              <div className="space-y-6">
+                <div className="bg-red-50 text-red-800 p-4 rounded-lg flex gap-3 text-sm">
+                  <AlertCircle className="h-5 w-5 shrink-0" />
+                  <p>Pengajuan Anda sebelumnya <b>ditolak</b>. Silakan perbaiki data dan ajukan kembali.</p>
+                </div>
+                <EscrowRequestForm />
+              </div>
+            ) : (
+              <EscrowRequestForm />
+            )}
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>

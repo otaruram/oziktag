@@ -36,25 +36,50 @@ async def approve_credit_score(user_id: str, admin: dict = Depends(get_admin_use
     return {"message": "Akses fitur Credit Score telah diberikan"}
 @router.get("/escrow-requests")
 async def get_escrow_requests(admin: dict = Depends(get_admin_user)):
-    """Get all users requesting Escrow access."""
-    users = await db.user.find_many(
-        where={"escrowRequested": True, "canUseEscrow": False},
+    """Get all Escrow requests."""
+    requests = await db.escrowrequest.find_many(
+        where={"status": "pending"},
+        include={"user": True},
         order={"createdAt": "desc"}
     )
-    return users
+    
+    return [
+        {
+            "id": r.id,
+            "user_id": r.userId,
+            "nama_toko": r.user.nama if r.user else "Unknown",
+            "email": r.user.email if r.user else "Unknown",
+            "nama_bank": r.namaBank,
+            "nomor_rekening": r.nomorRekening,
+            "nama_pemilik": r.namaPemilik,
+            "link_umkm": r.linkUmkm,
+            "catatan_produk": r.catatanProduk,
+            "tujuan_escrow": r.tujuanEscrow,
+            "status": r.status,
+            "created_at": r.createdAt.isoformat()
+        }
+        for r in requests
+    ]
 
-@router.post("/approve-escrow/{user_id}")
-async def approve_escrow(user_id: str, admin: dict = Depends(get_admin_user)):
+@router.post("/approve-escrow/{request_id}")
+async def approve_escrow(request_id: str, admin: dict = Depends(get_admin_user)):
     """Approve escrow access for a user."""
-    target_user = await db.user.find_unique(where={"id": user_id})
-    if not target_user:
-        raise HTTPException(status_code=404, detail="User not found")
+    req = await db.escrowrequest.find_unique(where={"id": request_id})
+    if not req:
+        raise HTTPException(status_code=404, detail="Request not found")
         
+    if req.status != "pending":
+        raise HTTPException(status_code=400, detail="Request already processed")
+        
+    await db.escrowrequest.update(
+        where={"id": request_id},
+        data={"status": "approved"}
+    )
+    
     await db.user.update(
-        where={"id": user_id},
+        where={"id": req.userId},
         data={
-            "canUseEscrow": True,
-            "escrowRequested": False
+            "canUseEscrow": True
         }
     )
     return {"message": "Akses pembayaran Escrow telah diberikan"}

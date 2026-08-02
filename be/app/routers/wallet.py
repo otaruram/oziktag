@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from app.database import db
 from app.dependencies import get_current_user, get_admin_user
 from typing import List
-from app.models.schemas import WalletWithdrawRequest, WithdrawRequestResponse
+from app.models.schemas import WalletWithdrawRequest, WithdrawRequestResponse, EscrowRequestSubmit, EscrowRequestResponse
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/wallet", tags=["Wallet"])
@@ -129,3 +129,63 @@ async def admin_complete_withdraw(withdraw_id: str, admin_user: dict = Depends(g
         }
     )
     return {"message": "Withdrawal marked as completed"}
+
+@router.post("/escrow-request", response_model=EscrowRequestResponse)
+async def submit_escrow_request(
+    req: EscrowRequestSubmit, 
+    current_user: dict = Depends(get_current_user)
+):
+    user_id = current_user["id"]
+    
+    # Check if already has access
+    user = await db.user.find_unique(where={"id": user_id})
+    if user and user.canUseEscrow:
+        raise HTTPException(status_code=400, detail="Anda sudah memiliki akses Escrow")
+        
+    # Check if already requested
+    existing = await db.escrowrequest.find_unique(where={"userId": user_id})
+    if existing:
+        if existing.status == "pending":
+            raise HTTPException(status_code=400, detail="Pengajuan Anda sedang direview")
+        elif existing.status == "approved":
+            raise HTTPException(status_code=400, detail="Anda sudah disetujui")
+            
+        # If rejected, allow update
+        req_record = await db.escrowrequest.update(
+            where={"userId": user_id},
+            data={
+                "namaBank": req.nama_bank,
+                "nomorRekening": req.nomor_rekening,
+                "namaPemilik": req.nama_pemilik,
+                "linkUmkm": req.link_umkm,
+                "catatanProduk": req.catatan_produk,
+                "tujuanEscrow": req.tujuan_escrow,
+                "status": "pending"
+            }
+        )
+    else:
+        req_record = await db.escrowrequest.create(
+            data={
+                "userId": user_id,
+                "namaBank": req.nama_bank,
+                "nomorRekening": req.nomor_rekening,
+                "namaPemilik": req.nama_pemilik,
+                "linkUmkm": req.link_umkm,
+                "catatanProduk": req.catatan_produk,
+                "tujuanEscrow": req.tujuan_escrow,
+                "status": "pending"
+            }
+        )
+        
+    return {
+        "id": req_record.id,
+        "user_id": req_record.userId,
+        "nama_bank": req_record.namaBank,
+        "nomor_rekening": req_record.nomorRekening,
+        "nama_pemilik": req_record.namaPemilik,
+        "link_umkm": req_record.linkUmkm,
+        "catatan_produk": req_record.catatanProduk,
+        "tujuan_escrow": req_record.tujuanEscrow,
+        "status": req_record.status,
+        "created_at": req_record.createdAt.isoformat()
+    }

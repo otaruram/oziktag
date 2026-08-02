@@ -26,15 +26,7 @@ from app.config import get_settings
 
 router = APIRouter(prefix="/api/tracking", tags=["Tracking"])
 
-@router.post("/request-escrow")
-async def request_escrow_access(current_user: dict = Depends(get_kyc_user)):
-    """Request access to Escrow feature."""
-    user_id = current_user["id"]
-    await db.user.update(
-        where={"id": user_id},
-        data={"escrowRequested": True}
-    )
-    return {"message": "Permintaan akses Escrow berhasil dikirim"}
+
 
 
 @router.post("/init", response_model=TrackingInitResponse)

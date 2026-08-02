@@ -4,6 +4,14 @@ import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
 import { generateHDTrackingLabel } from "@/lib/qr";
+import { EscrowRequestForm } from "@/components/escrow/EscrowRequestForm";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface TrackingCreateFormProps {
   onSuccess: (qrResult: any) => void;
@@ -39,16 +47,7 @@ export function TrackingCreateForm({ onSuccess, onCancel }: TrackingCreateFormPr
     },
   });
 
-  const requestEscrowMutation = useMutation({
-    mutationFn: () => apiFetch('/tracking/request-escrow', { method: 'POST' }),
-    onSuccess: () => {
-      toast.success("Permintaan akses Escrow berhasil dikirim!");
-      queryClient.invalidateQueries({ queryKey: ['auth-me'] });
-    },
-    onError: (err: any) => {
-      toast.error(err.message || "Gagal mengirim permintaan akses");
-    }
-  });
+  const [showEscrowForm, setShowEscrowForm] = useState(false);
 
   const toggleCheck = (item: string) => {
     setChecklist((prev) =>
@@ -238,7 +237,7 @@ export function TrackingCreateForm({ onSuccess, onCancel }: TrackingCreateFormPr
             </div>
           )}
         </div>
-      ) : user?.escrow_requested ? (
+      ) : user?.escrow_request_status === "pending" ? (
         <div className="rounded-lg border border-yellow-500/20 bg-yellow-500/5 p-4 flex items-start gap-3">
           <div className="mt-0.5"><Sparkles className="h-5 w-5 text-yellow-600" /></div>
           <div>
@@ -254,11 +253,10 @@ export function TrackingCreateForm({ onSuccess, onCancel }: TrackingCreateFormPr
           </div>
           <button
             type="button"
-            onClick={() => requestEscrowMutation.mutate()}
-            disabled={requestEscrowMutation.isPending}
-            className="shrink-0 rounded-md bg-primary/10 px-3 py-2 text-xs font-medium text-primary hover:bg-primary/20 disabled:opacity-50"
+            onClick={() => setShowEscrowForm(true)}
+            className="shrink-0 rounded-md bg-primary/10 px-3 py-2 text-xs font-medium text-primary hover:bg-primary/20"
           >
-            {requestEscrowMutation.isPending ? "Loading..." : "Ajukan Akses"}
+            Ajukan Akses
           </button>
         </div>
       )}
@@ -303,6 +301,20 @@ export function TrackingCreateForm({ onSuccess, onCancel }: TrackingCreateFormPr
           Batal
         </button>
       </div>
+
+      <Dialog open={showEscrowForm} onOpenChange={setShowEscrowForm}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Akses Pembayaran Aman (Escrow)</DialogTitle>
+            <DialogDescription>
+              Silakan lengkapi form berikut untuk mengajukan akses fitur pembayaran aman Escrow.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <EscrowRequestForm onSuccess={() => setShowEscrowForm(false)} />
+          </div>
+        </DialogContent>
+      </Dialog>
     </form>
   );
 }

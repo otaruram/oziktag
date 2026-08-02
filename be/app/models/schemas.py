@@ -43,6 +43,7 @@ class UserProfile(BaseModel):
     credit_score_requested: bool = False
     can_view_credit_score: bool = False
     escrow_requested: bool = False
+    escrow_request_status: Optional[str] = None
     can_use_escrow: bool = False
     is_elite: bool = False
     elite_expires_at: Optional[str] = None
@@ -270,3 +271,23 @@ class WithdrawRequestResponse(BaseModel):
     status: str
     created_at: str
     completed_at: Optional[str] = None
+
+class EscrowRequestSubmit(BaseModel):
+    nama_bank: str
+    nomor_rekening: str
+    nama_pemilik: str
+    link_umkm: Optional[str] = None
+    catatan_produk: Optional[str] = None
+    tujuan_escrow: Optional[str] = None
+
+class EscrowRequestResponse(BaseModel):
+    id: str
+    user_id: str
+    nama_bank: str
+    nomor_rekening: str
+    nama_pemilik: str
+    link_umkm: Optional[str] = None
+    catatan_produk: Optional[str] = None
+    tujuan_escrow: Optional[str] = None
+    status: str
+    created_at: str

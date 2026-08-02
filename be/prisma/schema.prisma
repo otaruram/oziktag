@@ -44,6 +44,7 @@ model User {
   productScans       ProductScan[]
   apiKeys            ApiKey[]
   creditLogs         CreditLog[]
+  escrowRequest      EscrowRequest?
   apiAccessRequests  ApiAccessRequest[]
   trackingProducts   TrackingProduct[]
   withdrawRequests   WithdrawRequest[]
@@ -278,4 +279,21 @@ model TrackingHistory {
   product TrackingProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@map("tracking_history")
+}
+// ──────────────────────── Escrow Request ────────────────────────
+model EscrowRequest {
+  id             String   @id @default(uuid())
+  userId         String   @unique @map("user_id")
+  namaBank       String   @map("nama_bank")
+  nomorRekening  String   @map("nomor_rekening")
+  namaPemilik    String   @map("nama_pemilik")
+  linkUmkm       String?  @map("link_umkm")
+  catatanProduk  String?  @map("catatan_produk")
+  tujuanEscrow   String?  @map("tujuan_escrow")
+  status         String   @default("pending") // pending, approved, rejected
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("escrow_requests")
 }
