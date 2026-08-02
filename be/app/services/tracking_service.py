@@ -115,21 +115,50 @@ async def process_scan(
             update_data["deliveredAt"] = datetime.now(timezone.utc)
 
     if update_data:
-        await db.trackingproduct.update(
-            where={"id": product_id},
-            data=update_data,
+        if new_status == "DELIVERED" and product.deliveredAt is None and product.isEscrow and product.netAmount > 0:
+            async with db.tx() as tx:
+                await tx.trackingproduct.update(
+                    where={"id": product_id},
+                    data=update_data,
+                )
+                await tx.user.update(
+                    where={"id": product.userId},
+                    data={"escrowBalance": {"increment": product.netAmount}}
+                )
+                await tx.trackinghistory.create(
+                    data={
+                        "productId": product_id,
+                        "statusUpdate": status_update,
+                        "scannedByRole": role,
+                        "latitude": lat,
+                        "longitude": lng,
+                    }
+                )
+        else:
+            await db.trackingproduct.update(
+                where={"id": product_id},
+                data=update_data,
+            )
+            await db.trackinghistory.create(
+                data={
+                    "productId": product_id,
+                    "statusUpdate": status_update,
+                    "scannedByRole": role,
+                    "latitude": lat,
+                    "longitude": lng,
+                }
+            )
+    else:
+        # Log to tracking history even if status didn't change
+        await db.trackinghistory.create(
+            data={
+                "productId": product_id,
+                "statusUpdate": status_update,
+                "scannedByRole": role,
+                "latitude": lat,
+                "longitude": lng,
+            }
         )
-
-    # Log to tracking history
-    await db.trackinghistory.create(
-        data={
-            "productId": product_id,
-            "statusUpdate": status_update,
-            "scannedByRole": role,
-            "latitude": lat,
-            "longitude": lng,
-        }
-    )
 
     return {
         "message": status_update,
