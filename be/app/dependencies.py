@@ -130,3 +130,32 @@ async def get_api_user(current_user: dict = Depends(get_current_user)):
             detail="Akses API belum disetujui.",
         )
     return current_user
+
+
+async def get_kyc_user(current_user: dict = Depends(get_current_user)):
+    """
+    Ensure the user has completed KYC. 
+    If they attempt to access protected resources without KYC, ban them immediately.
+    """
+    user_id = current_user["id"]
+    db_user = await db.user.find_unique(where={"id": user_id}, include={"kyc": True})
+    
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    # Admin bypasses this check so they can manage the system
+    admin_emails = ["okitr52@gmail.com", "adzikrim701@gmail.com"]
+    is_admin = current_user.get("email", "").lower() in admin_emails
+    
+    if not is_admin and (not db_user.kyc or db_user.kyc.status != "verified"):
+        # BYPASS DETECTED! Instaban the user.
+        await db.user.update(
+            where={"id": user_id},
+            data={"isBanned": True}
+        )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Mencoba bypass sistem KYC. Akun Anda telah diblokir permanen."
+        )
+        
+    return current_user

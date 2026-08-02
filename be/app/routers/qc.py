@@ -7,7 +7,7 @@ import json
 
 from app.database import db
 from prisma import Json
-from app.dependencies import get_current_user
+from app.dependencies import get_current_user, get_kyc_user
 from app.services.imagekit_service import upload_multiple_images
 from app.services.ai_service import analyze_qc
 from app.services.credit_service import deduct_qr_credit, refund_qr_credit
@@ -19,7 +19,7 @@ router = APIRouter(prefix="/api/qc", tags=["Quality Control"])
 @router.post("/upload")
 async def upload_images_api(
     images: list[UploadFile] = File(..., description="1-5 product images"),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_kyc_user),
 ):
     """Utility endpoint to upload images and return URLs. Useful for API Playground."""
     if len(images) < 1:
@@ -50,7 +50,7 @@ async def submit_qc(
     harga_produksi: Optional[int] = Form(None),
     harga_jual: Optional[int] = Form(None),
     images: list[UploadFile] = File(..., description="1-5 product images"),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_kyc_user),
 ):
     """
     Submit a QC product form with images.
@@ -134,7 +134,7 @@ async def submit_qc(
 
 
 @router.get("/products", response_model=list[QCProductListItem])
-async def list_products(current_user: dict = Depends(get_current_user)):
+async def list_products(current_user: dict = Depends(get_kyc_user)):
     """List all QC products for the current user."""
     user_id = current_user["id"]
 
@@ -163,7 +163,7 @@ async def list_products(current_user: dict = Depends(get_current_user)):
 
 
 @router.delete("/{product_id}")
-async def delete_qc(product_id: str, current_user: dict = Depends(get_current_user)):
+async def delete_qc(product_id: str, current_user: dict = Depends(get_kyc_user)):
     """Delete a QC product (must be owner)."""
     user_id = current_user["id"]
     
@@ -229,7 +229,7 @@ async def scan_qc_public(product_id: str):
 
 
 @router.get("/stats")
-async def get_stats(current_user: dict = Depends(get_current_user)):
+async def get_stats(current_user: dict = Depends(get_kyc_user)):
     """Get total products and scans for current user."""
     from app.services.analytics_service import get_user_analytics
     
@@ -245,7 +245,7 @@ async def get_stats(current_user: dict = Depends(get_current_user)):
 
 
 @router.get("/credit-report")
-async def get_credit_report(current_user: dict = Depends(get_current_user)):
+async def get_credit_report(current_user: dict = Depends(get_kyc_user)):
     """Get detailed credit report data for PDF generation."""
     from app.services.analytics_service import get_user_analytics
     

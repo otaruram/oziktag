@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Q
 from typing import Optional
 
 from app.database import db
-from app.dependencies import get_current_user
+from app.dependencies import get_current_user, get_kyc_user
 from app.services.tracking_service import (
     create_tracking_product,
     process_scan,
@@ -33,7 +33,7 @@ async def init_tracking(
     checklist_qc: str = Form("[]"),
     seller_notes: str = Form(""),
     image: UploadFile = File(...),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_kyc_user),
 ):
     """
     Initialize a tracking product (Seller only).
@@ -151,7 +151,7 @@ async def verify_pin(request: VerifyPinRequest):
 @router.get("/seller/my-products")
 async def get_my_tracking_products(
     page: int = Query(1, ge=1),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_kyc_user)
 ):
     """Get all tracking products for the authenticated seller."""
     limit = 10
@@ -163,7 +163,7 @@ async def get_my_tracking_products(
 @router.delete("/seller/my-products/{product_id}")
 async def delete_my_tracking_product(
     product_id: str,
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_kyc_user)
 ):
     """Soft delete a tracking product from seller's dashboard."""
     success = await hide_tracking_product(product_id, current_user["id"])

@@ -32,9 +32,10 @@ function Register() {
   const update = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) {
+    let timeoutId: NodeJS.Timeout;
+
+    const performCheck = async (session: any) => {
+      if (!session) {
         nav({ to: "/" });
         return;
       }
@@ -43,15 +44,42 @@ function Register() {
         if (me.kyc_status) {
           nav({ to: "/dashboard" });
         } else {
-          // User sudah login tapi belum KYC → tampilkan form register
           setCheckingAuth(false);
         }
       } catch (err) {
-        // /auth/me gagal (user belum ada di DB) → tampilkan form register
         setCheckingAuth(false);
       }
     };
-    checkAuth();
+
+    const init = async () => {
+      // If we are coming from an OAuth redirect, Supabase needs time to parse the hash.
+      if (window.location.hash.includes("access_token")) {
+        // Just wait for onAuthStateChange to fire.
+        // If it doesn't fire within 3 seconds, fallback.
+        timeoutId = setTimeout(async () => {
+          const { data } = await supabase.auth.getSession();
+          performCheck(data.session);
+        }, 3000);
+        return;
+      }
+
+      const { data } = await supabase.auth.getSession();
+      performCheck(data.session);
+    };
+
+    init();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        clearTimeout(timeoutId);
+        performCheck(session);
+      }
+    });
+
+    return () => {
+      clearTimeout(timeoutId);
+      authListener.subscription.unsubscribe();
+    };
   }, [nav]);
 
   if (checkingAuth) {
