@@ -231,146 +231,40 @@ async def scan_qc_public(product_id: str):
 @router.get("/stats")
 async def get_stats(current_user: dict = Depends(get_current_user)):
     """Get total products and scans for current user."""
+    from app.services.analytics_service import get_user_analytics
+    
     user_id = current_user["id"]
-    
-    total_products = await db.qcproduct.count(where={"userId": user_id})
-    
-    from datetime import datetime
-    now = datetime.now()
-    start_of_month = datetime(now.year, now.month, 1)
-    
-    total_scans = await db.productscan.count(
-        where={
-            "userId": user_id,
-            "scannedAt": {"gte": start_of_month}
-        }
-    )
-
-    # Revenue calculation from financial data
-    products_with_prices = await db.qcproduct.find_many(
-        where={"userId": user_id, "hargaJual": {"not": None}}
-    )
-    total_revenue = sum(p.hargaJual for p in products_with_prices if p.hargaJual)
-    total_cost = sum(p.hargaProduksi for p in products_with_prices if p.hargaProduksi)
-    avg_margin = round(((total_revenue - total_cost) / total_revenue * 100), 1) if total_revenue > 0 else 0
-
-    # 4-Layer Credit Score Calculation
-    user_data = await db.user.find_unique(
-        where={"id": user_id},
-        include={"kyc": True}
-    )
-    
-    all_time_scans = await db.productscan.count(where={"userId": user_id})
-
-    score = 300 # Base Score
-
-    # Layer 1: KYC
-    if user_data and user_data.kyc and user_data.kyc.status in ["verified", "approved"]:
-        score += 150
-
-    # Layer 2: Activity (Scans)
-    activity_points = min(all_time_scans * 2, 150)
-    score += activity_points
-
-    # Layer 3 & 4: Financial & Trust Factor
-    financial_points = 0
-    if total_revenue > 0 and 0 <= avg_margin <= 85: # Heuristic: Margin must be reasonable
-        trust_factor = min(all_time_scans / 50.0, 1.0) # Need 50 scans to fully trust financial data
-        financial_points = int(150 * trust_factor)
-    score += financial_points
-
-    # Loyalty (Elite/Credits)
-    if user_data:
-        loyalty = min(user_data.sisaKredit * 2, 100)
-        score += loyalty
-        
-    score = min(score, 850)
-
+    stats = await get_user_analytics(user_id)
     return {
-        "total_products": total_products,
-        "total_scans": total_scans,
-        "credit_score": score,
-        "total_revenue": total_revenue,
-        "avg_margin": avg_margin,
+        "total_products": stats["total_products"],
+        "total_scans": stats["total_scans_this_month"],
+        "credit_score": stats["credit_score"],
+        "total_revenue": stats["total_revenue"],
+        "avg_margin": stats["margin_percent"],
     }
 
 
 @router.get("/credit-report")
 async def get_credit_report(current_user: dict = Depends(get_current_user)):
     """Get detailed credit report data for PDF generation."""
+    from app.services.analytics_service import get_user_analytics
+    
     user_id = current_user["id"]
+    stats = await get_user_analytics(user_id)
 
-    user_data = await db.user.find_unique(
-        where={"id": user_id},
-        include={"kyc": True}
-    )
-    if not user_data:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    total_products = await db.qcproduct.count(where={"userId": user_id})
-    total_scans = await db.productscan.count(where={"userId": user_id})
-
-    # Financial data
-    products = await db.qcproduct.find_many(where={"userId": user_id})
-    total_revenue = sum(p.hargaJual for p in products if p.hargaJual)
-    total_cost = sum(p.hargaProduksi for p in products if p.hargaProduksi)
-    profit = total_revenue - total_cost
-    margin = round((profit / total_revenue * 100), 1) if total_revenue > 0 else 0
-
-    # 4-Layer Credit Score Calculation
-    score = 300 # Base Score
-
-    # Layer 1: KYC
-    if user_data.kyc and user_data.kyc.status in ["verified", "approved"]:
-        score += 150
-
-    # Layer 2: Activity (Scans)
-    activity_points = min(total_scans * 2, 150)
-    score += activity_points
-
-    # Layer 3 & 4: Financial & Trust Factor
-    financial_points = 0
-    if total_revenue > 0 and 0 <= margin <= 85: # Heuristic
-        trust_factor = min(total_scans / 50.0, 1.0) # Need 50 scans to fully trust financial data
-        financial_points = int(150 * trust_factor)
-    score += financial_points
-
-    # Loyalty
-    score += min(user_data.sisaKredit * 2, 100)
-    score = min(score, 850)
-
-    # Financial data
-    products = await db.qcproduct.find_many(where={"userId": user_id})
-    total_revenue = sum(p.hargaJual for p in products if p.hargaJual)
-    total_cost = sum(p.hargaProduksi for p in products if p.hargaProduksi)
-    profit = total_revenue - total_cost
-    margin = round((profit / total_revenue * 100), 1) if total_revenue > 0 else 0
-
-    # Rating
-    if score >= 750:
-        rating = "Sangat Baik"
-    elif score >= 600:
-        rating = "Baik"
-    elif score >= 450:
-        rating = "Sedang"
-    else:
-        rating = "Perlu Perbaikan"
-
-    brand_name = user_data.nama
-    if user_data.kyc and user_data.kyc.namaToko:
-        brand_name = user_data.kyc.namaToko
-
+    from datetime import datetime
+    
     return {
-        "brand_name": brand_name,
-        "email": user_data.email,
-        "credit_score": score,
-        "rating": rating,
-        "total_products": total_products,
-        "total_scans": total_scans,
-        "total_revenue": total_revenue,
-        "total_cost": total_cost,
-        "profit": profit,
-        "margin_percent": margin,
-        "is_elite": user_data.isElite,
+        "brand_name": stats["brand_name"],
+        "email": stats["user_data"].email,
+        "credit_score": stats["credit_score"],
+        "rating": stats["rating"],
+        "total_products": stats["total_products"],
+        "total_scans": stats["all_time_scans"],
+        "total_revenue": stats["total_revenue"],
+        "total_cost": stats["total_cost"],
+        "profit": stats["profit"],
+        "margin_percent": stats["margin_percent"],
+        "is_elite": stats["user_data"].isElite,
         "generated_at": datetime.now().isoformat(),
     }
