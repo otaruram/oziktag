@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as RegisterRouteImport } from './routes/register'
@@ -29,6 +30,11 @@ import { Route as ScanIdRouteImport } from './routes/scan.$id'
 import { Route as PaymentSuccessRouteImport } from './routes/payment.success'
 import { Route as PaymentCancelRouteImport } from './routes/payment.cancel'
 
+const WalletRoute = WalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
@@ -140,6 +146,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
+  '/wallet': typeof WalletRoute
   '/payment/cancel': typeof PaymentCancelRoute
   '/payment/success': typeof PaymentSuccessRoute
   '/scan/$id': typeof ScanIdRoute
@@ -161,6 +168,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
+  '/wallet': typeof WalletRoute
   '/payment/cancel': typeof PaymentCancelRoute
   '/payment/success': typeof PaymentSuccessRoute
   '/scan/$id': typeof ScanIdRoute
@@ -183,6 +191,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
+  '/wallet': typeof WalletRoute
   '/payment/cancel': typeof PaymentCancelRoute
   '/payment/success': typeof PaymentSuccessRoute
   '/scan/$id': typeof ScanIdRoute
@@ -206,6 +215,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/settings'
     | '/terms'
+    | '/wallet'
     | '/payment/cancel'
     | '/payment/success'
     | '/scan/$id'
@@ -227,6 +237,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/settings'
     | '/terms'
+    | '/wallet'
     | '/payment/cancel'
     | '/payment/success'
     | '/scan/$id'
@@ -248,6 +259,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/settings'
     | '/terms'
+    | '/wallet'
     | '/payment/cancel'
     | '/payment/success'
     | '/scan/$id'
@@ -270,6 +282,7 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   SettingsRoute: typeof SettingsRoute
   TermsRoute: typeof TermsRoute
+  WalletRoute: typeof WalletRoute
   PaymentCancelRoute: typeof PaymentCancelRoute
   PaymentSuccessRoute: typeof PaymentSuccessRoute
   ScanIdRoute: typeof ScanIdRoute
@@ -279,6 +292,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/wallet': {
+      id: '/wallet'
+      path: '/wallet'
+      fullPath: '/wallet'
+      preLoaderRoute: typeof WalletRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terms': {
       id: '/terms'
       path: '/terms'
@@ -430,6 +450,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   SettingsRoute: SettingsRoute,
   TermsRoute: TermsRoute,
+  WalletRoute: WalletRoute,
   PaymentCancelRoute: PaymentCancelRoute,
   PaymentSuccessRoute: PaymentSuccessRoute,
   ScanIdRoute: ScanIdRoute,
