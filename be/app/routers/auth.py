@@ -3,7 +3,7 @@
 import uuid
 import time
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from app.database import db, get_supabase_auth
 from app.dependencies import get_current_user
 from app.config import get_settings
@@ -54,7 +54,11 @@ class EmailPreferenceUpdate(BaseModel):
 from app.services.email_service import build_newsletter_welcome_email, send_email
 
 @router.post("/email-preferences")
-async def update_email_preferences(request: EmailPreferenceUpdate, current_user: dict = Depends(get_current_user)):
+async def update_email_preferences(
+    request: EmailPreferenceUpdate, 
+    background_tasks: BackgroundTasks,
+    current_user: dict = Depends(get_current_user)
+):
     """Update user email preferences."""
     user_id = current_user["id"]
     await db.user.update(
@@ -67,8 +71,7 @@ async def update_email_preferences(request: EmailPreferenceUpdate, current_user:
         user_name = current_user.get("user_metadata", {}).get("name") or current_user.get("email", "").split("@")[0] or "Pengguna"
         subject, html_body = build_newsletter_welcome_email(user_name)
         # Send in background (fire and forget) to avoid blocking the response
-        import asyncio
-        asyncio.create_task(send_email(current_user["email"], subject, html_body))
+        background_tasks.add_task(send_email, current_user["email"], subject, html_body)
         
     return {"message": "Preferensi email diperbarui", "receivesPromoEmails": request.receives_promo_emails}
 

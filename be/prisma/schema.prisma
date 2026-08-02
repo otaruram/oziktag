@@ -30,7 +30,7 @@ model User {
   eliteExpiresAt DateTime? @map("elite_expires_at")
   creditScoreRequested Boolean @default(false) @map("credit_score_requested")
   canViewCreditScore   Boolean @default(false) @map("can_view_credit_score")
-  receivesPromoEmails  Boolean @default(true) @map("receives_promo_emails")
+  receivesPromoEmails  Boolean @default(false) @map("receives_promo_emails")
   lastSeenAt DateTime? @default(now()) @map("last_seen_at")
   createdAt  DateTime  @default(now()) @map("created_at")
   updatedAt  DateTime  @updatedAt @map("updated_at")
