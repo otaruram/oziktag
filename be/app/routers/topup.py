@@ -84,7 +84,15 @@ async def payment_webhook(request: Request):
     """
     Internal webhook received from our Node.js microservice.
     Node.js has already verified the SumoPod token.
+    Now secured with a secret key.
     """
+    secret = request.headers.get("X-Internal-Secret")
+    from app.config import get_settings
+    settings = get_settings()
+    
+    if not secret or secret != settings.internal_webhook_secret:
+        raise HTTPException(status_code=403, detail="Forbidden: Invalid Secret")
+        
     payload = await request.json()
 
     event = payload.get("event_type")
@@ -183,62 +191,6 @@ async def get_topup_history(current_user: dict = Depends(get_current_user)):
         for t in txns
     ]
 
-@router.post("/demo-simulate")
-async def simulate_demo_payment(request: TopUpCreateRequest, current_user: dict = Depends(get_current_user)):
-    """Demo endpoint to instantly add credits and create a settled transaction."""
-    user_id = current_user["id"]
-    try:
-        pkg = get_package(request.paket)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-        
-    reference = f"demo-{uuid.uuid4().hex[:12]}"
-    
-    async with db.tx() as tx:
-        await tx.topuptransaction.create(
-            data={
-                "userId": user_id,
-                "paket": request.paket,
-                "tipeKredit": request.tipe_kredit,
-                "amount": pkg["price"],
-                "credits": pkg["credits"],
-                "status": "settled",
-                "sumopodRef": reference,
-                "paymentType": request.payment_type or "QRIS",
-            }
-        )
-        user = await tx.user.find_unique(where={"id": user_id})
-        if user:
-            if request.tipe_kredit == "API":
-                await tx.user.update(
-                    where={"id": user_id},
-                    data={"apiKredit": user.apiKredit + pkg["credits"]}
-                )
-                await tx.creditlog.create(
-                    data={
-                        "userId": user_id,
-                        "tipeKredit": "API",
-                        "action": "TOPUP",
-                        "amount": pkg["credits"],
-                        "description": f"Demo Top-Up Paket API {request.paket}"
-                    }
-                )
-            else:
-                await tx.user.update(
-                    where={"id": user_id},
-                    data={"sisaKredit": user.sisaKredit + pkg["credits"]}
-                )
-                await tx.creditlog.create(
-                    data={
-                        "userId": user_id,
-                        "tipeKredit": "QR",
-                        "action": "TOPUP",
-                        "amount": pkg["credits"],
-                        "description": f"Demo Top-Up Paket {request.paket}"
-                    }
-                )
-            
-    return {"message": "Demo payment successful", "credits_added": pkg["credits"]}
 
 
 @router.post("/subscribe-elite")
@@ -315,38 +267,4 @@ async def subscribe_elite(
     }
 
 
-@router.post("/demo-subscribe-elite")
-async def demo_subscribe_elite(current_user: dict = Depends(get_current_user)):
-    """Demo endpoint to instantly activate Elite membership for 30 days."""
-    from datetime import datetime, timedelta, timezone
-
-    user_id = current_user["id"]
-    user = await db.user.find_unique(where={"id": user_id})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    expires_at = datetime.now(timezone.utc) + timedelta(days=30)
-
-    await db.user.update(
-        where={"id": user_id},
-        data={
-            "isElite": True,
-            "eliteExpiresAt": expires_at,
-        }
-    )
-
-    await db.creditlog.create(
-        data={
-            "userId": user_id,
-            "tipeKredit": "QR",
-            "action": "TOPUP",
-            "amount": 0,
-            "description": "Aktivasi Artisan Elite (Demo)"
-        }
-    )
-
-    return {
-        "message": "Artisan Elite aktif selama 30 hari",
-        "elite_expires_at": expires_at.isoformat(),
-    }
 

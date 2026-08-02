@@ -67,9 +67,19 @@ async def init_tracking(
     # Upload image if provided
     image_url = None
     if image:
+        if image.content_type not in ["image/jpeg", "image/png", "image/webp"]:
+            await refund_qr_credit(current_user["id"], is_admin, credits, "Refund Gagal Upload (Format File)")
+            raise HTTPException(status_code=400, detail=f"File {image.filename} bukan format gambar yang diizinkan (JPG/PNG/WEBP).")
+            
         try:
             content = await image.read()
+            if len(content) > 5 * 1024 * 1024:
+                await refund_qr_credit(current_user["id"], is_admin, credits, "Refund Gagal Upload (Ukuran Terlalu Besar)")
+                raise HTTPException(status_code=413, detail=f"Ukuran file {image.filename} terlalu besar (Maks 5MB)")
+                
             image_url = await upload_image(content, image.filename or "tracking_img.jpg")
+        except HTTPException:
+            raise
         except Exception as e:
             print(f"[Tracking] Image upload failed: {e}")
             await refund_qr_credit(current_user["id"], is_admin, credits, "Refund Gagal Upload Gambar Tracking")

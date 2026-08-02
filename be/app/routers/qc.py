@@ -27,10 +27,19 @@ async def upload_images_api(
     if len(images) > 5:
         raise HTTPException(status_code=400, detail="Maksimal 5 foto produk")
 
+    # Validate file type and size
+    for img in images:
+        if img.content_type not in ["image/jpeg", "image/png", "image/webp"]:
+            raise HTTPException(status_code=400, detail=f"File {img.filename} bukan format gambar yang diizinkan (JPG/PNG/WEBP).")
+        # Optional: check size if spooling (FastAPI handles large files by writing to disk)
+        # But we can read to check length.
+        
     try:
         image_files = []
         for img in images:
             content = await img.read()
+            if len(content) > 5 * 1024 * 1024:
+                raise HTTPException(status_code=413, detail=f"Ukuran file {img.filename} terlalu besar (Maks 5MB)")
             image_files.append((content, img.filename or "image.jpg"))
         image_urls = await upload_multiple_images(image_files)
         return {"urls": image_urls}
@@ -68,6 +77,10 @@ async def submit_qc(
     if len(images) > 5:
         raise HTTPException(status_code=400, detail="Maksimal 5 foto produk")
 
+    for img in images:
+        if img.content_type not in ["image/jpeg", "image/png", "image/webp"]:
+            raise HTTPException(status_code=400, detail=f"File {img.filename} bukan format gambar yang diizinkan (JPG/PNG/WEBP).")
+
     # 2. Parse checklist
     try:
         checklist_items = json.loads(checklist)
@@ -97,8 +110,14 @@ async def submit_qc(
         image_files = []
         for img in images:
             content = await img.read()
+            if len(content) > 5 * 1024 * 1024:
+                # Refund credit if upload fails due to size
+                await refund_qr_credit(user_id, is_admin, credits, "Refund Gagal Upload (Ukuran Terlalu Besar)")
+                raise HTTPException(status_code=413, detail=f"Ukuran file {img.filename} terlalu besar (Maks 5MB)")
             image_files.append((content, img.filename or "image.jpg"))
         image_urls = await upload_multiple_images(image_files)
+    except HTTPException:
+        raise
     except Exception as e:
         import traceback
         traceback.print_exc()
