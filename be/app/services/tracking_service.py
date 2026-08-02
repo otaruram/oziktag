@@ -6,72 +6,7 @@ from app.config import get_settings
 from app.database import db
 
 
-async def generate_tracking_summary(
-    checklist: list[str],
-    seller_notes: str,
-    product_name: str,
-) -> str:
-    """
-    Call Gemini AI to summarize seller notes + checklist into a
-    friendly customer-facing narrative for the tracking page.
-    Reuses the same Gemini infrastructure as ai_service.py.
-    """
-    settings = get_settings()
-
-    prompt = f"""Kamu adalah asisten supply chain profesional untuk UMKM Indonesia.
-Buatlah ringkasan singkat (3-4 kalimat) yang ramah untuk pembeli tentang kondisi produk ini
-berdasarkan catatan penjual dan checklist QC. Tulis dalam Bahasa Indonesia yang natural.
-
-Nama Produk: {product_name}
-
-Checklist QC Penjual:
-{chr(10).join(f"✓ {item}" for item in checklist) if checklist else "Tidak ada checklist khusus."}
-
-Catatan Penjual:
-{seller_notes or "Tidak ada catatan khusus."}
-
-INSTRUKSI:
-- Jangan gunakan format bullet/numbering.
-- Langsung tulis ringkasannya saja tanpa label "RINGKASAN:" atau sejenisnya.
-- Fokus pada transparansi kondisi produk dan alasan mengapa pembeli bisa percaya.
-"""
-
-    try:
-        base_url = settings.gemini_base_url.rstrip("/")
-        url = f"{base_url}/v1/chat/completions"
-
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {settings.gemini_api_key}",
-        }
-
-        payload = {
-            "model": settings.gemini_model,
-            "messages": [{"role": "user", "content": prompt}],
-            "max_tokens": 512,
-            "temperature": 0.7,
-        }
-
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(url, headers=headers, json=payload)
-            response.raise_for_status()
-            data = response.json()
-
-        content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-        return content.strip() if content.strip() else _fallback_summary(product_name, checklist, seller_notes)
-
-    except Exception as e:
-        print(f"[Tracking AI] Error calling Gemini: {e}")
-        return _fallback_summary(product_name, checklist, seller_notes)
-
-
-def _fallback_summary(name: str, checklist: list[str], notes: str) -> str:
-    """Generate fallback summary when AI is unavailable."""
-    parts = [f"Produk {name} telah melewati {len(checklist)} checklist Quality Control oleh penjual."]
-    if notes:
-        parts.append(f'Catatan penjual: "{notes}".')
-    parts.append("Produk ini disiapkan dengan standar kualitas yang terjaga untuk menjamin kepuasan Anda.")
-    return " ".join(parts)
+from app.services.ai_service import analyze_tracking
 
 
 async def create_tracking_product(
@@ -89,7 +24,12 @@ async def create_tracking_product(
     buyer_pin = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
 
     # Generate AI summary
-    ai_summary = await generate_tracking_summary(checklist, seller_notes, name)
+    ai_summary = await analyze_tracking(
+        name=name,
+        checklist=checklist,
+        seller_notes=seller_notes,
+        image_url=image_url
+    )
 
     product = await db.trackingproduct.create(
         data={

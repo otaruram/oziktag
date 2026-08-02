@@ -14,32 +14,33 @@ async def analyze_qc(
     kategori: str,
     harga_produksi: int | None = None,
     harga_jual: int | None = None,
+    image_urls: list[str] | None = None,
 ) -> dict:
     """
-    Call Gemini AI to analyze QC data.
+    Call Gemini AI to analyze QC data and images.
     Returns dict with 'ai_insight' and 'ai_solution'.
-    Uses the custom endpoint https://ai.sumopod.com with model gemini/gemini-2.5-flash-lite.
     """
     settings = get_settings()
+    image_urls = image_urls or []
 
     prompt = f"""Kamu adalah asisten Quality Control profesional untuk produk UMKM Indonesia.
-Analisis data QC berikut dan berikan output dalam format yang diminta.
+Analisis data QC (termasuk gambar jika ada) berikut dan berikan output dalam format yang diminta.
 
 === DATA PRODUK ===
 Nama Produk: {nama_produk}
 Kategori: {kategori}
 
 === CHECKLIST QC PENJUAL ===
-{chr(10).join(f"✓ {item}" for item in checklist)}
+{chr(10).join(f"✓ {item}" for item in checklist) if checklist else "Tidak ada checklist."}
 
 === CATATAN PENJUAL ===
 {catatan_penjual or "Tidak ada catatan khusus."}
 
 === INSTRUKSI ===
-Berdasarkan 2 indikator utama di atas (checklist dan catatan penjual), berikan analisis dalam format berikut:
+Berdasarkan data di atas (serta gambar jika diberikan), berikan analisis:
 
 1. **INSIGHT**: Berikan insight umum tentang kondisi produk ini (2-3 kalimat). 
-   Fokus pada: apakah produk layak, apa yang sudah baik, dan apakah ada hal yang perlu diperhatikan pembeli.
+   Fokus pada: apakah produk layak berdasarkan klaim di catatan penjual, apa yang sudah baik, dan apakah ada hal yang perlu diperhatikan pembeli.
    Gunakan bahasa yang ramah dan meyakinkan untuk pembeli.
 
 2. **SOLUSI**: Berikan solusi dan tips perawatan spesifik untuk produk kategori "{kategori}" (2-3 kalimat).
@@ -50,11 +51,9 @@ INSIGHT: [isi insight di sini]
 SOLUSI: [isi solusi di sini]
 """
 
-    # Enrich prompt with financial data if available
     if harga_produksi and harga_jual:
-        margin = round((harga_jual - harga_produksi) / harga_jual * 100, 1)
+        margin = round((harga_jual - harga_produksi) / harga_jual * 100, 1) if harga_jual > 0 else 0
         prompt += f"""
-
 === DATA FINANSIAL (RAHASIA — hanya untuk analisis) ===
 Harga Produksi: Rp {harga_produksi:,}
 Harga Jual: Rp {harga_jual:,}
@@ -64,14 +63,15 @@ Tambahkan saran bisnis singkat di dalam SOLUSI: apakah margin sehat, tips efisie
 """
 
     # 1. Generate Input Hash
-    raw_input = f"{nama_produk}|{kategori}|{catatan_penjual}|{','.join(sorted(checklist))}|{harga_produksi or ''}|{harga_jual or ''}"
+    img_str = ",".join(sorted(image_urls))
+    raw_input = f"{nama_produk}|{kategori}|{catatan_penjual}|{','.join(sorted(checklist))}|{harga_produksi or ''}|{harga_jual or ''}|{img_str}"
     input_hash = hashlib.sha256(raw_input.encode('utf-8')).hexdigest()
 
     # 2. Check Cache
     try:
         cached = await db.aicache.find_unique(where={"inputHash": input_hash})
         if cached:
-            print(f"[AI Service] Cache HIT for {input_hash}")
+            print(f"[AI Service] Cache HIT for QC {input_hash}")
             return {
                 "ai_insight": cached.insight,
                 "ai_solution": cached.solution,
@@ -80,7 +80,6 @@ Tambahkan saran bisnis singkat di dalam SOLUSI: apakah margin sehat, tips efisie
         print(f"[AI Service] Cache error: {e}")
 
     try:
-        # Call the custom Gemini endpoint
         base_url = settings.gemini_base_url.rstrip("/")
         url = f"{base_url}/v1/chat/completions"
 
@@ -89,10 +88,14 @@ Tambahkan saran bisnis singkat di dalam SOLUSI: apakah margin sehat, tips efisie
             "Authorization": f"Bearer {settings.gemini_api_key}",
         }
 
+        content = [{"type": "text", "text": prompt}]
+        for img_url in image_urls:
+            content.append({"type": "image_url", "image_url": {"url": img_url}})
+
         payload = {
             "model": settings.gemini_model,
             "messages": [
-                {"role": "user", "content": prompt}
+                {"role": "user", "content": content}
             ],
             "max_tokens": 1024,
             "temperature": 0.7,
@@ -104,9 +107,9 @@ Tambahkan saran bisnis singkat di dalam SOLUSI: apakah margin sehat, tips efisie
             data = response.json()
 
         # Parse the response
-        content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+        resp_text = data.get("choices", [{}])[0].get("message", {}).get("content", "")
 
-        result = _parse_ai_response(content, nama_produk, kategori, catatan_penjual)
+        result = _parse_ai_response(resp_text, nama_produk, kategori, catatan_penjual)
         
         # 3. Save to Cache
         try:
@@ -126,6 +129,98 @@ Tambahkan saran bisnis singkat di dalam SOLUSI: apakah margin sehat, tips efisie
         print(f"[AI Service] Error calling Gemini: {e}")
         # Fallback response if AI fails
         return _fallback_response(nama_produk, kategori, catatan_penjual, checklist, harga_produksi, harga_jual)
+
+
+async def analyze_tracking(
+    name: str,
+    checklist: list[str],
+    seller_notes: str,
+    image_url: str | None = None,
+) -> str:
+    """
+    Call Gemini AI to analyze Tracking data.
+    Returns a single string summarizing the tracking status, condition, and tips.
+    """
+    settings = get_settings()
+
+    prompt = f"""Kamu adalah asisten logistik & Quality Control profesional.
+Analisis pengiriman paket ini dan berikan ringkasan padat dan berdaging.
+
+=== DATA PENGIRIMAN ===
+Nama Paket: {name}
+Checklist Kondisi: {chr(10).join(f"✓ {item}" for item in checklist) if checklist else "Tidak ada checklist."}
+Catatan Penjual: {seller_notes or "Tidak ada catatan."}
+
+=== INSTRUKSI ===
+Buat 1 paragraf ringkasan (3-4 kalimat) yang merangkum:
+1. Kondisi paket saat dikirim (berdasarkan checklist & gambar jika ada).
+2. Kesesuaian dengan catatan penjual.
+3. Solusi singkat: tips unboxing atau hal yang harus diperhatikan pembeli saat menerima paket ini.
+
+Gunakan bahasa yang profesional, ramah, dan meyakinkan. Jangan gunakan format heading atau list. Jadikan satu paragraf utuh yang mengalir.
+"""
+
+    img_str = image_url or ""
+    raw_input = f"track|{name}|{seller_notes}|{','.join(sorted(checklist))}|{img_str}"
+    input_hash = hashlib.sha256(raw_input.encode('utf-8')).hexdigest()
+
+    try:
+        cached = await db.aicache.find_unique(where={"inputHash": input_hash})
+        if cached:
+            print(f"[AI Service] Cache HIT for Tracking {input_hash}")
+            return cached.insight
+    except Exception as e:
+        pass
+
+    try:
+        base_url = settings.gemini_base_url.rstrip("/")
+        url = f"{base_url}/v1/chat/completions"
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {settings.gemini_api_key}",
+        }
+
+        content = [{"type": "text", "text": prompt}]
+        if image_url:
+            content.append({"type": "image_url", "image_url": {"url": image_url}})
+
+        payload = {
+            "model": settings.gemini_model,
+            "messages": [
+                {"role": "user", "content": content}
+            ],
+            "max_tokens": 1024,
+            "temperature": 0.7,
+        }
+
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(url, headers=headers, json=payload)
+            response.raise_for_status()
+            data = response.json()
+
+        resp_text = data.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+        
+        if not resp_text:
+            raise ValueError("Empty response from AI")
+
+        try:
+            await db.aicache.create(
+                data={
+                    "inputHash": input_hash,
+                    "insight": resp_text,
+                    "solution": "-",
+                }
+            )
+        except Exception:
+            pass
+            
+        return resp_text
+
+    except Exception as e:
+        print(f"[AI Service] Error calling Gemini for tracking: {e}")
+        notes_str = f" dengan catatan: '{seller_notes}'" if seller_notes else ""
+        return f"Paket '{name}' telah disiapkan dengan baik dan melalui {len(checklist)} poin pengecekan kondisi{notes_str}. Disarankan untuk merekam video unboxing saat paket tiba untuk keamanan ganda."
 
 
 def _parse_ai_response(
@@ -154,7 +249,6 @@ def _parse_ai_response(
         elif current_section == "solution" and stripped:
             ai_solution += " " + stripped
 
-    # If parsing failed, use the whole content
     if not ai_insight and not ai_solution:
         parts = content.split("\n\n", 1)
         ai_insight = parts[0].strip() if parts else content.strip()
@@ -198,7 +292,6 @@ def _fallback_response(
 
     solution = care_tips.get(kategori, "Simpan di tempat aman, kering, dan jauh dari jangkauan anak-anak.")
 
-    # Enrich with business tip if financial data present
     if harga_produksi and harga_jual and harga_jual > 0:
         margin = round((harga_jual - harga_produksi) / harga_jual * 100, 1)
         if margin < 20:

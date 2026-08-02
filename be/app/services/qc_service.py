@@ -11,6 +11,7 @@ async def process_qc_submission(user_id: str, nama_produk: str, kategori: str, b
             kategori=kategori,
             harga_produksi=harga_produksi,
             harga_jual=harga_jual,
+            image_urls=image_urls,
         )
     except Exception as e:
         print(f"[QC Router] AI analysis failed: {e}")
