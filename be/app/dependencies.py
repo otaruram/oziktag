@@ -70,7 +70,8 @@ async def get_current_user(authorization: str = Header(...)):
                         "id": user_id,
                         "email": email,
                         "nama": name,
-                        "sisaKredit": 999999 if is_admin else 5,
+                        "sisaKredit": 999999 if is_admin else 4,
+                        "apiKredit": 999999 if is_admin else 4,
                         "isAdmin": is_admin
                     }
                 )

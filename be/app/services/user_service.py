@@ -57,7 +57,8 @@ async def process_google_login(access_token: str) -> dict:
                     "id": user_id,
                     "nama": name,
                     "email": email,
-                    "sisaKredit": 999999 if is_admin else 5,
+                    "sisaKredit": 999999 if is_admin else 4,
+                    "apiKredit": 999999 if is_admin else 4,
                     "isAdmin": is_admin,
                 }
             )
