@@ -113,10 +113,9 @@ async def init_tracking(
                 customer_email="buyer@oziktag.com",
                 reference=sumopod_ref
             )
-            payment_url = res.get("payment_url")
-            # If no payment_url, maybe it returns qris_string, but SumoPod's new API might return payment_url for checkout
-            if not payment_url and "payment" in res and "payment_url" in res["payment"]:
-                payment_url = res["payment"]["payment_url"]
+            payment_url = res.get("payment_link_url", res.get("payment_url"))
+            if not payment_url and "payment" in res:
+                payment_url = res["payment"].get("payment_link_url", res["payment"].get("payment_url"))
         except Exception as e:
             # If payment gateway fails, fallback to standard tracking or raise
             raise HTTPException(status_code=500, detail=f"Gagal membuat link pembayaran: {str(e)}")
