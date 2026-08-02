@@ -11,6 +11,7 @@ PACKAGES = {
     "growth": {"name": "Growth", "price": 35000, "credits": 150},
     "pro": {"name": "Pro", "price": 79000, "credits": 400},
     "elite_monthly": {"name": "Artisan Elite", "price": 49900, "credits": 0},
+    "elite_yearly": {"name": "Artisan Elite (Yearly)", "price": 499000, "credits": 0},
 }
 
 

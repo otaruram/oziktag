@@ -116,9 +116,34 @@ async def payment_webhook(request: Request):
                     data={"status": "settled"}
                 )
 
-                # Add credits using the service within the same transaction
-                desc = f"Top-Up Paket API {txn.paket}" if txn.tipeKredit == "API" else f"Top-Up Paket {txn.paket}"
-                await add_credits(txn.userId, txn.credits, txn.tipeKredit, desc, tx_client=tx)
+                if txn.paket.startswith("elite_"):
+                    from datetime import datetime, timedelta, timezone
+                    days = 365 if txn.paket == "elite_yearly" else 30
+                    expires_at = datetime.now(timezone.utc) + timedelta(days=days)
+                    
+                    user = await tx.user.find_unique(where={"id": txn.userId})
+                    if user and user.isElite and user.eliteExpiresAt:
+                        if user.eliteExpiresAt.replace(tzinfo=timezone.utc) > datetime.now(timezone.utc):
+                            expires_at = user.eliteExpiresAt.replace(tzinfo=timezone.utc) + timedelta(days=days)
+                            
+                    await tx.user.update(
+                        where={"id": txn.userId},
+                        data={"isElite": True, "eliteExpiresAt": expires_at}
+                    )
+                    
+                    await tx.creditlog.create(
+                        data={
+                            "userId": txn.userId,
+                            "tipeKredit": "QR",
+                            "action": "TOPUP",
+                            "amount": 0,
+                            "description": f"Aktivasi Artisan Elite ({days} hari)"
+                        }
+                    )
+                else:
+                    # Add credits using the service within the same transaction
+                    desc = f"Top-Up Paket API {txn.paket}" if txn.tipeKredit == "API" else f"Top-Up Paket {txn.paket}"
+                    await add_credits(txn.userId, txn.credits, txn.tipeKredit, desc, tx_client=tx)
 
             print(f"[Webhook] Payment settled: {order_id}, +{txn.credits} credits to user {txn.userId}")
 
@@ -200,7 +225,7 @@ async def subscribe_elite(
 ):
     """
     Create a subscription transaction for Artisan Elite membership.
-    Price: Rp 49,900/month.
+    Price: Rp 499,000/year.
     """
     user_id = current_user["id"]
 
@@ -212,22 +237,13 @@ async def subscribe_elite(
     if user.isElite:
         raise HTTPException(status_code=400, detail="Anda sudah menjadi member Artisan Elite")
 
-    elite_price = 49900
+    elite_price = 499000
     reference = f"elite-{uuid.uuid4().hex[:12]}"
 
-    # Create transaction via SumoPod
     try:
-        from app.services.sumopod_service import create_elite_transaction
-        sumopod_response = await create_elite_transaction(
-            payment_type=payment_type,
-            customer_name=current_user.get("name", ""),
-            customer_email=current_user.get("email", ""),
-            reference=reference,
-        )
-    except ImportError:
-        # Fallback: If create_elite_transaction doesn't exist, use generic
+        from app.services.sumopod_service import create_transaction
         sumopod_response = await create_transaction(
-            paket="elite_monthly",
+            paket="elite_yearly",
             payment_type=payment_type,
             customer_name=current_user.get("name", ""),
             customer_email=current_user.get("email", ""),
@@ -247,7 +263,7 @@ async def subscribe_elite(
     await db.topuptransaction.create(
         data={
             "userId": user_id,
-            "paket": "elite_monthly",
+            "paket": "elite_yearly",
             "tipeKredit": "QR",
             "amount": elite_price,
             "credits": 0,

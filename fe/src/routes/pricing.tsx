@@ -33,11 +33,6 @@ const BENEFITS = [
   "Integrasi AI Scanner",
   "QR aktif selamanya",
   "Halaman scan publik tanpa iklan",
-  "Badge \"Artisan Elite\" di halaman scan publik",
-  "Video pelatihan QC kerajinan tangan",
-  "Tips & trik dari pengrajin berpengalaman",
-  "Forum diskusi sesama pengrajin (coming soon)",
-  "Prioritas dukungan Oziktag",
 ];
 
 const idr = (n: number) => "Rp " + n.toLocaleString("id-ID");
@@ -159,8 +154,8 @@ function Pricing() {
             </ul>
           </div>
           <div className="mt-8 md:mt-0 flex flex-col items-center justify-center rounded-xl bg-card border border-border p-6 shadow-sm min-w-[250px] shrink-0">
-             <p className="text-3xl font-bold tracking-tight">Rp 49.900</p>
-             <p className="text-sm text-muted-foreground mt-1">/ bulan</p>
+             <p className="text-3xl font-bold tracking-tight">Rp 499.000</p>
+             <p className="text-sm text-muted-foreground mt-1">/ tahun</p>
              {isElite ? (
                 <div className="mt-6 w-full rounded-md bg-secondary py-2.5 text-center text-sm font-medium text-foreground opacity-80 cursor-not-allowed">
                   Member Aktif
@@ -240,13 +235,13 @@ function CheckoutModal({
   pkg: Pkg;
   onClose: () => void;
 }) {
-  const [method, setMethod] = useState<"QRIS" | "GoPay">("QRIS");
+  const [method, setMethod] = useState<"QRIS">("QRIS");
   const [processing, setProcessing] = useState(false);
 
   const createTransaction = async () => {
     setProcessing(true);
     try {
-      const paymentType = method === "QRIS" ? "qris" : "gopay";
+      const paymentType = "qris";
       const res = await apiFetch("/topup/create", {
         method: "POST",
         body: JSON.stringify({ paket: pkg.id, payment_type: paymentType })
@@ -310,20 +305,13 @@ function CheckoutModal({
             <p className="mt-5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Metode pembayaran
             </p>
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              {(["QRIS", "GoPay"] as const).map((m) => (
-                <button
-                  key={m}
-                  onClick={() => setMethod(m)}
-                  className={`rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
-                    method === m
-                      ? "border-primary/60 bg-primary/10 text-foreground"
-                      : "border-border bg-background text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {m}
-                </button>
-              ))}
+            <div className="mt-2 grid grid-cols-1 gap-2">
+              <button
+                onClick={() => setMethod("QRIS")}
+                className="rounded-md border border-primary/60 bg-primary/10 px-3 py-2 text-sm font-medium transition-colors text-foreground"
+              >
+                QRIS
+              </button>
             </div>
 
             <button
@@ -393,13 +381,13 @@ function HistoryModal({ history, onClose }: { history: any[]; onClose: () => voi
 }
 
 function EliteCheckoutModal({ onClose }: { onClose: () => void }) {
-  const [method, setMethod] = useState<"QRIS" | "GoPay">("QRIS");
+  const [method, setMethod] = useState<"QRIS">("QRIS");
   const [processing, setProcessing] = useState(false);
 
   const createSubscription = async () => {
     setProcessing(true);
     try {
-      const paymentType = method === "QRIS" ? "qris" : "gopay";
+      const paymentType = "qris";
       const res = await apiFetch(`/topup/subscribe-elite?payment_type=${paymentType}`, {
         method: "POST"
       });
@@ -443,8 +431,8 @@ function EliteCheckoutModal({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="mt-4 flex items-center justify-between rounded-lg border border-border bg-background/40 px-4 py-3 text-sm">
-          <span className="text-muted-foreground">Total tagihan bulanan</span>
-          <span className="text-lg font-semibold">Rp 49.900</span>
+          <span className="text-muted-foreground">Total tagihan tahunan</span>
+          <span className="text-lg font-semibold">Rp 499.000</span>
         </div>
 
         {processing ? (
@@ -463,20 +451,13 @@ function EliteCheckoutModal({ onClose }: { onClose: () => void }) {
             <p className="mt-5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Metode pembayaran
             </p>
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              {(["QRIS", "GoPay"] as const).map((m) => (
-                <button
-                  key={m}
-                  onClick={() => setMethod(m)}
-                  className={`rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
-                    method === m
-                      ? "border-primary/60 bg-primary/10 text-foreground"
-                      : "border-border bg-background text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {m}
-                </button>
-              ))}
+            <div className="mt-2 grid grid-cols-1 gap-2">
+              <button
+                onClick={() => setMethod("QRIS")}
+                className="rounded-md border border-primary/60 bg-primary/10 px-3 py-2 text-sm font-medium transition-colors text-foreground"
+              >
+                QRIS
+              </button>
             </div>
 
             <button
