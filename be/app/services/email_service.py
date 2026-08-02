@@ -9,9 +9,11 @@ from datetime import datetime
 from app.config import get_settings
 
 
-async def send_email(to_email: str, subject: str, html_body: str) -> bool:
+def send_email(to_email: str, subject: str, html_body: str) -> bool:
     """
-    Send an HTML email directly using Python's smtplib.
+    Send an HTML email using smtplib.
+    This is a SYNC function so BackgroundTasks runs it in a thread pool,
+    preventing it from blocking the FastAPI event loop.
     Returns True on success, False on failure.
     """
     settings = get_settings()
@@ -31,7 +33,8 @@ async def send_email(to_email: str, subject: str, html_body: str) -> bool:
     try:
         context = ssl.create_default_context()
         # SumoPod uses port 465 with implicit SSL/TLS
-        with smtplib.SMTP_SSL(settings.smtp_host, settings.smtp_port, context=context) as server:
+        # Timeout 10s to prevent long blocking
+        with smtplib.SMTP_SSL(settings.smtp_host, settings.smtp_port, context=context, timeout=10) as server:
             server.login(settings.smtp_user, settings.smtp_password)
             server.sendmail(
                 settings.smtp_from_email,

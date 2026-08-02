@@ -1,6 +1,7 @@
 """Top-Up credit router with Louvin payment integration and webhook handler."""
 
 import uuid
+import asyncio
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from app.database import db
 from app.dependencies import get_current_user
@@ -157,7 +158,7 @@ async def payment_webhook(request: Request):
                         credits=txn.credits,
                         amount=txn.amount,
                     )
-                    await send_email(user.email, subject, html)
+                    await asyncio.to_thread(send_email, user.email, subject, html)
             except Exception as email_err:
                 print(f"[Webhook] Email notification failed: {email_err}")
 
@@ -181,8 +182,7 @@ async def payment_webhook(request: Request):
                         user_name=user.nama or user.email.split("@")[0] or "Pengguna",
                         paket=txn.paket,
                     )
-                    import asyncio
-                    asyncio.create_task(send_email(user.email, subject, html))
+                    await asyncio.to_thread(send_email, user.email, subject, html)
             except Exception as email_err:
                 print(f"[Webhook] Email failure notification failed: {email_err}")
 

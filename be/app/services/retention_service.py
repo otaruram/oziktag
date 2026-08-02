@@ -1,7 +1,8 @@
 """Service for handling user retention, churn checks, and inactive warnings."""
 
 import asyncio
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+from functools import partial
 from app.database import db
 from app.services.email_service import send_email
 
@@ -40,7 +41,7 @@ async def retention_loop():
                         <p style="font-size: 12px; color: #666666; margin-bottom: 0;">Tim Oziktag</p>
                     </div>
                     """
-                    await send_email(user.email, subject, html)
+                    await asyncio.to_thread(send_email, user.email, subject, html)
                     print(f"[Retention] Sent H-15 warning to {user.email}")
                     
                 elif days_inactive == 90:
@@ -57,7 +58,7 @@ async def retention_loop():
                         <p style="font-size: 12px; color: #666666; margin-bottom: 0;">Tim Oziktag</p>
                     </div>
                     """
-                    await send_email(user.email, subject, html)
+                    await asyncio.to_thread(send_email, user.email, subject, html)
                     print(f"[Retention] Sent deactivated notice to {user.email}")
                     
         except Exception as e:
