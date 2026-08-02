@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from app.database import db
-from app.dependencies import get_current_user
+from app.dependencies import get_current_user, get_admin_user
 from typing import List
 from app.models.schemas import WalletWithdrawRequest, WithdrawRequestResponse
 from pydantic import BaseModel
@@ -81,11 +81,8 @@ async def get_my_withdraws(current_user: dict = Depends(get_current_user)):
 @router.get("/admin/withdraws")
 async def admin_get_withdraws(
     status: str = Query(None, description="pending, completed, rejected"),
-    current_user: dict = Depends(get_current_user)
+    admin_user: dict = Depends(get_admin_user)
 ):
-    if not current_user.get("is_admin"):
-        raise HTTPException(status_code=403, detail="Forbidden")
-        
     where_clause = {}
     if status:
         where_clause["status"] = status
@@ -113,9 +110,7 @@ async def admin_get_withdraws(
     ]
 
 @router.post("/admin/withdraws/{withdraw_id}/complete")
-async def admin_complete_withdraw(withdraw_id: str, current_user: dict = Depends(get_current_user)):
-    if not current_user.get("is_admin"):
-        raise HTTPException(status_code=403, detail="Forbidden")
+async def admin_complete_withdraw(withdraw_id: str, admin_user: dict = Depends(get_admin_user)):
         
     withdraw = await db.withdrawrequest.find_unique(where={"id": withdraw_id})
     if not withdraw:
