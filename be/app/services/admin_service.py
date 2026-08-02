@@ -8,9 +8,16 @@ async def get_all_users_for_admin() -> list[AdminUserItem]:
         order={"createdAt": "desc"}
     )
 
+    # Bulk query to count products per user (Fix N+1 Query)
+    qc_counts = await db.qcproduct.group_by(
+        by=["userId"],
+        count={"id": True}
+    )
+    count_map = {item["userId"]: item["_count"]["id"] for item in qc_counts}
+
     result = []
     for u in users:
-        total_qr = await db.qcproduct.count(where={"userId": u.id})
+        total_qr = count_map.get(u.id, 0)
         
         score = 300
         if u.kyc and u.kyc.status in ["verified", "approved"]:

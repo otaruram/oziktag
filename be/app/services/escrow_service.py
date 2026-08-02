@@ -57,16 +57,19 @@ async def auto_release_escrow_funds():
         return 0
 
     now = datetime.now(timezone.utc)
-    count = 0
-    for product in products_to_release:
-        # Simulate webhook/payout
-        await db.trackingproduct.update(
-            where={"id": product.id},
-            data={
-                "escrowStatus": "RELEASED",
-                "payoutReleasedAt": now
+    
+    # Simulate webhook/payout for all products at once
+    updated_count = await db.trackingproduct.update_many(
+        where={
+            "escrowStatus": "HELD",
+            "deliveredAt": {
+                "lt": cutoff_time
             }
-        )
-        count += 1
+        },
+        data={
+            "escrowStatus": "RELEASED",
+            "payoutReleasedAt": now
+        }
+    )
 
-    return count
+    return updated_count
