@@ -12,10 +12,12 @@ from app.models.schemas import AdminUserItem, AdminAddCreditsRequest, AdminBanRe
 router = APIRouter(prefix="/api/admin", tags=["Admin Panel"])
 
 
-@router.get("/users", response_model=list[AdminUserItem])
-async def list_all_users(admin: dict = Depends(get_admin_user)):
-    """List all registered users with their details."""
-    return await get_all_users_for_admin()
+@router.get("/users")
+async def get_all_users(page: int = 1, admin: dict = Depends(get_admin_user)):
+    """Get all users (Admin only)"""
+    limit = 10
+    offset = (page - 1) * limit
+    return await get_all_users_for_admin(limit, offset)
 
 @router.post("/approve-credit-score/{user_id}")
 async def approve_credit_score(user_id: str, admin: dict = Depends(get_admin_user)):
@@ -171,14 +173,19 @@ async def fetch_tracking_activities(
 
 from app.models.schemas import ApiAccessRequestItem
 
-@router.get("/api-requests", response_model=list[ApiAccessRequestItem])
-async def get_api_requests(admin: dict = Depends(get_admin_user)):
+@router.get("/api-requests")
+async def get_api_requests(page: int = 1, admin: dict = Depends(get_admin_user)):
     """Get all API access requests."""
+    limit = 10
+    offset = (page - 1) * limit
+    total = await db.apiaccessrequest.count()
     requests = await db.apiaccessrequest.find_many(
         include={"user": True},
-        order={"createdAt": "desc"}
+        order={"createdAt": "desc"},
+        take=limit,
+        skip=offset
     )
-    return [
+    data = [
         ApiAccessRequestItem(
             id=r.id,
             user_id=r.userId,
@@ -189,6 +196,7 @@ async def get_api_requests(admin: dict = Depends(get_admin_user)):
         )
         for r in requests
     ]
+    return {"data": data, "total": total}
 
 @router.post("/api-requests/{request_id}/approve")
 async def approve_api_request(request_id: str, admin: dict = Depends(get_admin_user)):
@@ -230,14 +238,19 @@ async def reject_api_request(request_id: str, admin: dict = Depends(get_admin_us
 
 from app.models.schemas import AdminKycItem
 
-@router.get("/kyc-requests", response_model=list[AdminKycItem])
-async def get_kyc_requests(admin: dict = Depends(get_admin_user)):
+@router.get("/kyc-requests")
+async def get_kyc_requests(page: int = 1, admin: dict = Depends(get_admin_user)):
     """Get all KYC requests."""
+    limit = 10
+    offset = (page - 1) * limit
+    total = await db.kyc.count()
     requests = await db.kyc.find_many(
         include={"user": True},
-        order={"createdAt": "desc"}
+        order={"createdAt": "desc"},
+        take=limit,
+        skip=offset
     )
-    return [
+    data = [
         AdminKycItem(
             id=r.id,
             user_id=r.userId,
@@ -248,15 +261,16 @@ async def get_kyc_requests(admin: dict = Depends(get_admin_user)):
             npwp=r.npwp,
             foto_ktp=r.fotoKtp,
             foto_npwp=r.fotoNpwp,
-            website=r.website,
             foto_produk_1=r.fotoProduk1,
             foto_produk_2=r.fotoProduk2,
             deskripsi_produk=r.deskripsiProduk,
+            website=r.website,
             status=r.status,
             created_at=r.createdAt
         )
         for r in requests
     ]
+    return {"data": data, "total": total}
 
 @router.post("/kyc-requests/{request_id}/approve")
 async def approve_kyc_request(request_id: str, admin: dict = Depends(get_admin_user)):

@@ -14,16 +14,16 @@ export function AdminKycRequests() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const { data: kycRequests, isLoading: kycRequestsLoading, refetch: refetchKyc } = useQuery({
-    queryKey: ['admin-kyc-requests'],
+  const { data: response, isLoading: kycRequestsLoading, refetch: refetchKyc } = useQuery({
+    queryKey: ['admin-kyc-requests', currentPage],
     queryFn: async () => {
-      const data = await apiFetch('/admin/kyc-requests');
-      return data;
+      const res = await apiFetch(`/admin/kyc-requests?page=${currentPage}`);
+      return res;
     },
   });
 
-  const currentRequests = kycRequests ? kycRequests.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage) : [];
-  const totalPages = kycRequests ? Math.ceil(kycRequests.length / itemsPerPage) : 1;
+  const currentRequests = response?.data || [];
+  const totalPages = response?.total ? Math.ceil(response.total / itemsPerPage) : 1;
 
   const approveKycMutation = useMutation({
     mutationFn: async (requestId: string) => {

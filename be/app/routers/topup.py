@@ -91,6 +91,10 @@ async def payment_webhook(request: Request):
     from app.config import get_settings
     settings = get_settings()
     
+    if not settings.internal_webhook_secret or len(settings.internal_webhook_secret) < 10:
+        print("[Webhook] INTERNAL_WEBHOOK_SECRET is missing or too weak. Rejecting request for safety.")
+        raise HTTPException(status_code=500, detail="Server Configuration Error")
+
     if not secret or secret != settings.internal_webhook_secret:
         raise HTTPException(status_code=403, detail="Forbidden: Invalid Secret")
         

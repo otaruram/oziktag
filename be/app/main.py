@@ -23,13 +23,14 @@ async def _self_ping_loop():
     settings = get_settings()
     url = f"{settings.app_url}/health"
     while True:
-        await asyncio.sleep(720)  # 12 minutes
         try:
+            await asyncio.sleep(720)  # 12 minutes
             async with httpx.AsyncClient(timeout=10.0) as client:
                 resp = await client.get(url)
                 print(f"[Self-Ping] {url} → {resp.status_code}")
         except Exception as e:
             print(f"[Self-Ping] Failed: {e}")
+            await asyncio.sleep(60)
 
 async def _auto_release_loop():
     """Check and auto-release escrow funds every hour."""
@@ -40,6 +41,7 @@ async def _auto_release_loop():
                 print(f"[Escrow] Auto-released funds for {released_count} products.")
         except Exception as e:
             print(f"[Escrow] Auto-release failed: {e}")
+            await asyncio.sleep(60)
         # Sleep for 1 hour (3600 seconds)
         await asyncio.sleep(3600)
 

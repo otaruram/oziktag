@@ -2,10 +2,13 @@ from datetime import datetime, timedelta, timezone
 from app.database import db
 from app.models.schemas import AdminUserItem
 
-async def get_all_users_for_admin() -> list[AdminUserItem]:
+async def get_all_users_for_admin(limit: int = 10, offset: int = 0) -> dict:
+    total = await db.user.count()
     users = await db.user.find_many(
         include={"kyc": True},
-        order={"createdAt": "desc"}
+        order={"createdAt": "desc"},
+        take=limit,
+        skip=offset
     )
 
     # Bulk query to count products per user (Fix N+1 Query)
@@ -42,7 +45,7 @@ async def get_all_users_for_admin() -> list[AdminUserItem]:
             can_view_credit_score=u.canViewCreditScore,
             is_elite=u.isElite,
         ))
-    return result
+    return {"data": result, "total": total}
 
 
 async def get_platform_stats() -> dict:
@@ -80,7 +83,8 @@ async def get_supaledger_dataset() -> list[dict]:
             "hargaProduksi": {"not": None},
             "hargaJual": {"not": None}
         },
-        include={"user": {"include": {"kyc": True}}, "scans": True}
+        include={"user": {"include": {"kyc": True}}, "scans": True},
+        take=1000
     )
 
     dataset = []

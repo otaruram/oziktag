@@ -13,6 +13,23 @@ from app.services.ai_service import analyze_qc
 from app.services.credit_service import deduct_qr_credit, refund_qr_credit
 from app.services.qc_service import process_qc_submission
 from app.models.schemas import QCSubmitResponse, QCProductListItem
+import time
+
+_upload_timestamps: dict[str, list[float]] = {}
+
+def check_rate_limit(user_id: str, max_requests: int = 10, window_seconds: int = 60):
+    now = time.time()
+    if user_id not in _upload_timestamps:
+        _upload_timestamps[user_id] = []
+    
+    # Remove old timestamps
+    _upload_timestamps[user_id] = [t for t in _upload_timestamps[user_id] if now - t < window_seconds]
+    
+    if len(_upload_timestamps[user_id]) >= max_requests:
+        raise HTTPException(status_code=429, detail="Terlalu banyak permintaan upload. Silakan tunggu beberapa saat.")
+        
+    _upload_timestamps[user_id].append(now)
+
 
 router = APIRouter(prefix="/api/qc", tags=["Quality Control"])
 
@@ -26,6 +43,8 @@ async def upload_images_api(
         raise HTTPException(status_code=400, detail="Upload minimal 1 foto produk")
     if len(images) > 5:
         raise HTTPException(status_code=400, detail="Maksimal 5 foto produk")
+
+    check_rate_limit(current_user["id"], max_requests=10, window_seconds=60)
 
     # Validate file type and size
     for img in images:
@@ -76,6 +95,8 @@ async def submit_qc(
         raise HTTPException(status_code=400, detail="Upload minimal 1 foto produk")
     if len(images) > 5:
         raise HTTPException(status_code=400, detail="Maksimal 5 foto produk")
+
+    check_rate_limit(user_id, max_requests=10, window_seconds=60)
 
     for img in images:
         if img.content_type not in ["image/jpeg", "image/png", "image/webp"]:

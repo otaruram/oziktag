@@ -14,16 +14,16 @@ export function AdminApiRequests() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const { data: apiRequests, isLoading: apiRequestsLoading } = useQuery({
-    queryKey: ['admin-api-requests'],
+  const { data: response, isLoading: apiRequestsLoading } = useQuery({
+    queryKey: ['admin-api-requests', currentPage],
     queryFn: async () => {
-      const data = await apiFetch('/admin/api-requests');
-      return data;
+      const res = await apiFetch(`/admin/api-requests?page=${currentPage}`);
+      return res;
     },
   });
 
-  const currentRequests = apiRequests ? apiRequests.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage) : [];
-  const totalPages = apiRequests ? Math.ceil(apiRequests.length / itemsPerPage) : 1;
+  const currentRequests = response?.data || [];
+  const totalPages = response?.total ? Math.ceil(response.total / itemsPerPage) : 1;
 
 
   const approveApiRequestMutation = useMutation({

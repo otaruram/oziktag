@@ -29,6 +29,9 @@ Dengan API Developer yang terintegrasi dan ekosistem dompet ganda (dual-wallet),
 - 🔌 **API Developer & Webhook**: Endpoint RESTful dengan autentikasi Bearer Token aman yang dirancang untuk integrasi POS dan ERP yang mulus.
 - 🛒 **Payment Gateway Otomatis**: Integrasi end-to-end dengan **Louvin Payment Gateway** yang mendukung perutean dinamis QRIS/GoPay dengan pemenuhan Webhook secara instan.
 - 📊 **Dashboard Telemetri Real-time**: Langganan *event* WebSocket langsung melalui Supabase untuk melacak pemindaian produk yang aktif, log konsumsi kredit, dan analitik platform yang komprehensif.
+- 🔐 **Sistem Autentikasi Grandfathering & KYC**: Penerapan KYC ketat untuk pengguna baru demi menjaga kualitas platform, sementara pengguna lama (*grandfathered*) dapat login lebih mulus. Dilengkapi dengan SMTP HTTP Relay Fallback (via SumoPod API) untuk bypassing batasan port provider hosting.
+- 🖨️ **HD Tracking & QC Labels (SHA-256)**: Pembuatan label produk berkualitas tinggi (1200x1500px) lengkap dengan hash SHA-256 unik yang langsung bisa diunduh dalam format PNG atau PDF siap cetak, baik untuk sistem QC AI maupun Tracking Lite.
+- 📈 **Admin Dashboard Teroptimasi (FIFO)**: Sistem manajemen data admin yang telah dipaginasi (10 baris per halaman) agar lebih efisien dan ringan saat memuat ribuan data pengguna atau transaksi.
 
 ---
 

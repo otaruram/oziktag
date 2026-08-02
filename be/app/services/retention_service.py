@@ -63,6 +63,8 @@ async def retention_loop():
                     
         except Exception as e:
             print(f"[Retention] Loop error: {e}")
+            await asyncio.sleep(60)
+            continue
             
         # Sleep for 24 hours
         await asyncio.sleep(86400)
