@@ -51,6 +51,8 @@ from pydantic import BaseModel
 class EmailPreferenceUpdate(BaseModel):
     receives_promo_emails: bool
 
+from app.services.email_service import build_newsletter_welcome_email, send_email
+
 @router.post("/email-preferences")
 async def update_email_preferences(request: EmailPreferenceUpdate, current_user: dict = Depends(get_current_user)):
     """Update user email preferences."""
@@ -59,8 +61,16 @@ async def update_email_preferences(request: EmailPreferenceUpdate, current_user:
         where={"id": user_id},
         data={"receivesPromoEmails": request.receives_promo_emails}
     )
+    
+    # If they turn on promo emails, send them a welcome newsletter email
+    if request.receives_promo_emails:
+        user_name = current_user.get("user_metadata", {}).get("name") or current_user.get("email", "").split("@")[0] or "Pengguna"
+        subject, html_body = build_newsletter_welcome_email(user_name)
+        # Send in background (fire and forget) to avoid blocking the response
+        import asyncio
+        asyncio.create_task(send_email(current_user["email"], subject, html_body))
+        
     return {"message": "Preferensi email diperbarui", "receivesPromoEmails": request.receives_promo_emails}
-
 
 
 @router.post("/kyc", response_model=KYCResponse)

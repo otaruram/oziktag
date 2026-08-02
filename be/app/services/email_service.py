@@ -4,6 +4,7 @@ import smtplib
 import ssl
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from datetime import datetime
 
 from app.config import get_settings
 
@@ -46,68 +47,128 @@ async def send_email(to_email: str, subject: str, html_body: str) -> bool:
 
 # ──────────────────────── Email Templates ────────────────────────
 
-def build_topup_success_email(user_name: str, paket: str, credits: int, amount: int) -> tuple[str, str]:
-    """Build subject and HTML body for top-up success notification."""
-    idr = f"Rp {amount:,}".replace(",", ".")
-    subject = f"✅ Top-Up Berhasil — {credits} Kredit Ditambahkan"
-    html = f"""
-    <div style="font-family: 'Segoe UI', sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px; color: #1a1a1a;">
-      <div style="text-align: center; margin-bottom: 24px;">
-        <h1 style="font-size: 22px; margin: 0;">✅ Pembayaran Berhasil</h1>
+def _get_base_template(title: str, content: str) -> str:
+    """Minimalist white and black base template."""
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">
+      <div style="max-width: 600px; margin: 0 auto; padding: 40px 24px; color: #000000;">
+        <!-- Header -->
+        <div style="margin-bottom: 32px;">
+          <h2 style="margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.5px;">Oziktag.</h2>
+        </div>
+        
+        <!-- Main Content -->
+        <div style="margin-bottom: 40px;">
+          {content}
+        </div>
+        
+        <!-- Footer -->
+        <div style="border-top: 1px solid #e5e5e5; padding-top: 24px;">
+          <p style="margin: 0; font-size: 12px; color: #666666; line-height: 1.5;">
+            Email ini dikirim secara otomatis. Mohon tidak membalas email ini.<br>
+            &copy; {datetime.now().year} Oziktag. Hak Cipta Dilindungi.
+          </p>
+        </div>
       </div>
-      <p>Halo <strong>{user_name}</strong>,</p>
-      <p>Top-up paket <strong>{paket}</strong> Anda sebesar <strong>{idr}</strong> telah berhasil diproses.</p>
-      <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 20px; text-align: center; margin: 20px 0;">
-        <p style="font-size: 36px; font-weight: bold; color: #16a34a; margin: 0;">+{credits}</p>
-        <p style="color: #4b5563; margin: 4px 0 0;">Kredit Ditambahkan</p>
-      </div>
-      <p style="font-size: 13px; color: #6b7280;">Kredit sudah bisa langsung digunakan untuk Generate QR Code QC atau Tracking Lite di dashboard Oziktag Anda.</p>
-      <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
-      <p style="font-size: 11px; color: #9ca3af; text-align: center;">Email ini dikirim otomatis oleh sistem Oziktag. Jangan membalas email ini.</p>
-    </div>
+    </body>
+    </html>
     """
-    return subject, html
+
+def build_topup_success_email(user_name: str, paket: str, credits: int, amount: int) -> tuple[str, str]:
+    idr = f"Rp {amount:,}".replace(",", ".")
+    subject = f"Pembayaran Berhasil — {credits} Kredit Ditambahkan"
+    
+    content = f"""
+    <h1 style="margin: 0 0 24px 0; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">Pembayaran Berhasil</h1>
+    <p style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.6; color: #333333;">Halo {user_name},</p>
+    <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6; color: #333333;">Terima kasih. Pembayaran Anda untuk paket <strong>{paket}</strong> sebesar <strong>{idr}</strong> telah berhasil kami terima.</p>
+    
+    <div style="background-color: #f9f9f9; border: 1px solid #e5e5e5; border-radius: 8px; padding: 24px; margin-bottom: 24px; text-align: center;">
+      <p style="margin: 0; font-size: 14px; color: #666666; text-transform: uppercase; letter-spacing: 1px;">Kredit Ditambahkan</p>
+      <p style="margin: 8px 0 0 0; font-size: 32px; font-weight: 700;">+{credits}</p>
+    </div>
+    
+    <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #666666;">Kredit sudah otomatis masuk ke akun Anda dan siap digunakan untuk Generate QR Code QC atau layanan API kami.</p>
+    """
+    
+    return subject, _get_base_template("Pembayaran Berhasil", content)
+
+
+def build_topup_failed_email(user_name: str, paket: str) -> tuple[str, str]:
+    subject = f"Pembayaran Gagal — Paket {paket}"
+    
+    content = f"""
+    <h1 style="margin: 0 0 24px 0; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">Pembayaran Gagal</h1>
+    <p style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.6; color: #333333;">Halo {user_name},</p>
+    <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6; color: #333333;">Kami menginformasikan bahwa proses pembayaran Anda untuk paket <strong>{paket}</strong> telah gagal atau dibatalkan.</p>
+    
+    <p style="margin: 0 0 16px 0; font-size: 14px; line-height: 1.6; color: #666666;">Saldo Anda tidak terpotong. Jika Anda masih ingin melakukan Top-Up, silakan kembali ke dashboard Oziktag dan buat tagihan baru.</p>
+    <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #666666;">Jika Anda merasa ini adalah kesalahan sistem, mohon hubungi tim dukungan kami melalui WhatsApp yang tertera di menu Pengaturan.</p>
+    """
+    
+    return subject, _get_base_template("Pembayaran Gagal", content)
+
+
+def build_newsletter_welcome_email(user_name: str) -> tuple[str, str]:
+    subject = "Selamat Datang di Newsletter Oziktag"
+    
+    content = f"""
+    <h1 style="margin: 0 0 24px 0; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">Terima kasih telah berlangganan!</h1>
+    <p style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.6; color: #333333;">Halo {user_name},</p>
+    <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6; color: #333333;">Mulai sekarang, Anda akan menjadi yang pertama tahu tentang pembaruan fitur terbaru, tips mengoptimalkan QR Code QC, dan wawasan seputar dunia UMKM kerajinan tangan dari Oziktag.</p>
+    
+    <div style="background-color: #f9f9f9; border: 1px solid #e5e5e5; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+      <h3 style="margin: 0 0 12px 0; font-size: 16px; font-weight: 600;">Apa yang bisa Anda harapkan?</h3>
+      <ul style="margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.6; color: #333333;">
+        <li style="margin-bottom: 8px;">Pembaruan sistem & fitur baru Oziktag</li>
+        <li style="margin-bottom: 8px;">Panduan integrasi API dan Otomatisasi</li>
+        <li style="margin-bottom: 0;">Promo eksklusif khusus pengguna aktif</li>
+      </ul>
+    </div>
+    
+    <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #666666;">Anda selalu bisa menonaktifkan email ini kapan saja melalui menu Pengaturan di dashboard Anda.</p>
+    """
+    
+    return subject, _get_base_template("Selamat Datang", content)
 
 
 def build_welcome_email(user_name: str) -> tuple[str, str]:
-    """Build subject and HTML body for welcome email after registration."""
-    subject = "🎉 Selamat Datang di Oziktag!"
-    html = f"""
-    <div style="font-family: 'Segoe UI', sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px; color: #1a1a1a;">
-      <div style="text-align: center; margin-bottom: 24px;">
-        <h1 style="font-size: 22px; margin: 0;">🎉 Selamat Datang!</h1>
-      </div>
-      <p>Halo <strong>{user_name}</strong>,</p>
-      <p>Akun Oziktag Anda sudah aktif. Sekarang Anda bisa:</p>
-      <ul style="padding-left: 20px; line-height: 1.8;">
-        <li>Generate QR Code QC untuk produk Anda</li>
-        <li>Gunakan fitur Tracking Lite untuk lacak pengiriman</li>
-        <li>Integrasikan API untuk otomatisasi</li>
+    subject = "Selamat Datang di Oziktag"
+    
+    content = f"""
+    <h1 style="margin: 0 0 24px 0; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">Selamat Datang!</h1>
+    <p style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.6; color: #333333;">Halo {user_name},</p>
+    <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6; color: #333333;">Akun Oziktag Anda kini telah aktif. Kami sangat antusias menyambut Anda di platform Quality Control & Tracking inovatif untuk produk kerajinan Anda.</p>
+    
+    <div style="margin-bottom: 24px;">
+      <h3 style="margin: 0 0 12px 0; font-size: 16px; font-weight: 600;">Langkah Selanjutnya:</h3>
+      <ul style="margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.6; color: #333333;">
+        <li style="margin-bottom: 8px;">Eksplorasi Dashboard untuk melihat analisis produk</li>
+        <li style="margin-bottom: 8px;">Top-Up kredit pertama Anda untuk mulai generate QR Code</li>
+        <li style="margin-bottom: 0;">Gunakan fitur Tracking Lite untuk melacak perjalanan produk</li>
       </ul>
-      <p>Mulai dengan top-up kredit pertama Anda untuk mulai generate QR Code.</p>
-      <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
-      <p style="font-size: 11px; color: #9ca3af; text-align: center;">Email ini dikirim otomatis oleh sistem Oziktag. Jangan membalas email ini.</p>
     </div>
     """
-    return subject, html
+    
+    return subject, _get_base_template("Selamat Datang", content)
 
 
 def build_escrow_released_email(user_name: str, product_name: str) -> tuple[str, str]:
-    """Build subject and HTML body for escrow release notification."""
-    subject = f"💰 Dana Dicairkan — {product_name}"
-    html = f"""
-    <div style="font-family: 'Segoe UI', sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px; color: #1a1a1a;">
-      <div style="text-align: center; margin-bottom: 24px;">
-        <h1 style="font-size: 22px; margin: 0;">💰 Dana Berhasil Dicairkan</h1>
-      </div>
-      <p>Halo <strong>{user_name}</strong>,</p>
-      <p>Dana escrow untuk produk <strong>{product_name}</strong> telah berhasil dicairkan ke rekening Anda.</p>
-      <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 20px; text-align: center; margin: 20px 0;">
-        <p style="font-size: 18px; font-weight: bold; color: #16a34a; margin: 0;">Pencairan Berhasil ✅</p>
-      </div>
-      <p style="font-size: 13px; color: #6b7280;">Silakan cek saldo rekening bank Anda. Dana biasanya masuk dalam 1x24 jam kerja.</p>
-      <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
-      <p style="font-size: 11px; color: #9ca3af; text-align: center;">Email ini dikirim otomatis oleh sistem Oziktag. Jangan membalas email ini.</p>
-    </div>
+    subject = f"Dana Dicairkan — {product_name}"
+    
+    content = f"""
+    <h1 style="margin: 0 0 24px 0; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">Pencairan Dana Berhasil</h1>
+    <p style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.6; color: #333333;">Halo {user_name},</p>
+    <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6; color: #333333;">Dana escrow untuk produk <strong>{product_name}</strong> telah berhasil dicairkan ke rekening Anda.</p>
+    
+    <p style="margin: 0 0 16px 0; font-size: 14px; line-height: 1.6; color: #666666;">Silakan cek mutasi rekening bank Anda. Proses masuknya dana mungkin membutuhkan waktu hingga 1x24 jam kerja tergantung kebijakan bank.</p>
     """
-    return subject, html
+    
+    return subject, _get_base_template("Pencairan Berhasil", content)
+

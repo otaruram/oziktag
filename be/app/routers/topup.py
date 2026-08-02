@@ -138,6 +138,20 @@ async def payment_webhook(request: Request):
                 where={"id": txn.id},
                 data={"status": "failed"}
             )
+            
+            # Send email notification for failed payment
+            try:
+                user = await db.user.find_unique(where={"id": txn.userId})
+                if user and user.email:
+                    from app.services.email_service import build_topup_failed_email
+                    subject, html = build_topup_failed_email(
+                        user_name=user.nama or user.email.split("@")[0] or "Pengguna",
+                        paket=txn.paket,
+                    )
+                    import asyncio
+                    asyncio.create_task(send_email(user.email, subject, html))
+            except Exception as email_err:
+                print(f"[Webhook] Email failure notification failed: {email_err}")
 
         print(f"[Webhook] Payment failed: {order_id}")
 
