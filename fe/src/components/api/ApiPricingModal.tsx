@@ -63,8 +63,6 @@ export function PricingModal({ onClose }: { onClose: () => void }) {
 function RealCheckoutModal({ pkg, onClose }: { pkg: any, onClose: () => void }) {
   const [method, setMethod] = useState<"QRIS" | "GoPay">("QRIS");
   const [processing, setProcessing] = useState(false);
-  const [qrImage, setQrImage] = useState<string | null>(null);
-  const [deeplink, setDeeplink] = useState<string | null>(null);
 
   const createTransaction = async () => {
     setProcessing(true);
@@ -78,19 +76,17 @@ function RealCheckoutModal({ pkg, onClose }: { pkg: any, onClose: () => void }) 
           tipe_kredit: "API"
         })
       });
+      // SumoPod uses hosted checkout. qr_string contains the checkout URL.
       if (res.qr_string) {
-        const url = await QRCode.toDataURL(res.qr_string, { width: 300 });
-        setQrImage(url);
-        toast.success("Tagihan berhasil dibuat!");
+        window.location.href = res.qr_string;
       } else if (res.deeplink_url) {
-        setDeeplink(res.deeplink_url);
-        toast.success("Tagihan berhasil dibuat!");
+        window.location.href = res.deeplink_url;
       } else {
-        toast.error("Tidak ada data QR/Deeplink dari server");
+        toast.error("Tidak ada link pembayaran dari server");
+        setProcessing(false);
       }
     } catch (e: any) {
       toast.error(e.message || "Gagal membuat transaksi");
-    } finally {
       setProcessing(false);
     }
   };
@@ -115,26 +111,15 @@ function RealCheckoutModal({ pkg, onClose }: { pkg: any, onClose: () => void }) 
           <span className="text-lg font-semibold">{idr(pkg.price)}</span>
         </div>
 
-        {qrImage || deeplink ? (
-          <div className="mt-5 flex flex-col items-center rounded-lg border border-dashed border-border bg-background/40 p-4 text-center">
-            {qrImage && (
-              <>
-                <img src={qrImage} alt="QRIS" className="h-48 w-48 rounded-md bg-white p-2 shadow-sm" />
-                <p className="mt-3 text-xs font-semibold text-primary">Scan dengan e-Wallet atau m-Banking</p>
-              </>
-            )}
-            {deeplink && (
-              <a href={deeplink} target="_blank" rel="noreferrer" className="mt-4 rounded-md bg-[#00AED6] px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-90">
-                Buka Aplikasi Gojek
-              </a>
-            )}
-            <div className="mt-6 flex flex-col items-center gap-1.5">
+        {processing ? (
+          <div className="mt-5 flex flex-col items-center rounded-lg border border-dashed border-border bg-background/40 p-6 text-center">
+            <div className="mt-2 flex flex-col items-center gap-1.5">
               <span className="relative flex h-3 w-3">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
                 <span className="relative inline-flex h-3 w-3 rounded-full bg-primary"></span>
               </span>
-              <p className="text-sm font-medium">Menunggu Pembayaran...</p>
-              <p className="text-[11px] text-muted-foreground">Saldo Anda akan otomatis bertambah jika pembayaran berhasil.</p>
+              <p className="text-sm font-medium mt-2">Mengarahkan ke Halaman Pembayaran...</p>
+              <p className="text-[11px] text-muted-foreground mt-1">Mohon tunggu sebentar.</p>
             </div>
           </div>
         ) : (
