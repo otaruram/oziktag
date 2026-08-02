@@ -23,8 +23,22 @@ function Scan() {
 
   useEffect(() => {
     apiFetch(`/scan/${id}`)
-      .then((data) => {
-        setTag(data);
+      .then((data: any) => {
+        const mappedTag: Qrtag = {
+          id: data.id,
+          productName: data.nama_produk,
+          category: data.kategori,
+          batch: data.batch,
+          qc: data.checklist || [],
+          brand: data.brand,
+          createdAt: data.created_at,
+          notes: data.catatan_penjual,
+          photos: data.images,
+          aiInsight: data.ai_insight,
+          aiSolution: data.ai_solution,
+          isElite: data.is_elite,
+        };
+        setTag(mappedTag);
         setLoaded(true);
       })
       .catch((err) => {
