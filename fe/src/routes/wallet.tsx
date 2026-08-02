@@ -73,7 +73,7 @@ function WalletPage() {
     }
   };
 
-  if (me && !me.can_use_escrow) {
+  if (me && !me.can_use_escrow && !me.is_admin) {
     return (
       <AppShell>
         <div className="max-w-xl mx-auto py-12 space-y-6">
