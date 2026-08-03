@@ -169,18 +169,18 @@ function TrackingScan() {
   // ─── MODE 1: CHECKOUT (Belum Bayar) ───
   if (data.current_status === "PENDING_PAYMENT" && data.is_escrow) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white text-foreground flex flex-col items-center justify-center p-4 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-72 bg-gradient-to-br from-orange-600 to-orange-500 rounded-b-[50px] -z-10" />
-        <div className="w-full max-w-sm rounded-3xl bg-white shadow-2xl p-8 relative text-center border border-orange-100">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-orange-100 mb-6">
-            <Receipt className="h-8 w-8 text-orange-600" />
+      <div className="min-h-screen bg-zinc-50 text-foreground flex flex-col items-center justify-center p-4 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-72 bg-black rounded-b-[50px] -z-10" />
+        <div className="w-full max-w-sm rounded-3xl bg-white shadow-2xl p-8 relative text-center border border-zinc-200">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-zinc-100 mb-6 border border-zinc-200">
+            <Receipt className="h-8 w-8 text-black" />
           </div>
           <h2 className="text-xl font-bold mb-1">Tagihan Pembayaran</h2>
           <p className="text-sm text-muted-foreground mb-6">Silakan selesaikan pembayaran untuk pesanan Anda.</p>
-          <div className="bg-orange-50/80 rounded-2xl p-5 mb-6 text-left border border-orange-100">
+          <div className="bg-zinc-50 rounded-2xl p-5 mb-6 text-left border border-zinc-200">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Total Tagihan</p>
-            <p className="text-3xl font-bold text-orange-600 mb-4">Rp {data.price?.toLocaleString("id-ID") || 0}</p>
-            <div className="border-t border-orange-200/60 pt-3 space-y-2">
+            <p className="text-3xl font-bold text-black mb-4">Rp {data.price?.toLocaleString("id-ID") || 0}</p>
+            <div className="border-t border-zinc-200 pt-3 space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Barang</span>
                 <span className="font-medium text-right line-clamp-1 max-w-[180px]">{data.name}</span>
@@ -194,11 +194,11 @@ function TrackingScan() {
             </div>
           </div>
           <div className="text-xs text-muted-foreground mb-6 leading-relaxed px-2">
-            <ShieldCheck className="h-4 w-4 inline-block mr-1 -mt-0.5 text-orange-600" />
+            <ShieldCheck className="h-4 w-4 inline-block mr-1 -mt-0.5 text-black" />
             Pembayaran dijamin aman oleh sistem Escrow Oziktag. Uang diteruskan ke penjual setelah barang diterima.
           </div>
           {data.payment_url ? (
-            <a href={data.payment_url} className="block w-full rounded-2xl bg-gradient-to-r from-orange-600 to-orange-500 py-4 font-bold text-white shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 transition-all hover:scale-[1.02] active:scale-[0.98]">
+            <a href={data.payment_url} className="block w-full rounded-2xl bg-black py-4 font-bold text-white shadow-lg shadow-black/20 hover:shadow-black/40 transition-all hover:scale-[1.02] active:scale-[0.98]">
               Bayar Sekarang
             </a>
           ) : (
@@ -207,7 +207,7 @@ function TrackingScan() {
             </button>
           )}
         </div>
-        <p className="text-center text-xs text-white/80 mt-8 font-medium">Secure Payment by Oziktag</p>
+        <p className="text-center text-xs text-white/70 mt-8 font-medium">Secure Payment by Oziktag</p>
       </div>
     );
   }
@@ -216,26 +216,26 @@ function TrackingScan() {
   if (showInvoice && data.is_escrow) {
     const now = new Date();
     return (
-      <div className="min-h-screen bg-gradient-to-b from-green-50 to-white text-foreground flex flex-col items-center justify-center p-4 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-72 bg-gradient-to-br from-green-600 to-emerald-500 rounded-b-[50px] -z-10" />
-        <div className="w-full max-w-sm rounded-3xl bg-white shadow-2xl p-8 relative text-center border border-green-100">
+      <div className="min-h-screen bg-zinc-50 text-foreground flex flex-col items-center justify-center p-4 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-72 bg-black rounded-b-[50px] -z-10" />
+        <div className="w-full max-w-sm rounded-3xl bg-white shadow-2xl p-8 relative text-center border border-zinc-200">
           <div className="absolute top-6 right-6 -rotate-12">
-            <div className="border-4 border-green-500 rounded-xl px-3 py-1">
-              <span className="text-green-600 font-black text-lg tracking-widest">LUNAS</span>
+            <div className="border-4 border-black rounded-xl px-3 py-1">
+              <span className="text-black font-black text-lg tracking-widest">LUNAS</span>
             </div>
           </div>
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 mb-6">
-            <CheckCircle2 className="h-8 w-8 text-green-600" />
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-zinc-100 mb-6 border border-zinc-200">
+            <CheckCircle2 className="h-8 w-8 text-black" />
           </div>
-          <h2 className="text-xl font-bold mb-1 text-green-800">Pembayaran Berhasil!</h2>
+          <h2 className="text-xl font-bold mb-1 text-black">Pembayaran Berhasil!</h2>
           <p className="text-sm text-muted-foreground mb-6">Terima kasih. Pesanan Anda sudah tercatat.</p>
-          <div className="bg-green-50/80 rounded-2xl p-5 mb-6 text-left border border-green-100">
+          <div className="bg-zinc-50 rounded-2xl p-5 mb-6 text-left border border-zinc-200">
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Total Bayar</span>
-                <span className="font-bold text-green-700 text-lg">Rp {data.price?.toLocaleString("id-ID") || 0}</span>
+                <span className="font-bold text-black text-lg">Rp {data.price?.toLocaleString("id-ID") || 0}</span>
               </div>
-              <div className="border-t border-green-200/60 pt-3 space-y-2">
+              <div className="border-t border-zinc-200 pt-3 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Barang</span>
                   <span className="font-medium text-right line-clamp-1 max-w-[180px]">{data.name}</span>
@@ -258,19 +258,19 @@ function TrackingScan() {
             </div>
           </div>
           <div className="text-xs text-muted-foreground mb-6 leading-relaxed px-2">
-            <ShieldCheck className="h-4 w-4 inline-block mr-1 -mt-0.5 text-green-600" />
+            <ShieldCheck className="h-4 w-4 inline-block mr-1 -mt-0.5 text-black" />
             Dana ditahan oleh Oziktag dan akan dicairkan ke penjual setelah barang sampai ke tangan Anda.
           </div>
           <div className="flex gap-2">
-            <button onClick={() => window.print()} className="flex items-center justify-center gap-2 w-full rounded-2xl border-2 border-green-500 py-4 font-bold text-green-600 hover:bg-green-50 transition-all hover:scale-[1.02] active:scale-[0.98]">
+            <button onClick={() => window.print()} className="flex items-center justify-center gap-2 w-full rounded-2xl border-2 border-black py-4 font-bold text-black hover:bg-zinc-100 transition-all hover:scale-[1.02] active:scale-[0.98]">
               <Download className="h-5 w-5" /> Download
             </button>
-            <button onClick={() => setShowInvoice(false)} className="block w-full rounded-2xl bg-gradient-to-r from-green-600 to-emerald-500 py-4 font-bold text-white shadow-lg shadow-green-500/30 hover:shadow-green-500/50 transition-all hover:scale-[1.02] active:scale-[0.98]">
+            <button onClick={() => setShowInvoice(false)} className="block w-full rounded-2xl bg-black py-4 font-bold text-white shadow-lg shadow-black/20 hover:shadow-black/40 transition-all hover:scale-[1.02] active:scale-[0.98]">
               Lanjut →
             </button>
           </div>
         </div>
-        <p className="text-center text-xs text-white/80 mt-8 font-medium">Invoice by Oziktag Escrow</p>
+        <p className="text-center text-xs text-white/70 mt-8 font-medium">Invoice by Oziktag Escrow</p>
       </div>
     );
   }
