@@ -1,9 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
 from app.database import db
 from app.dependencies import get_current_user, get_admin_user
 from typing import List
 from app.models.schemas import WalletWithdrawRequest, WithdrawRequestResponse, EscrowRequestSubmit, EscrowRequestResponse
 from pydantic import BaseModel
+from app.services.email_service import send_email, build_admin_withdrawal_notification_email
+from app.config import get_settings
 
 router = APIRouter(prefix="/api/wallet", tags=["Wallet"])
 
@@ -59,7 +61,7 @@ async def get_wallet_balance(current_user: dict = Depends(get_current_user)):
     }
 
 @router.post("/withdraw", response_model=WithdrawRequestResponse)
-async def request_withdraw(req: WalletWithdrawRequest, current_user: dict = Depends(get_current_user)):
+async def request_withdraw(req: WalletWithdrawRequest, background_tasks: BackgroundTasks, current_user: dict = Depends(get_current_user)):
     user = await db.user.find_unique(where={"id": current_user["id"]})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -86,6 +88,21 @@ async def request_withdraw(req: WalletWithdrawRequest, current_user: dict = Depe
             "status": "pending"
         }
     )
+    
+    # Send email notification to Admin
+    settings = get_settings()
+    if settings.admin_email:
+        admin_emails = [e.strip() for e in settings.admin_email.split(",") if e.strip()]
+        if admin_emails:
+            bank_details = f"{req.bank_name} - {req.bank_account} a.n {req.account_name}"
+            subject, html_body = build_admin_withdrawal_notification_email(
+                seller_name=user.nama, 
+                amount=req.amount, 
+                bank_details=bank_details
+            )
+            # Send to the primary admin email (or all if we iterate)
+            for email in admin_emails:
+                background_tasks.add_task(send_email, email, subject, html_body)
     
     return {
         "id": withdraw.id,

@@ -192,3 +192,24 @@ def build_escrow_released_email(user_name: str, product_name: str) -> tuple[str,
     
     return subject, _get_base_template("Pencairan Berhasil", content)
 
+
+def build_admin_withdrawal_notification_email(seller_name: str, amount: int, bank_details: str) -> tuple[str, str]:
+    subject = f"Permintaan Pencairan Dana Escrow - {seller_name}"
+    idr = f"Rp {amount:,}".replace(",", ".")
+    
+    content = f"""
+    <h1 style="margin: 0 0 24px 0; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">Permintaan Pencairan Dana</h1>
+    <p style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.6; color: #333333;">Halo Admin,</p>
+    <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6; color: #333333;">Terdapat permintaan pencairan dana escrow baru dari penjual <strong>{seller_name}</strong>.</p>
+    
+    <div style="background-color: #f9f9f9; border: 1px solid #e5e5e5; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+      <ul style="margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.6; color: #333333;">
+        <li style="margin-bottom: 8px;"><strong>Jumlah:</strong> {idr}</li>
+        <li style="margin-bottom: 0;"><strong>Tujuan:</strong> {bank_details}</li>
+      </ul>
+    </div>
+    
+    <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #666666;">Silakan segera memproses pencairan ini melalui Dashboard Admin Oziktag.</p>
+    """
+    
+    return subject, _get_base_template("Permintaan Pencairan", content)
