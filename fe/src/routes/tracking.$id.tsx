@@ -172,47 +172,47 @@ function TrackingScan() {
     return (
       <div className="min-h-screen bg-zinc-50 text-foreground flex flex-col items-center justify-center p-4 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-72 bg-black rounded-b-[50px] -z-10" />
-        <div id="invoice-card" className="w-full max-w-sm rounded-3xl bg-white shadow-2xl p-8 relative text-center border border-zinc-200">
+        <div id="invoice-card" className="w-full max-w-sm rounded-3xl bg-[#ffffff] shadow-2xl p-8 relative text-center border border-[#e4e4e7]">
           <div className="absolute top-6 right-6 -rotate-12">
-            <div className="border-4 border-black rounded-xl px-3 py-1">
-              <span className="text-black font-black text-lg tracking-widest">LUNAS</span>
+            <div className="border-4 border-[#000000] rounded-xl px-3 py-1">
+              <span className="text-[#000000] font-black text-lg tracking-widest">LUNAS</span>
             </div>
           </div>
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-zinc-100 mb-6 border border-zinc-200">
-            <CheckCircle2 className="h-8 w-8 text-black" />
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#f4f4f5] mb-6 border border-[#e4e4e7]">
+            <CheckCircle2 className="h-8 w-8 text-[#000000]" />
           </div>
-          <h2 className="text-xl font-bold mb-1 text-black">Pembayaran Berhasil!</h2>
-          <p className="text-sm text-muted-foreground mb-6">Terima kasih. Pesanan Anda sudah tercatat.</p>
-          <div className="bg-zinc-50 rounded-2xl p-5 mb-6 text-left border border-zinc-200">
+          <h2 className="text-xl font-bold mb-1 text-[#000000]">Pembayaran Berhasil!</h2>
+          <p className="text-sm text-[#71717a] mb-6">Terima kasih. Pesanan Anda sudah tercatat.</p>
+          <div className="bg-[#fafafa] rounded-2xl p-5 mb-6 text-left border border-[#e4e4e7]">
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Total Bayar</span>
-                <span className="font-bold text-black text-lg">Rp {data.price?.toLocaleString("id-ID") || 0}</span>
+                <span className="text-[#71717a]">Total Bayar</span>
+                <span className="font-bold text-[#000000] text-lg">Rp {data.price?.toLocaleString("id-ID") || 0}</span>
               </div>
-              <div className="border-t border-zinc-200 pt-3 space-y-2">
+              <div className="border-t border-[#e4e4e7] pt-3 space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Barang</span>
-                  <span className="font-medium text-right line-clamp-1 max-w-[180px]">{data.name}</span>
+                  <span className="text-[#71717a]">Barang</span>
+                  <span className="font-medium text-[#000000] text-right line-clamp-1 max-w-[180px]">{data.name}</span>
                 </div>
                 {data.brand && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Toko</span>
-                    <span className="font-medium">{data.brand}</span>
+                    <span className="text-[#71717a]">Toko</span>
+                    <span className="font-medium text-[#000000]">{data.brand}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Tanggal</span>
-                  <span className="font-medium">{now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}</span>
+                  <span className="text-[#71717a]">Tanggal</span>
+                  <span className="font-medium text-[#000000]">{now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Metode</span>
-                  <span className="font-medium">Escrow Oziktag</span>
+                  <span className="text-[#71717a]">Metode</span>
+                  <span className="font-medium text-[#000000]">Escrow Oziktag</span>
                 </div>
               </div>
             </div>
           </div>
-          <div className="text-xs text-muted-foreground mb-6 leading-relaxed px-2" data-html2canvas-ignore>
-            <ShieldCheck className="h-4 w-4 inline-block mr-1 -mt-0.5 text-black" />
+          <div className="text-xs text-[#71717a] mb-6 leading-relaxed px-2" data-html2canvas-ignore>
+            <ShieldCheck className="h-4 w-4 inline-block mr-1 -mt-0.5 text-[#000000]" />
             Dana ditahan oleh Oziktag dan akan dicairkan ke penjual setelah barang sampai ke tangan Anda.
           </div>
           <div className="flex gap-2" data-html2canvas-ignore>
@@ -241,7 +241,7 @@ function TrackingScan() {
                   btn.disabled = false;
                 }
               }} 
-              className="flex items-center justify-center gap-2 w-full rounded-2xl bg-black py-4 font-bold text-white shadow-lg shadow-black/20 hover:shadow-black/40 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              className="flex items-center justify-center gap-2 w-full rounded-2xl bg-[#000000] py-4 font-bold text-[#ffffff] shadow-lg shadow-black/20 hover:shadow-black/40 transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
               <Download className="h-5 w-5" /> Download PDF
             </button>
