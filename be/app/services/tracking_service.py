@@ -232,6 +232,12 @@ async def get_tracking_data(product_id: str, role: str, pin: str | None = None) 
             "brand": None,
             "history": history,
             "created_at": product.createdAt.isoformat(),
+            
+            # Escrow fields (needed by frontend to switch to Checkout Mode)
+            "is_escrow": product.isEscrow,
+            "price": product.price,
+            "payment_url": product.paymentUrl,
+            "youtube_url": None,
         }
 
     # buyer or seller — full data

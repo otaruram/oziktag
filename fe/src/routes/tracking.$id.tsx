@@ -261,9 +261,14 @@ function TrackingScan() {
             <ShieldCheck className="h-4 w-4 inline-block mr-1 -mt-0.5 text-green-600" />
             Dana ditahan oleh Oziktag dan akan dicairkan ke penjual setelah barang sampai ke tangan Anda.
           </div>
-          <button onClick={() => setShowInvoice(false)} className="block w-full rounded-2xl bg-gradient-to-r from-green-600 to-emerald-500 py-4 font-bold text-white shadow-lg shadow-green-500/30 hover:shadow-green-500/50 transition-all hover:scale-[1.02] active:scale-[0.98]">
-            Lihat Status Pengiriman →
-          </button>
+          <div className="flex gap-2">
+            <button onClick={() => window.print()} className="flex items-center justify-center gap-2 w-full rounded-2xl border-2 border-green-500 py-4 font-bold text-green-600 hover:bg-green-50 transition-all hover:scale-[1.02] active:scale-[0.98]">
+              <Download className="h-5 w-5" /> Download
+            </button>
+            <button onClick={() => setShowInvoice(false)} className="block w-full rounded-2xl bg-gradient-to-r from-green-600 to-emerald-500 py-4 font-bold text-white shadow-lg shadow-green-500/30 hover:shadow-green-500/50 transition-all hover:scale-[1.02] active:scale-[0.98]">
+              Lanjut →
+            </button>
+          </div>
         </div>
         <p className="text-center text-xs text-white/80 mt-8 font-medium">Invoice by Oziktag Escrow</p>
       </div>
