@@ -150,17 +150,26 @@ export function TrackingProductModal({ product, qrDataUrl, paymentQrDataUrl, onC
             </div>
           </div>
           
-          <div className="flex items-center justify-center gap-2 text-sm bg-muted p-3 rounded-lg">
-            <span className="text-muted-foreground truncate flex-1 text-left text-xs">
-              {`${window.location.origin}/tracking/${product.id}`}
+          <div className="flex items-center justify-center gap-2 text-sm bg-muted p-3 rounded-lg flex-col">
+            <span className="text-muted-foreground font-medium text-[10px] uppercase tracking-wider self-start mb-1">
+              {activeTab === "payment" && paymentQrDataUrl ? "Link Pembayaran" : "Link Tracking"}
             </span>
-            <button
-              onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/tracking/${product.id}`); toast.success("URL disalin!"); }}
-              className="text-primary hover:opacity-80 flex-shrink-0"
-              title="Salin URL"
-            >
-              <Copy className="h-4 w-4" />
-            </button>
+            <div className="flex w-full items-center gap-2">
+              <span className="text-muted-foreground truncate flex-1 text-left text-xs">
+                {activeTab === "payment" && paymentQrDataUrl ? product.payment_url : scanUrl}
+              </span>
+              <button
+                onClick={() => { 
+                  const textToCopy = activeTab === "payment" && paymentQrDataUrl ? product.payment_url : scanUrl;
+                  navigator.clipboard.writeText(textToCopy); 
+                  toast.success("URL disalin!"); 
+                }}
+                className="text-primary hover:opacity-80 flex-shrink-0"
+                title="Salin URL"
+              >
+                <Copy className="h-4 w-4" />
+              </button>
+            </div>
           </div>
 
           <div className="pt-2">

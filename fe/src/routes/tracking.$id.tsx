@@ -172,7 +172,7 @@ function TrackingScan() {
     return (
       <div className="min-h-screen bg-zinc-50 text-foreground flex flex-col items-center justify-center p-4 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-72 bg-black rounded-b-[50px] -z-10" />
-        <div className="w-full max-w-sm rounded-3xl bg-white shadow-2xl p-8 relative text-center border border-zinc-200">
+        <div id="invoice-card" className="w-full max-w-sm rounded-3xl bg-white shadow-2xl p-8 relative text-center border border-zinc-200">
           <div className="absolute top-6 right-6 -rotate-12">
             <div className="border-4 border-black rounded-xl px-3 py-1">
               <span className="text-black font-black text-lg tracking-widest">LUNAS</span>
@@ -211,16 +211,39 @@ function TrackingScan() {
               </div>
             </div>
           </div>
-          <div className="text-xs text-muted-foreground mb-6 leading-relaxed px-2">
+          <div className="text-xs text-muted-foreground mb-6 leading-relaxed px-2" data-html2canvas-ignore>
             <ShieldCheck className="h-4 w-4 inline-block mr-1 -mt-0.5 text-black" />
             Dana ditahan oleh Oziktag dan akan dicairkan ke penjual setelah barang sampai ke tangan Anda.
           </div>
-          <div className="flex gap-2">
-            <button onClick={() => window.print()} className="flex items-center justify-center gap-2 w-full rounded-2xl border-2 border-black py-4 font-bold text-black hover:bg-zinc-100 transition-all hover:scale-[1.02] active:scale-[0.98]">
-              <Download className="h-5 w-5" /> Download
-            </button>
-            <button onClick={() => setShowInvoice(false)} className="block w-full rounded-2xl bg-black py-4 font-bold text-white shadow-lg shadow-black/20 hover:shadow-black/40 transition-all hover:scale-[1.02] active:scale-[0.98]">
-              Lanjut →
+          <div className="flex gap-2" data-html2canvas-ignore>
+            <button 
+              onClick={async (e) => {
+                const btn = e.currentTarget;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = "Memproses PDF...";
+                btn.disabled = true;
+                try {
+                  const html2canvas = (await import("html2canvas")).default;
+                  const { jsPDF } = await import("jspdf");
+                  const element = document.getElementById("invoice-card");
+                  if (!element) return;
+                  const canvas = await html2canvas(element, { scale: 2, useCORS: true });
+                  const imgData = canvas.toDataURL("image/png");
+                  const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+                  const pdfWidth = pdf.internal.pageSize.getWidth();
+                  const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                  pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+                  pdf.save(`Invoice-Oziktag-${data.id}.pdf`);
+                } catch (err) {
+                  console.error(err);
+                } finally {
+                  btn.innerHTML = originalText;
+                  btn.disabled = false;
+                }
+              }} 
+              className="flex items-center justify-center gap-2 w-full rounded-2xl bg-black py-4 font-bold text-white shadow-lg shadow-black/20 hover:shadow-black/40 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <Download className="h-5 w-5" /> Download PDF
             </button>
           </div>
         </div>
