@@ -80,26 +80,22 @@ async def create_topup(
     )
 
 
-@router.post("/webhook-internal")
+@router.post("/webhook")
 async def payment_webhook(request: Request):
     """
-    Internal webhook received from our Node.js microservice.
-    Node.js has already verified the SumoPod token.
-    Now secured with a secret key.
+    Public webhook receiver for SumoPod.
     """
-    secret = request.headers.get("X-Internal-Secret")
+    payload = await request.json()
+    
+    # Check optional Webhook Token from SumoPod if configured
     from app.config import get_settings
     settings = get_settings()
-    
-    if not settings.internal_webhook_secret or len(settings.internal_webhook_secret) < 10:
-        print("[Webhook] INTERNAL_WEBHOOK_SECRET is missing or too weak. Rejecting request for safety.")
-        raise HTTPException(status_code=500, detail="Server Configuration Error")
-
-    if not secret or secret != settings.internal_webhook_secret:
-        raise HTTPException(status_code=403, detail="Forbidden: Invalid Secret")
+    sumopod_token = getattr(settings, "sumopod_webhook_token", None)
+    if sumopod_token:
+        received_token = request.headers.get("X-Webhook-Token")
+        if received_token != sumopod_token:
+            raise HTTPException(status_code=403, detail="Invalid Webhook Token")
         
-    payload = await request.json()
-
     event = payload.get("event_type")
     data = payload.get("data", {})
     order_id = data.get("order_id")
