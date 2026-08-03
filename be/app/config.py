@@ -19,6 +19,7 @@ class Settings(BaseSettings):
 
     # SumoPod Payment API
     sumopod_api_key: str = ""
+    sumopod_webhook_token: str = ""
     internal_webhook_secret: str = "ozk_secret_webhook_123"
 
     # SMTP Email
