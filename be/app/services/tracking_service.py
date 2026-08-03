@@ -21,6 +21,7 @@ async def create_tracking_product(
     net_amount: int = 0,
     sumopod_ref: str | None = None,
     payment_url: str | None = None,
+    youtube_url: str | None = None,
 ) -> dict:
     """Create a new tracking product with AI summary."""
     import random
@@ -53,6 +54,7 @@ async def create_tracking_product(
             "netAmount": net_amount,
             "sumopodRef": sumopod_ref,
             "paymentUrl": payment_url,
+            "youtubeUrl": youtube_url,
         }
     )
 
@@ -250,6 +252,7 @@ async def get_tracking_data(product_id: str, role: str, pin: str | None = None) 
         "price": product.price,
         "escrow_fee": product.escrowFee,
         "payment_url": product.paymentUrl,
+        "youtube_url": product.youtubeUrl,
     }
 
 
@@ -270,6 +273,10 @@ async def get_seller_products(user_id: str, limit: int = 10, offset: int = 0) ->
             "current_status": p.currentStatus,
             "image_url": p.imageUrl,
             "buyer_pin": p.buyerPin,
+            "is_escrow": p.isEscrow,
+            "price": p.price,
+            "escrow_status": p.escrowStatus,
+            "payment_url": p.paymentUrl,
             "last_update": p.history[0].statusUpdate if p.history else "Baru dibuat",
             "created_at": p.createdAt.isoformat(),
         }
@@ -314,3 +321,50 @@ async def get_all_tracking_admin(limit: int = 20, offset: int = 0) -> list[dict]
         }
         for p in products
     ]
+
+
+async def auto_release_escrow():
+    """Auto-release escrow funds 48 hours after delivery."""
+    from datetime import datetime, timezone, timedelta
+    
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=48)
+    
+    products = await db.trackingproduct.find_many(
+        where={
+            "isEscrow": True,
+            "currentStatus": "DELIVERED",
+            "escrowStatus": "HELD",
+            "deliveredAt": {"lt": cutoff},
+        }
+    )
+    
+    released_count = 0
+    for product in products:
+        try:
+            async with db.tx() as tx:
+                await tx.trackingproduct.update(
+                    where={"id": product.id},
+                    data={
+                        "escrowStatus": "RELEASED",
+                        "payoutReleasedAt": datetime.now(timezone.utc),
+                    }
+                )
+                await tx.user.update(
+                    where={"id": product.userId},
+                    data={"escrowBalance": {"increment": product.netAmount}}
+                )
+                await tx.trackinghistory.create(
+                    data={
+                        "productId": product.id,
+                        "statusUpdate": f"Dana escrow Rp {product.netAmount:,} otomatis dicairkan setelah 2x24 jam.",
+                        "scannedByRole": "system",
+                    }
+                )
+            released_count += 1
+            print(f"[Auto-Release] Released escrow for product {product.id}, amount: {product.netAmount}")
+        except Exception as e:
+            print(f"[Auto-Release] Failed for product {product.id}: {e}")
+    
+    if released_count > 0:
+        print(f"[Auto-Release] Total released: {released_count} products")
+    return released_count

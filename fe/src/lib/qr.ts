@@ -75,7 +75,8 @@ export async function generateQrWithLogo(url: string, size = 512): Promise<strin
 export async function generateHDTrackingLabel(
   url: string,
   productName: string,
-  id: string
+  id: string,
+  badgeText: string = "Verified by Oziktag"
 ): Promise<string> {
   const qrSize = 1024; // High definition QR
   const qrDataUrl = await generateQrWithLogo(url, qrSize);
@@ -131,11 +132,11 @@ export async function generateHDTrackingLabel(
       }
       ctx.fillText(line, width / 2, y);
 
-      // Draw "Verified by Oziktag"
+      // Draw Badge Text
       y += 120;
-      ctx.fillStyle = "#64748b";
-      ctx.font = "500 42px sans-serif";
-      ctx.fillText("Verified by Oziktag", width / 2, y);
+      ctx.fillStyle = badgeText.includes("PEMBAYARAN") ? "#ea580c" : "#64748b";
+      ctx.font = badgeText.includes("PEMBAYARAN") ? "bold 42px sans-serif" : "500 42px sans-serif";
+      ctx.fillText(badgeText, width / 2, y);
 
       // Draw URL
       y += 60;

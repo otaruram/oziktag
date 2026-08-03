@@ -237,6 +237,7 @@ model TrackingProduct {
   netAmount      Int      @default(0) @map("net_amount")
   sumopodRef     String?  @map("sumopod_ref")
   paymentUrl     String?  @map("payment_url")
+  youtubeUrl     String?  @map("youtube_url")
   
   escrowStatus   String   @default("HELD") @map("escrow_status")
   deliveredAt    DateTime? @map("delivered_at")

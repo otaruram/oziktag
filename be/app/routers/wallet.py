@@ -8,14 +8,55 @@ from pydantic import BaseModel
 router = APIRouter(prefix="/api/wallet", tags=["Wallet"])
 
 class WalletBalanceResponse(BaseModel):
-    escrow_balance: int
+    balance: int
+    withdraws: list
+    escrow_transactions: list
 
 @router.get("/balance", response_model=WalletBalanceResponse)
 async def get_wallet_balance(current_user: dict = Depends(get_current_user)):
     user = await db.user.find_unique(where={"id": current_user["id"]})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return {"escrow_balance": user.escrowBalance}
+        
+    withdraws = await db.withdrawrequest.find_many(
+        where={"userId": user.id},
+        order={"createdAt": "desc"}
+    )
+    
+    # Get all escrow transactions (tracking products that are escrow)
+    escrow_transactions = await db.trackingproduct.find_many(
+        where={"userId": user.id, "isEscrow": True},
+        order={"createdAt": "desc"}
+    )
+    
+    return {
+        "balance": user.escrowBalance,
+        "withdraws": [
+            {
+                "id": w.id,
+                "amount": w.amount,
+                "bankCode": w.bankName,
+                "accountNumber": w.bankAccount,
+                "accountName": w.accountName,
+                "status": w.status,
+                "createdAt": w.createdAt.isoformat(),
+            } for w in withdraws
+        ],
+        "escrow_transactions": [
+            {
+                "id": t.id,
+                "name": t.name,
+                "price": t.price,
+                "netAmount": t.netAmount,
+                "escrowFee": t.escrowFee,
+                "escrowStatus": t.escrowStatus,
+                "currentStatus": t.currentStatus,
+                "createdAt": t.createdAt.isoformat(),
+                "deliveredAt": t.deliveredAt.isoformat() if t.deliveredAt else None,
+                "payoutReleasedAt": t.payoutReleasedAt.isoformat() if t.payoutReleasedAt else None,
+            } for t in escrow_transactions
+        ]
+    }
 
 @router.post("/withdraw", response_model=WithdrawRequestResponse)
 async def request_withdraw(req: WalletWithdrawRequest, current_user: dict = Depends(get_current_user)):

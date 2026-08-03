@@ -37,6 +37,7 @@ async def init_tracking(
     image: UploadFile = File(...),
     is_escrow: bool = Form(False),
     price: int = Form(0),
+    youtube_url: str = Form(""),
     current_user: dict = Depends(get_kyc_user),
 ):
     """
@@ -118,6 +119,7 @@ async def init_tracking(
             net_amount=net_amount,
             sumopod_ref=sumopod_ref,
             payment_url=None,
+            youtube_url=youtube_url.strip() if youtube_url else None,
         )
     except Exception as e:
         await refund_qr_credit(current_user["id"], is_admin, credits, "Refund Gagal Generate Tracking")
@@ -139,7 +141,7 @@ async def init_tracking(
                 customer_name="Oziktag Buyer",
                 customer_email="buyer@oziktag.com",
                 reference=sumopod_ref,
-                return_url=tracking_url
+                return_url=f"{tracking_url}?paid=1"
             )
             payment_url = res.get("payment_link_url", res.get("payment_url"))
             if not payment_url and "payment" in res:

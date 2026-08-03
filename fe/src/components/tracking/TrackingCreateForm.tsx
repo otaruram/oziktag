@@ -37,7 +37,8 @@ export function TrackingCreateForm({ onSuccess, onCancel }: TrackingCreateFormPr
   const [submitting, setSubmitting] = useState(false);
   
   const [isEscrow, setIsEscrow] = useState(false);
-  const [price, setPrice] = useState<number | "">("");
+  const [price, setPrice] = useState<number | "">("")
+  const [youtubeUrl, setYoutubeUrl] = useState("");;
 
   const { data: user } = useQuery({
     queryKey: ['auth-me'],
@@ -88,6 +89,9 @@ export function TrackingCreateForm({ onSuccess, onCancel }: TrackingCreateFormPr
         formData.append("is_escrow", "true");
         formData.append("price", price.toString());
       }
+      if (youtubeUrl.trim()) {
+        formData.append("youtube_url", youtubeUrl.trim());
+      }
 
       const res = await apiFetch("/tracking/init", {
         method: "POST",
@@ -95,13 +99,24 @@ export function TrackingCreateForm({ onSuccess, onCancel }: TrackingCreateFormPr
       });
 
       const trackingUrl = `${window.location.origin}/tracking/${res.product_id}`;
-      const qrDataUrl = await generateHDTrackingLabel(trackingUrl, name.trim(), res.product_id);
+      
+      let qrDataUrl = "";
+      let qrDataUrlPayment = "";
+      
+      if (isEscrow && price) {
+        qrDataUrl = await generateHDTrackingLabel(trackingUrl, name.trim(), res.product_id, "TRACKING - Tempel di Paket");
+        qrDataUrlPayment = await generateHDTrackingLabel(trackingUrl, name.trim(), res.product_id, "PEMBAYARAN ESCROW");
+      } else {
+        qrDataUrl = await generateHDTrackingLabel(trackingUrl, name.trim(), res.product_id);
+      }
 
       onSuccess({
         url: trackingUrl,
         qrDataUrl,
+        qrDataUrlPayment,
         summary: res.ai_summary || "",
         buyerPin: res.buyer_pin || "000000",
+        isEscrow: isEscrow && !!price,
       });
     } catch (err: any) {
       toast.error(err.message || "Gagal membuat tracking");
@@ -190,6 +205,23 @@ export function TrackingCreateForm({ onSuccess, onCancel }: TrackingCreateFormPr
             </label>
           ))}
         </div>
+        {/* Show custom checks that were added */}
+        {checklist.filter(c => !DEFAULT_CHECKS.includes(c)).length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-3">
+            {checklist.filter(c => !DEFAULT_CHECKS.includes(c)).map((item) => (
+              <span key={item} className="inline-flex items-center gap-1.5 rounded-full bg-green-100 text-green-800 px-3 py-1 text-xs font-medium">
+                ✓ {item}
+                <button
+                  type="button"
+                  onClick={() => setChecklist(prev => prev.filter(c => c !== item))}
+                  className="text-green-600 hover:text-red-500 font-bold ml-0.5"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
         <div className="flex gap-2 mt-2">
           <input
             value={customCheck}
@@ -229,7 +261,7 @@ export function TrackingCreateForm({ onSuccess, onCancel }: TrackingCreateFormPr
                 className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
                 placeholder="Contoh: 150000"
                 required={isEscrow}
-                min={10000}
+                min={1000}
                 max={10000000}
               />
               <p className="text-xs text-muted-foreground mt-1.5">
@@ -271,6 +303,17 @@ export function TrackingCreateForm({ onSuccess, onCancel }: TrackingCreateFormPr
           className="w-full rounded-md border border-border bg-input/40 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
           placeholder="Kondisi barang, tips penyimpanan, dll..."
         />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-1.5">Video YouTube <span className="text-muted-foreground font-normal">(Opsional)</span></label>
+        <input
+          value={youtubeUrl}
+          onChange={(e) => setYoutubeUrl(e.target.value)}
+          className="w-full rounded-md border border-border bg-input/40 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+          placeholder="https://youtube.com/watch?v=... atau https://youtu.be/..."
+        />
+        <p className="text-xs text-muted-foreground mt-1">Video produk akan tampil di halaman tracking pembeli.</p>
       </div>
 
       <div>

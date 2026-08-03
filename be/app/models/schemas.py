@@ -250,6 +250,7 @@ class TrackingDetailResponse(BaseModel):
     escrow_fee: int = 0
     net_amount: int = 0
     payment_url: Optional[str] = None
+    youtube_url: Optional[str] = None
     escrow_status: str = "HELD"
 
 

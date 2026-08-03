@@ -252,6 +252,83 @@ function WalletPage() {
                 </div>
               )}
             </div>
+
+            {/* Escrow Transactions / Notifications */}
+            <div className="mt-8 rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+              <div className="p-6 border-b border-border flex justify-between items-center">
+                <div>
+                  <h3 className="font-semibold text-lg">Notifikasi & Riwayat Escrow</h3>
+                  <p className="text-xs text-muted-foreground mt-1">Pantau status pencairan dana otomatis 2x24 jam setelah barang sampai.</p>
+                </div>
+              </div>
+              
+              {(!balanceData?.escrow_transactions || balanceData.escrow_transactions.length === 0) ? (
+                <div className="p-10 text-center text-muted-foreground text-sm">
+                  Belum ada transaksi escrow.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm text-left">
+                    <thead className="bg-muted/50 text-muted-foreground text-xs uppercase font-semibold">
+                      <tr>
+                        <th className="px-6 py-3">Barang & Tgl</th>
+                        <th className="px-6 py-3">Pendapatan Bersih</th>
+                        <th className="px-6 py-3">Status Pencairan</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {balanceData.escrow_transactions.map((t: any) => (
+                        <tr key={t.id} className="hover:bg-muted/30">
+                          <td className="px-6 py-4">
+                            <div className="font-medium text-foreground">{t.name}</div>
+                            <div className="text-xs text-muted-foreground mt-0.5">
+                              {new Date(t.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="font-medium text-green-600">Rp {t.netAmount?.toLocaleString("id-ID") || 0}</div>
+                            <div className="text-[10px] text-muted-foreground mt-0.5">Harga: Rp {t.price?.toLocaleString("id-ID") || 0} | Fee: Rp {t.escrowFee?.toLocaleString("id-ID") || 0}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            {t.escrowStatus === "RELEASED" ? (
+                              <div className="flex flex-col gap-1">
+                                <span className="inline-flex items-center gap-1 w-max rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-800">
+                                  <CheckCircle2 className="h-3 w-3"/> Dana Masuk Dompet
+                                </span>
+                                {t.payoutReleasedAt && (
+                                  <span className="text-[10px] text-muted-foreground">
+                                    Cair: {new Date(t.payoutReleasedAt).toLocaleDateString("id-ID", {day: "numeric", month: "short"})}
+                                  </span>
+                                )}
+                              </div>
+                            ) : t.escrowStatus === "HELD" ? (
+                              <div className="flex flex-col gap-1">
+                                <span className="inline-flex items-center gap-1 w-max rounded-full bg-blue-100 px-2.5 py-1 text-xs font-medium text-blue-800">
+                                  <Clock className="h-3 w-3"/> Ditahan (Escrow)
+                                </span>
+                                {t.currentStatus === "DELIVERED" && t.deliveredAt ? (
+                                  <span className="text-[10px] text-orange-600 font-medium">
+                                    Akan otomatis cair maks 2x24 jam sejak {new Date(t.deliveredAt).toLocaleDateString("id-ID", {day: "numeric", month: "short"})}
+                                  </span>
+                                ) : (
+                                  <span className="text-[10px] text-muted-foreground">
+                                    Menunggu pesanan sampai
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 w-max rounded-full bg-red-100 px-2.5 py-1 text-xs font-medium text-red-800">
+                                <AlertCircle className="h-3 w-3"/> Dibatalkan
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
