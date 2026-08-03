@@ -30,36 +30,37 @@ export function TrackingDeleteModal({ onConfirm, onCancel }: DeleteModalProps) {
 interface ProductModalProps {
   product: any;
   qrDataUrl: string | null;
+  paymentQrDataUrl?: string | null;
   onClose: () => void;
 }
 
-export function TrackingProductModal({ product, qrDataUrl, onClose }: ProductModalProps) {
+export function TrackingProductModal({ product, qrDataUrl, paymentQrDataUrl, onClose }: ProductModalProps) {
   const [pdfLoading, setPdfLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<"payment" | "tracking">("payment");
   const scanUrl = `${window.location.origin}/tracking/${product.id}`;
   const slug = product.name ? product.name.replace(/\s+/g, "-").toLowerCase() : "tracking";
 
+  const currentQr = paymentQrDataUrl && activeTab === "payment" ? paymentQrDataUrl : qrDataUrl;
+
   const downloadPng = () => {
-    if (!qrDataUrl) return;
+    if (!currentQr) return;
     const a = document.createElement("a");
-    a.href = qrDataUrl;
-    a.download = `qr-${slug}.png`;
+    a.href = currentQr;
+    a.download = `qr-${activeTab}-${slug}.png`;
     a.click();
     toast.success("QR Code diunduh sebagai PNG");
   };
 
   const downloadPdf = async () => {
-    if (!qrDataUrl) return;
+    if (!currentQr) return;
     setPdfLoading(true);
     try {
       const { jsPDF } = await import("jspdf");
-      // The HD label is 1200x1500, ratio is 1:1.25. 
-      // We will make the PDF 80x100mm.
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: [80, 100] });
       pdf.setFillColor(255, 255, 255);
       pdf.rect(0, 0, 80, 100, "F");
-      // The image takes the full card
-      pdf.addImage(qrDataUrl, "PNG", 0, 0, 80, 100);
-      pdf.save(`qr-${slug}.pdf`);
+      pdf.addImage(currentQr, "PNG", 0, 0, 80, 100);
+      pdf.save(`qr-${activeTab}-${slug}.pdf`);
       toast.success("QR Code diunduh sebagai PDF (HD)");
     } catch {
       toast.error("Gagal membuat PDF");
@@ -81,9 +82,36 @@ export function TrackingProductModal({ product, qrDataUrl, onClose }: ProductMod
         <h3 className="text-xl font-bold mb-6 text-center">{product.name}</h3>
         
         <div className="space-y-6 text-center">
-          {qrDataUrl ? (
+          {paymentQrDataUrl && (
+            <div className="flex bg-muted p-1 rounded-lg max-w-sm mx-auto mb-4">
+              <button
+                onClick={() => setActiveTab("payment")}
+                className={`flex-1 flex items-center justify-center py-2 text-sm font-medium rounded-md transition-colors ${activeTab === "payment" ? "bg-white shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                Link Pembayaran
+              </button>
+              <button
+                onClick={() => setActiveTab("tracking")}
+                className={`flex-1 flex items-center justify-center py-2 text-sm font-medium rounded-md transition-colors ${activeTab === "tracking" ? "bg-white shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                Label Kardus
+              </button>
+            </div>
+          )}
+
+          {currentQr ? (
             <div className="flex flex-col items-center">
-              <img src={qrDataUrl} alt="QR Code" className="mx-auto w-48 h-48 rounded-lg border border-border" />
+              {paymentQrDataUrl && activeTab === "payment" && (
+                <p className="text-xs text-muted-foreground mb-3 leading-relaxed max-w-xs">
+                  Kirimkan gambar/link ini ke pembeli. Pembeli akan melihat <strong>Halaman Tagihan</strong> saat membuka QR ini.
+                </p>
+              )}
+              {paymentQrDataUrl && activeTab === "tracking" && (
+                <p className="text-xs text-muted-foreground mb-3 leading-relaxed max-w-xs">
+                  Cetak QR ini dan tempel di paket. Pembeli akan butuh ini untuk konfirmasi penerimaan (memasukkan PIN).
+                </p>
+              )}
+              <img src={currentQr} alt="QR Code" className="mx-auto w-48 h-48 rounded-lg border border-border" />
               <div className="mt-4 flex gap-2 w-full justify-center">
                 <button
                   onClick={downloadPng}

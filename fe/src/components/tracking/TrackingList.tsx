@@ -13,7 +13,7 @@ interface TrackingListProps {
   onRefresh: () => void;
   onCreateNewClick: () => void;
   onDeleteRequest: (id: string) => void;
-  onProductClick: (product: any, qrDataUrl: string) => void;
+  onProductClick: (product: any, qrDataUrl: string, paymentQrDataUrl?: string | null) => void;
 }
 
 const STATUS_MAP: Record<string, { label: string; color: string; icon: any }> = {
@@ -65,7 +65,11 @@ export function TrackingList({
   const handleProductClick = async (p: any) => {
     const url = `${window.location.origin}/tracking/${p.id}`;
     const qr = await generateHDTrackingLabel(url, p.name, p.id);
-    onProductClick(p, qr);
+    let paymentQr = null;
+    if (p.is_escrow && p.payment_url) {
+      paymentQr = await generateHDTrackingLabel(p.payment_url, `PAYMENT-${p.name}`, p.id);
+    }
+    onProductClick(p, qr, paymentQr);
   };
 
   if (loading) {
