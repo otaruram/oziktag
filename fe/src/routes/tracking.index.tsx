@@ -25,6 +25,7 @@ function TrackingPage() {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
   const [selectedProductQr, setSelectedProductQr] = useState<string | null>(null);
+  const [selectedProductPaymentQr, setSelectedProductPaymentQr] = useState<string | null>(null);
 
   const resetForm = () => {
     setShowForm(false);
@@ -84,9 +85,10 @@ function TrackingPage() {
         onRefresh={refreshProducts}
         onCreateNewClick={() => setShowForm(true)}
         onDeleteRequest={setConfirmDelete}
-        onProductClick={(p, qr) => {
+        onProductClick={(p, qr, paymentQr) => {
           setSelectedProduct(p);
           setSelectedProductQr(qr);
+          setSelectedProductPaymentQr(paymentQr || null);
         }}
       />
 
@@ -94,9 +96,11 @@ function TrackingPage() {
         <TrackingProductModal 
           product={selectedProduct}
           qrDataUrl={selectedProductQr}
+          paymentQrDataUrl={selectedProductPaymentQr}
           onClose={() => {
             setSelectedProduct(null);
             setSelectedProductQr(null);
+            setSelectedProductPaymentQr(null);
           }}
         />
       )}
