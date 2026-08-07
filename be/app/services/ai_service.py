@@ -1,4 +1,4 @@
-"""Google Gemini AI analysis service for QC products."""
+"""Unified AI analysis service with model fallback."""
 
 import httpx
 import json
@@ -7,6 +7,71 @@ from app.config import get_settings
 from app.database import db
 
 
+# ──────────── Core AI Call Helper ────────────
+async def _call_ai(prompt: str, image_urls: list[str] | None = None) -> str:
+    """
+    Central function to call AI with automatic model fallback.
+    Primary: claude-haiku-4-5
+    Backup: gemini/gemini-3.1-flash-lite
+    Final fallback: settings.gemini_model (from .env)
+    """
+    settings = get_settings()
+    base_url = settings.gemini_base_url.rstrip("/")
+    url = f"{base_url}/v1/chat/completions"
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {settings.gemini_api_key}",
+    }
+
+    if image_urls:
+        content = [{"type": "text", "text": prompt}]
+        for img_url in image_urls:
+            content.append({"type": "image_url", "image_url": {"url": img_url}})
+    else:
+        content = prompt
+
+    models = [
+        "claude-haiku-4-5",
+        "gemini/gemini-3.1-flash-lite",
+        settings.gemini_model,
+    ]
+    # Deduplicate while preserving order
+    seen = set()
+    unique_models = []
+    for m in models:
+        if m not in seen:
+            seen.add(m)
+            unique_models.append(m)
+
+    last_err = None
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        for model in unique_models:
+            try:
+                payload = {
+                    "model": model,
+                    "messages": [{"role": "user", "content": content}],
+                    "max_tokens": 1024,
+                    "temperature": 0.7,
+                }
+                response = await client.post(url, headers=headers, json=payload)
+                response.raise_for_status()
+                data = response.json()
+                resp_text = data.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+                if resp_text:
+                    print(f"[AI Service] Success with model: {model}")
+                    return resp_text
+                else:
+                    print(f"[AI Service] Empty response from model: {model}")
+            except Exception as e:
+                last_err = e
+                print(f"[AI Service] Model '{model}' failed: {e}")
+                continue
+
+    raise Exception(f"All AI models failed. Last error: {last_err}")
+
+
+# ──────────── QC Analysis ────────────
 async def analyze_qc(
     checklist: list[str],
     catatan_penjual: str,
@@ -17,10 +82,9 @@ async def analyze_qc(
     image_urls: list[str] | None = None,
 ) -> dict:
     """
-    Call Gemini AI to analyze QC data and images.
+    Call AI to analyze QC data and images.
     Returns dict with 'ai_insight' and 'ai_solution'.
     """
-    settings = get_settings()
     image_urls = image_urls or []
 
     prompt = f"""Kamu adalah asisten Quality Control profesional untuk produk UMKM Indonesia.
@@ -79,42 +143,12 @@ Tambahkan saran bisnis singkat di dalam SOLUSI: apakah margin sehat, tips efisie
     except Exception as e:
         print(f"[AI Service] Cache error: {e}")
 
+    # 3. Call AI
     try:
-        base_url = settings.gemini_base_url.rstrip("/")
-        url = f"{base_url}/v1/chat/completions"
-
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {settings.gemini_api_key}",
-        }
-
-        if image_urls:
-            content = [{"type": "text", "text": prompt}]
-            for img_url in image_urls:
-                content.append({"type": "image_url", "image_url": {"url": img_url}})
-        else:
-            content = prompt
-
-        payload = {
-            "model": settings.gemini_model,
-            "messages": [
-                {"role": "user", "content": content}
-            ],
-            "max_tokens": 1024,
-            "temperature": 0.7,
-        }
-
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(url, headers=headers, json=payload)
-            response.raise_for_status()
-            data = response.json()
-
-        # Parse the response
-        resp_text = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-
+        resp_text = await _call_ai(prompt, image_urls if image_urls else None)
         result = _parse_ai_response(resp_text, nama_produk, kategori, catatan_penjual)
         
-        # 3. Save to Cache
+        # 4. Save to Cache
         try:
             await db.aicache.create(
                 data={
@@ -129,11 +163,11 @@ Tambahkan saran bisnis singkat di dalam SOLUSI: apakah margin sehat, tips efisie
         return result
 
     except Exception as e:
-        print(f"[AI Service] Error calling Gemini: {e}")
-        # Fallback response if AI fails
+        print(f"[AI Service] Error calling AI for QC: {e}")
         return _fallback_response(nama_produk, kategori, catatan_penjual, checklist, harga_produksi, harga_jual)
 
 
+# ──────────── Tracking Analysis ────────────
 async def analyze_tracking(
     name: str,
     checklist: list[str],
@@ -144,10 +178,7 @@ async def analyze_tracking(
     """
     Call AI to analyze Tracking data for risk mitigation and informative insights.
     Returns a single string summarizing the tracking status, condition, and tips.
-    Primary: claude-haiku-4-5, Fallback: gemini/gemini-3.1-flash-lite
     """
-    settings = get_settings()
-
     prompt = f"""Kamu adalah asisten Logistik & Quality Control profesional yang bertugas memitigasi risiko bagi pembeli.
 Analisis pengiriman paket ini dan berikan ringkasan yang informatif, padat, dan berguna.
 
@@ -176,53 +207,12 @@ Gunakan bahasa yang profesional, ramah, dan meyakinkan. Jangan gunakan format he
         if cached:
             print(f"[AI Service] Cache HIT for Tracking {input_hash}")
             return cached.insight
-    except Exception as e:
+    except Exception:
         pass
 
     try:
-        base_url = settings.gemini_base_url.rstrip("/")
-        url = f"{base_url}/v1/chat/completions"
-
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {settings.gemini_api_key}",
-        }
-
-        if image_url:
-            content = [
-                {"type": "text", "text": prompt},
-                {"type": "image_url", "image_url": {"url": image_url}}
-            ]
-        else:
-            content = prompt
-
-        # Primary Model
-        payload = {
-            "model": "claude-haiku-4-5",
-            "messages": [
-                {"role": "user", "content": content}
-            ],
-            "max_tokens": 1024,
-            "temperature": 0.7,
-        }
-
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            try:
-                response = await client.post(url, headers=headers, json=payload)
-                response.raise_for_status()
-                data = response.json()
-            except Exception as primary_err:
-                print(f"[AI Service] Primary model failed: {primary_err}. Retrying with backup...")
-                # Backup Model
-                payload["model"] = "gemini/gemini-3.1-flash-lite"
-                response = await client.post(url, headers=headers, json=payload)
-                response.raise_for_status()
-                data = response.json()
-
-        resp_text = data.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
-        
-        if not resp_text:
-            raise ValueError("Empty response from AI")
+        image_urls = [image_url] if image_url else None
+        resp_text = await _call_ai(prompt, image_urls)
 
         try:
             await db.aicache.create(
@@ -243,6 +233,7 @@ Gunakan bahasa yang profesional, ramah, dan meyakinkan. Jangan gunakan format he
         return f"Paket '{name}' telah disiapkan dengan baik dan melalui {len(checklist)} poin pengecekan kondisi{notes_str}. Untuk memitigasi risiko, kami sarankan Anda merekam video unboxing tanpa jeda saat paket tiba sebagai bukti jika terjadi ketidaksesuaian."
 
 
+# ──────────── Parsing & Fallbacks ────────────
 def _parse_ai_response(
     content: str,
     nama_produk: str,
