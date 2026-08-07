@@ -411,7 +411,21 @@ function TrackingScan() {
                     h2: ({node, ...props}) => <h4 className="font-semibold text-foreground mb-1 mt-3" {...props} />
                   }}
                 >
-                  {data.ai_summary.replace(/\\n/g, '\n')}
+                  {(() => {
+                    let text = data.ai_summary;
+                    // Normalize literal \n sequences to real newlines
+                    text = text.replace(/\\n/g, '\n');
+                    // Ensure double newline before markdown block elements (headings, list items, hr)
+                    text = text.replace(/([^\n])\n(#{1,3}\s)/g, '$1\n\n$2');
+                    text = text.replace(/([^\n])\n(-{3,})/g, '$1\n\n$2');
+                    text = text.replace(/([^\n])\n(- )/g, '$1\n\n$2');
+                    // Also handle cases where there's no newline at all before these markers
+                    text = text.replace(/([^\n])(#{1,3}\s)/g, '$1\n\n$2');
+                    text = text.replace(/([^\n])(-{3,})/g, '$1\n\n$2');
+                    text = text.replace(/([^\n])(- [✅⚠️❌🚚📦☕🌡️⏰🏠📋🔍💡📌🛡️📞🔒✉️📸🎥💰🔧📝🏷️📊🎯💬📢🔔💊🧴🧊🍳🧈])/g, '$1\n\n$2');
+                    text = text.replace(/([^\n])(- \*\*)/g, '$1\n\n$2');
+                    return text;
+                  })()}
                 </ReactMarkdown>
               </div>
             )}
