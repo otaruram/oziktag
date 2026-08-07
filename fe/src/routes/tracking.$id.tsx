@@ -397,7 +397,7 @@ function TrackingScan() {
               <span className="text-sm font-semibold text-primary flex items-center gap-2"><Sparkles className="h-4 w-4" /> Ringkasan Kualitas AI</span>
               {showAI ? <EyeOff className="h-4 w-4 text-primary" /> : <Eye className="h-4 w-4 text-primary" />}
             </button>
-            {showAI && <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{data.ai_summary}</p>}
+            {showAI && <div className="mt-3 text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{data.ai_summary}</div>}
           </div>
         )}
 
