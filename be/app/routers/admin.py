@@ -378,7 +378,8 @@ async def get_all_disputes(page: int = 1, admin: dict = Depends(get_admin_user))
         ]
     }
 
-class ResolveDisputeRequest(from_pydantic := BaseModel):
+from pydantic import BaseModel
+class ResolveDisputeRequest(BaseModel):
     action: str  # "RELEASE" or "REFUND"
 
 @router.post("/disputes/{ticket_id}/resolve")
