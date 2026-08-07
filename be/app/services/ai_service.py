@@ -189,12 +189,12 @@ Catatan Manual Penjual: {seller_notes or "Tidak ada catatan."}
 Link Video YouTube: {youtube_url or "Tidak dilampirkan."}
 
 === INSTRUKSI ===
-Buat 1 paragraf ringkasan (3-4 kalimat) yang berisi:
-1. Kondisi paket berdasarkan pengecekan (QC, catatan penjual, gambar, dan video YouTube jika ada).
-2. Mitigasi Risiko: Berikan panduan kepada pembeli jika terjadi ketidaksesuaian saat menerima barang (contoh: wajib video unboxing).
-3. Hal informatif/berguna lainnya terkait perawatan atau penggunaan produk yang sedang dikirim.
+Buat ringkasan menggunakan **bullet points** (poin-poin) agar sangat mudah dan cepat dibaca oleh pembeli. Isi poin-poinnya harus mencakup:
+- **Kondisi Paket**: Berdasarkan hasil QC, catatan penjual, dan lampiran yang ada.
+- **Perlindungan Pembeli**: Panduan mitigasi risiko jika terjadi ketidaksesuaian (contoh: anjuran wajib video unboxing dan klaim dalam 24 jam).
+- **Tips Ekstra**: Saran perawatan atau informasi berguna terkait produk tersebut.
 
-Gunakan bahasa yang profesional, ramah, dan meyakinkan. Jangan gunakan format heading atau list. Jadikan satu paragraf utuh yang mengalir.
+Gunakan bahasa yang profesional, ringkas, padat, dan meyakinkan. HANYA keluarkan poin-poinnya saja, tanpa basa-basi kalimat pembuka/penutup.
 """
 
     img_str = image_url or ""
