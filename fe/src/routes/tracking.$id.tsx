@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
 import { DisputeModal } from "@/components/tracking/DisputeModal";
 import TrackingMap from "@/components/tracking/TrackingMap";
+import ReactMarkdown from "react-markdown";
 
 export const Route = createFileRoute("/tracking/$id")({
   head: () => ({
@@ -397,7 +398,23 @@ function TrackingScan() {
               <span className="text-sm font-semibold text-primary flex items-center gap-2"><Sparkles className="h-4 w-4" /> Ringkasan Kualitas AI</span>
               {showAI ? <EyeOff className="h-4 w-4 text-primary" /> : <Eye className="h-4 w-4 text-primary" />}
             </button>
-            {showAI && <div className="mt-3 text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{data.ai_summary}</div>}
+            {showAI && (
+              <div className="mt-3 text-sm text-muted-foreground leading-relaxed">
+                <ReactMarkdown
+                  components={{
+                    p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
+                    ul: ({node, ...props}) => <ul className="list-disc pl-5 mb-2 space-y-1" {...props} />,
+                    ol: ({node, ...props}) => <ol className="list-decimal pl-5 mb-2 space-y-1" {...props} />,
+                    li: ({node, ...props}) => <li className="pl-1" {...props} />,
+                    strong: ({node, ...props}) => <strong className="font-semibold text-foreground" {...props} />,
+                    h1: ({node, ...props}) => <h3 className="font-bold text-foreground mb-2 mt-4 text-base" {...props} />,
+                    h2: ({node, ...props}) => <h4 className="font-semibold text-foreground mb-1 mt-3" {...props} />
+                  }}
+                >
+                  {data.ai_summary.replace(/\\n/g, '\n')}
+                </ReactMarkdown>
+              </div>
+            )}
           </div>
         )}
 
