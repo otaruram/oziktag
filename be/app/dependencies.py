@@ -6,17 +6,78 @@ from app.database import db, get_supabase_auth
 from app.config import get_settings
 
 
+async def _verify_supabase_token(token: str):
+    sb = get_supabase_auth()
+    user_response = sb.auth.get_user(token)
+    if not user_response or not user_response.user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+        )
+    return user_response.user
+
+async def _sync_user_db(user) -> dict:
+    user_id = str(user.id)
+    email = user.email or ""
+    name = user.user_metadata.get("full_name", "") if user.user_metadata else ""
+    admin_emails = ["okitr52@gmail.com", "adzikrim701@gmail.com"]
+    is_admin = email.lower() in admin_emails
+    
+    db_user = await db.user.find_unique(where={"id": user_id}, include={"kyc": True})
+    
+    if not db_user:
+        existing_email_user = await db.user.find_unique(where={"email": email})
+        if existing_email_user:
+            # Relink the account
+            update_data = {
+                "id": user_id,
+                "nama": name,
+                "lastSeenAt": datetime.now(timezone.utc),
+            }
+            if is_admin:
+                update_data["isAdmin"] = True
+                update_data["sisaKredit"] = 999999
+            db_user = await db.user.update(where={"email": email}, data=update_data)
+        else:
+            db_user = await db.user.create(
+                data={
+                    "id": user_id,
+                    "email": email,
+                    "nama": name,
+                    "sisaKredit": 999999 if is_admin else 4,
+                    "apiKredit": 999999 if is_admin else 4,
+                    "isAdmin": is_admin
+                }
+            )
+    else:
+        if db_user.isBanned:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Akun Anda telah diblokir. Hubungi admin.",
+            )
+        if db_user.kyc and db_user.kyc.status == "rejected":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Pendaftaran KYC Anda ditolak oleh Admin. Silakan hubungi dukungan pelanggan.",
+            )
+            
+        from datetime import timedelta
+        now = datetime.now(timezone.utc)
+        if not db_user.lastSeenAt or (now - db_user.lastSeenAt) > timedelta(minutes=5):
+            await db.user.update(where={"id": user_id}, data={"lastSeenAt": now})
+            
+    return db_user
+
 async def get_current_user(authorization: str = Header(...)):
     """
     Decode the Supabase JWT from the Authorization header.
     Uses Supabase client for token verification, Prisma for DB.
     """
     if authorization == "Bearer test":
-        # Check if dummy user exists
         dummy = await db.user.find_first()
         if not dummy:
             return {"id": "dummy_id", "email": "test@test.com", "name": "Test"}
-        return {"id": dummy.id, "email": dummy.email, "name": dummy.nama}
+        return {"id": dummy.id, "email": dummy.email, "name": dummy.nama, "_db_user": dummy}
 
     if not authorization.startswith("Bearer "):
         raise HTTPException(
@@ -25,82 +86,17 @@ async def get_current_user(authorization: str = Header(...)):
         )
 
     token = authorization.replace("Bearer ", "")
-    sb = get_supabase_auth()
 
     try:
-        user_response = sb.auth.get_user(token)
-        if not user_response or not user_response.user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid or expired token",
-            )
-
-        user = user_response.user
-        user_id = str(user.id)
-
-        email = user.email or ""
-        name = user.user_metadata.get("full_name", "") if user.user_metadata else ""
-
-        # Check if user exists (via Prisma)
-        db_user = await db.user.find_unique(where={"id": user_id}, include={"kyc": True})
-        if not db_user:
-            admin_emails = ["okitr52@gmail.com", "adzikrim701@gmail.com"]
-            is_admin = email.lower() in admin_emails
-            
-            # Check if user exists by email (happens if they deleted Supabase auth but not Prisma DB)
-            existing_email_user = await db.user.find_unique(where={"email": email})
-            
-            if existing_email_user:
-                # Relink the account
-                update_data = {
-                    "id": user_id,
-                    "nama": name,
-                    "lastSeenAt": datetime.now(timezone.utc),
-                }
-                if is_admin:
-                    update_data["isAdmin"] = True
-                    update_data["sisaKredit"] = 999999
-                db_user = await db.user.update(
-                    where={"email": email},
-                    data=update_data,
-                )
-            else:
-                db_user = await db.user.create(
-                    data={
-                        "id": user_id,
-                        "email": email,
-                        "nama": name,
-                        "sisaKredit": 999999 if is_admin else 4,
-                        "apiKredit": 999999 if is_admin else 4,
-                        "isAdmin": is_admin
-                    }
-                )
-        else:
-            if db_user.isBanned:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Akun Anda telah diblokir. Hubungi admin.",
-                )
-            if db_user.kyc and db_user.kyc.status == "rejected":
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Pendaftaran KYC Anda ditolak oleh Admin. Silakan hubungi dukungan pelanggan.",
-                )
-            # Only update lastSeenAt every 5 minutes to reduce DB writes
-            from datetime import timedelta
-            now = datetime.now(timezone.utc)
-            if not db_user.lastSeenAt or (now - db_user.lastSeenAt) > timedelta(minutes=5):
-                await db.user.update(
-                    where={"id": user_id},
-                    data={"lastSeenAt": now},
-                )
-
+        user = await _verify_supabase_token(token)
+        db_user = await _sync_user_db(user)
+        
         return {
-            "id": user_id,
+            "id": str(user.id),
             "email": user.email,
             "name": user.user_metadata.get("full_name", "") if user.user_metadata else "",
             "user_metadata": user.user_metadata or {},
-            "_db_user": db_user,  # cache to avoid redundant queries in downstream deps
+            "_db_user": db_user,  # cache to avoid redundant queries
         }
 
     except HTTPException:
@@ -110,7 +106,6 @@ async def get_current_user(authorization: str = Header(...)):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Authentication failed: {str(e)}",
         )
-
 
 async def get_admin_user(current_user: dict = Depends(get_current_user)):
     """Ensure the current user is an admin."""

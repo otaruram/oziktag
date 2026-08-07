@@ -14,7 +14,7 @@ from app.services.tracking_service import (
 )
 from app.services.escrow_service import verify_buyer_pin
 from pydantic import BaseModel
-from app.services.imagekit_service import upload_image
+from app.services.imagekit_service import upload_image, validate_and_read_images
 from app.services.credit_service import deduct_qr_credit, refund_qr_credit
 from app.models.schemas import (
     TrackingInitResponse,
@@ -74,17 +74,15 @@ async def init_tracking(
     # Upload image if provided
     image_url = None
     if image:
-        if image.content_type not in ["image/jpeg", "image/png", "image/webp"]:
-            await refund_qr_credit(current_user["id"], is_admin, credits, "Refund Gagal Upload (Format File)")
-            raise HTTPException(status_code=400, detail=f"File {image.filename} bukan format gambar yang diizinkan (JPG/PNG/WEBP).")
+        try:
+            image_files = await validate_and_read_images([image], max_size_mb=5)
+        except HTTPException as e:
+            await refund_qr_credit(current_user["id"], is_admin, credits, "Refund Gagal Validasi Format/Ukuran Gambar")
+            raise
             
         try:
-            content = await image.read()
-            if len(content) > 5 * 1024 * 1024:
-                await refund_qr_credit(current_user["id"], is_admin, credits, "Refund Gagal Upload (Ukuran Terlalu Besar)")
-                raise HTTPException(status_code=413, detail=f"Ukuran file {image.filename} terlalu besar (Maks 5MB)")
-                
-            image_url = await upload_image(content, image.filename or "tracking_img.jpg")
+            content, filename = image_files[0]
+            image_url = await upload_image(content, filename)
         except HTTPException:
             raise
         except Exception as e:

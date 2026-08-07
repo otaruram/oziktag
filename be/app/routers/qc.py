@@ -8,27 +8,14 @@ import json
 from app.database import db
 from prisma import Json
 from app.dependencies import get_current_user, get_kyc_user
-from app.services.imagekit_service import upload_multiple_images
+from app.services.imagekit_service import upload_multiple_images, validate_and_read_images
 from app.services.ai_service import analyze_qc
 from app.services.credit_service import deduct_qr_credit, refund_qr_credit
 from app.services.qc_service import process_qc_submission
 from app.models.schemas import QCSubmitResponse, QCProductListItem
 import time
 
-_upload_timestamps: dict[str, list[float]] = {}
-
-def check_rate_limit(user_id: str, max_requests: int = 10, window_seconds: int = 60):
-    now = time.time()
-    if user_id not in _upload_timestamps:
-        _upload_timestamps[user_id] = []
-    
-    # Remove old timestamps
-    _upload_timestamps[user_id] = [t for t in _upload_timestamps[user_id] if now - t < window_seconds]
-    
-    if len(_upload_timestamps[user_id]) >= max_requests:
-        raise HTTPException(status_code=429, detail="Terlalu banyak permintaan upload. Silakan tunggu beberapa saat.")
-        
-    _upload_timestamps[user_id].append(now)
+from app.utils.limiter import upload_rate_limiter
 
 
 router = APIRouter(prefix="/api/qc", tags=["Quality Control"])
@@ -44,22 +31,10 @@ async def upload_images_api(
     if len(images) > 5:
         raise HTTPException(status_code=400, detail="Maksimal 5 foto produk")
 
-    check_rate_limit(current_user["id"], max_requests=10, window_seconds=60)
+    upload_rate_limiter.check_rate_limit(current_user["id"], max_requests=10, window_seconds=60)
 
-    # Validate file type and size
-    for img in images:
-        if img.content_type not in ["image/jpeg", "image/png", "image/webp"]:
-            raise HTTPException(status_code=400, detail=f"File {img.filename} bukan format gambar yang diizinkan (JPG/PNG/WEBP).")
-        # Optional: check size if spooling (FastAPI handles large files by writing to disk)
-        # But we can read to check length.
-        
     try:
-        image_files = []
-        for img in images:
-            content = await img.read()
-            if len(content) > 5 * 1024 * 1024:
-                raise HTTPException(status_code=413, detail=f"Ukuran file {img.filename} terlalu besar (Maks 5MB)")
-            image_files.append((content, img.filename or "image.jpg"))
+        image_files = await validate_and_read_images(images, max_size_mb=5)
         image_urls = await upload_multiple_images(image_files)
         return {"urls": image_urls}
     except Exception as e:
@@ -96,11 +71,7 @@ async def submit_qc(
     if len(images) > 5:
         raise HTTPException(status_code=400, detail="Maksimal 5 foto produk")
 
-    check_rate_limit(user_id, max_requests=10, window_seconds=60)
-
-    for img in images:
-        if img.content_type not in ["image/jpeg", "image/png", "image/webp"]:
-            raise HTTPException(status_code=400, detail=f"File {img.filename} bukan format gambar yang diizinkan (JPG/PNG/WEBP).")
+    upload_rate_limiter.check_rate_limit(user_id, max_requests=10, window_seconds=60)
 
     # 2. Parse checklist
     try:
@@ -126,16 +97,15 @@ async def submit_qc(
 
     await deduct_qr_credit(user_id, is_admin, credits, f"Generate QC Label: {nama_produk[:20]}")
 
-    # 4. Upload images to ImageKit
+    # 4. Validate and Upload images to ImageKit
     try:
-        image_files = []
-        for img in images:
-            content = await img.read()
-            if len(content) > 5 * 1024 * 1024:
-                # Refund credit if upload fails due to size
-                await refund_qr_credit(user_id, is_admin, credits, "Refund Gagal Upload (Ukuran Terlalu Besar)")
-                raise HTTPException(status_code=413, detail=f"Ukuran file {img.filename} terlalu besar (Maks 5MB)")
-            image_files.append((content, img.filename or "image.jpg"))
+        image_files = await validate_and_read_images(images, max_size_mb=5)
+    except HTTPException:
+        # If validation fails, do not deduct credit (since it's already deducted, we must refund)
+        await refund_qr_credit(user_id, is_admin, credits, "Refund Gagal Validasi Gambar")
+        raise
+        
+    try:
         image_urls = await upload_multiple_images(image_files)
     except HTTPException:
         raise

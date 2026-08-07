@@ -72,22 +72,26 @@ async def request_withdraw(req: WalletWithdrawRequest, background_tasks: Backgro
     if req.amount > user.escrowBalance:
         raise HTTPException(status_code=400, detail="Saldo tidak mencukupi")
         
-    # Deduct balance immediately to prevent double spend
-    await db.user.update(
-        where={"id": user.id},
-        data={"escrowBalance": {"decrement": req.amount}}
-    )
-    
-    withdraw = await db.withdrawrequest.create(
-        data={
-            "userId": user.id,
-            "amount": req.amount,
-            "bankName": req.bank_name,
-            "bankAccount": req.bank_account,
-            "accountName": req.account_name,
-            "status": "pending"
-        }
-    )
+    # Transaction to ensure balance deduction and withdraw creation are atomic
+    try:
+        async with db.tx() as tx:
+            await tx.user.update(
+                where={"id": user.id},
+                data={"escrowBalance": {"decrement": req.amount}}
+            )
+            
+            withdraw = await tx.withdrawrequest.create(
+                data={
+                    "userId": user.id,
+                    "amount": req.amount,
+                    "bankName": req.bank_name,
+                    "bankAccount": req.bank_account,
+                    "accountName": req.account_name,
+                    "status": "pending"
+                }
+            )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Gagal memproses penarikan: {str(e)}")
     
     # Send email notification to Admin
     settings = get_settings()
@@ -188,6 +192,33 @@ async def admin_complete_withdraw(withdraw_id: str, admin_user: dict = Depends(g
     )
     return {"message": "Withdrawal marked as completed"}
 
+@router.post("/admin/withdraws/{withdraw_id}/reject")
+async def admin_reject_withdraw(withdraw_id: str, admin_user: dict = Depends(get_admin_user)):
+        
+    withdraw = await db.withdrawrequest.find_unique(where={"id": withdraw_id})
+    if not withdraw:
+        raise HTTPException(status_code=404, detail="Withdrawal not found")
+        
+    if withdraw.status != "pending":
+        raise HTTPException(status_code=400, detail="Status must be pending")
+        
+    # Transaction to refund the amount and update status to rejected
+    try:
+        async with db.tx() as tx:
+            await tx.withdrawrequest.update(
+                where={"id": withdraw_id},
+                data={"status": "rejected"}
+            )
+            # Refund escrow balance back to user
+            await tx.user.update(
+                where={"id": withdraw.userId},
+                data={"escrowBalance": {"increment": withdraw.amount}}
+            )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Gagal menolak penarikan: {str(e)}")
+        
+    return {"message": "Withdrawal rejected and balance refunded"}
+
 @router.post("/escrow-request", response_model=EscrowRequestResponse)
 async def submit_escrow_request(
     req: EscrowRequestSubmit, 
@@ -208,32 +239,24 @@ async def submit_escrow_request(
         elif existing.status == "approved":
             raise HTTPException(status_code=400, detail="Anda sudah disetujui")
             
-        # If rejected, allow update
-        req_record = await db.escrowrequest.update(
-            where={"userId": user_id},
-            data={
-                "namaBank": req.nama_bank,
-                "nomorRekening": req.nomor_rekening,
-                "namaPemilik": req.nama_pemilik,
-                "linkUmkm": req.link_umkm,
-                "catatanProduk": req.catatan_produk,
-                "tujuanEscrow": req.tujuan_escrow,
-                "status": "pending"
-            }
-        )
-    else:
-        req_record = await db.escrowrequest.create(
-            data={
-                "userId": user_id,
-                "namaBank": req.nama_bank,
-                "nomorRekening": req.nomor_rekening,
-                "namaPemilik": req.nama_pemilik,
-                "linkUmkm": req.link_umkm,
-                "catatanProduk": req.catatan_produk,
-                "tujuanEscrow": req.tujuan_escrow,
-                "status": "pending"
-            }
-        )
+    # Upsert Escrow Request
+    data_payload = {
+        "namaBank": req.nama_bank,
+        "nomorRekening": req.nomor_rekening,
+        "namaPemilik": req.nama_pemilik,
+        "linkUmkm": req.link_umkm,
+        "catatanProduk": req.catatan_produk,
+        "tujuanEscrow": req.tujuan_escrow,
+        "status": "pending"
+    }
+    
+    req_record = await db.escrowrequest.upsert(
+        where={"userId": user_id},
+        data={
+            "create": {**data_payload, "userId": user_id},
+            "update": data_payload
+        }
+    )
         
     return {
         "id": req_record.id,
