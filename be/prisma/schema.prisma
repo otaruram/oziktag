@@ -246,6 +246,7 @@ model TrackingProduct {
 
   user    User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   history TrackingHistory[]
+  disputeTicket DisputeTicket?
 
   @@map("tracking_products")
 }
@@ -297,4 +298,21 @@ model EscrowRequest {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("escrow_requests")
+}
+
+// ──────────────────────── Dispute Ticket ────────────────────────
+model DisputeTicket {
+  id                String   @id @default(uuid())
+  trackingProductId String   @unique @map("tracking_product_id")
+  buyerEmail        String   @map("buyer_email")
+  buyerPhone        String?  @map("buyer_phone")
+  reason            String   @db.Text
+  videoUrl          String?  @map("video_url")
+  status            String   @default("OPEN") // OPEN, RESOLVED_REFUND, RESOLVED_RELEASE, REJECTED
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  product TrackingProduct @relation(fields: [trackingProductId], references: [id], onDelete: Cascade)
+
+  @@map("dispute_tickets")
 }

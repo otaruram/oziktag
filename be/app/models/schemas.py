@@ -252,6 +252,7 @@ class TrackingDetailResponse(BaseModel):
     payment_url: Optional[str] = None
     youtube_url: Optional[str] = None
     escrow_status: str = "HELD"
+    delivered_at: Optional[str] = None
 
 
 # ──────────────────────── Wallet / Escrow ────────────────────────

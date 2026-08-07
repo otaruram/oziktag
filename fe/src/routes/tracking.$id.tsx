@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
+import { DisputeModal } from "@/components/tracking/DisputeModal";
 
 export const Route = createFileRoute("/tracking/$id")({
   head: () => ({
@@ -45,6 +46,7 @@ function TrackingScan() {
   const [confirming, setConfirming] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
   const [videoFullscreen, setVideoFullscreen] = useState(false);
+  const [showDisputeModal, setShowDisputeModal] = useState(false);
 
   // Check if user just came back from payment
   useEffect(() => {
@@ -461,8 +463,66 @@ function TrackingScan() {
               <CheckCircle2 className="h-5 w-5" />{confirming ? "Memproses..." : "Konfirmasi Produk Diterima"}
             </button>
           )}
+          
+          {/* Dispute Section */}
+          {role === "buyer" && data.current_status === "DELIVERED" && data.is_escrow && (
+            <div className="mt-6 pt-6 border-t border-border space-y-3">
+              {data.escrow_status === "HELD" && data.delivered_at && (
+                (() => {
+                  const deliveredDate = new Date(data.delivered_at);
+                  const expiryDate = new Date(deliveredDate.getTime() + 24 * 60 * 60 * 1000);
+                  const now = new Date();
+                  const diffHours = Math.max(0, (expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60));
+                  
+                  if (diffHours > 0) {
+                    return (
+                      <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-5">
+                        <h3 className="text-sm font-semibold text-red-600 mb-2 flex items-center gap-1.5">
+                          <AlertCircle className="h-4 w-4" /> Perlindungan Pembeli
+                        </h3>
+                        <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
+                          Dana Anda tertahan dengan aman di Oziktag Escrow selama 1x24 jam sejak diterima. 
+                          Tersisa <strong>{Math.floor(diffHours)} jam {Math.floor((diffHours % 1) * 60)} menit</strong>. 
+                          Jika pesanan tidak sesuai (misal isi batu), segera ajukan sengketa.
+                        </p>
+                        <button 
+                          onClick={() => setShowDisputeModal(true)} 
+                          className="w-full rounded-xl bg-red-500 py-3 text-sm font-bold text-white shadow-lg shadow-red-500/20 hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
+                        >
+                          Ajukan Sengketa
+                        </button>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()
+              )}
+              
+              {data.escrow_status === "DISPUTED" && (
+                <div className="rounded-2xl border border-red-500 bg-red-50 p-4 flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-bold text-red-700">Pesanan Dalam Sengketa</p>
+                    <p className="text-xs text-red-600/80 mt-1">Anda telah mengajukan sengketa untuk pesanan ini. Dana dibekukan sementara, mohon tunggu email dari Admin Oziktag.</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </main>
+
+      {/* Dispute Modal */}
+      {showDisputeModal && (
+        <DisputeModal
+          productId={id as string}
+          onClose={() => setShowDisputeModal(false)}
+          onSuccess={() => {
+            setShowDisputeModal(false);
+            loadData("buyer", pin);
+          }}
+        />
+      )}
     </div>
   );
 }

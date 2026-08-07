@@ -255,3 +255,75 @@ async def get_tracking(
 
     return TrackingDetailResponse(**data)
 
+
+class DisputeRequest(BaseModel):
+    buyer_email: str
+    buyer_phone: Optional[str] = None
+    reason: str
+    video_url: Optional[str] = None
+
+@router.post("/{product_id}/dispute")
+async def open_dispute(product_id: str, request: DisputeRequest):
+    """
+    Open a dispute for a delivered tracking product within 24h settlement window.
+    """
+    from datetime import datetime, timedelta, timezone
+    from app.services.email_service import send_email
+
+    product = await db.trackingproduct.find_unique(where={"id": product_id})
+    if not product:
+        raise HTTPException(status_code=404, detail="Tracking product tidak ditemukan")
+        
+    if product.currentStatus != "DELIVERED":
+        raise HTTPException(status_code=400, detail="Pesanan belum diterima, sengketa belum dapat diajukan.")
+        
+    if product.escrowStatus != "HELD":
+        raise HTTPException(status_code=400, detail="Sengketa tidak dapat diajukan untuk status ini.")
+        
+    if not product.deliveredAt:
+        raise HTTPException(status_code=400, detail="Waktu penerimaan tidak valid.")
+        
+    # Check if within 24 hours
+    now = datetime.now(timezone.utc)
+    if now > product.deliveredAt + timedelta(hours=24):
+        raise HTTPException(status_code=400, detail="Masa pengajuan sengketa (1x24 jam) telah habis.")
+
+    # Create ticket and update status
+    async with db.tx() as tx:
+        await tx.trackingproduct.update(
+            where={"id": product_id},
+            data={"escrowStatus": "DISPUTED"}
+        )
+        ticket = await tx.disputeticket.create(
+            data={
+                "trackingProductId": product_id,
+                "buyerEmail": request.buyer_email,
+                "buyerPhone": request.buyer_phone,
+                "reason": request.reason,
+                "videoUrl": request.video_url,
+                "status": "OPEN"
+            }
+        )
+
+    # Send email to admin
+    try:
+        html_content = f"""
+        <h2>Tiket Sengketa Baru #{ticket.id}</h2>
+        <p><strong>Tracking ID:</strong> {product_id}</p>
+        <p><strong>Email Pembeli:</strong> {request.buyer_email}</p>
+        <p><strong>Telepon:</strong> {request.buyer_phone}</p>
+        <p><strong>Alasan:</strong><br/>{request.reason}</p>
+        <p><strong>Bukti Video:</strong> <a href="{request.video_url}">Lihat Video</a></p>
+        <br/>
+        <p>Harap segera tinjau di Dashboard Admin Oziktag.</p>
+        """
+        await send_email(
+            to_email="admin@oziktag.my.id",
+            subject=f"🚨 Sengketa Baru: {product.name}",
+            body_html=html_content
+        )
+    except Exception as e:
+        print(f"[Dispute] Failed to send email to admin: {e}")
+
+    return {"message": "Sengketa berhasil diajukan. Dana ditahan sementara hingga masalah selesai."}
+

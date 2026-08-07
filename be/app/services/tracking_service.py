@@ -35,7 +35,8 @@ async def create_tracking_product(
         name=name,
         checklist=checklist,
         seller_notes=seller_notes,
-        image_url=image_url
+        image_url=image_url,
+        youtube_url=youtube_url
     )
 
     product = await db.trackingproduct.create(
@@ -259,9 +260,9 @@ async def get_tracking_data(product_id: str, role: str, pin: str | None = None) 
         "escrow_fee": product.escrowFee,
         "payment_url": product.paymentUrl,
         "youtube_url": product.youtubeUrl,
+        "escrow_status": product.escrowStatus,
+        "delivered_at": product.deliveredAt.isoformat() if product.deliveredAt else None,
     }
-
-
 async def get_seller_products(user_id: str, limit: int = 10, offset: int = 0) -> list[dict]:
     """Get all tracking products for a seller with pagination and filtering hidden."""
     products = await db.trackingproduct.find_many(
@@ -283,6 +284,7 @@ async def get_seller_products(user_id: str, limit: int = 10, offset: int = 0) ->
             "price": p.price,
             "escrow_status": p.escrowStatus,
             "payment_url": p.paymentUrl,
+            "delivered_at": p.deliveredAt.isoformat() if p.deliveredAt else None,
             "last_update": p.history[0].statusUpdate if p.history else "Baru dibuat",
             "created_at": p.createdAt.isoformat(),
         }

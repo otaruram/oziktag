@@ -5,7 +5,7 @@ from app.database import db
 async def verify_buyer_pin(product_id: str, pin: str) -> Dict[str, Any]:
     """
     Verify the PIN entered by the buyer.
-    If valid, change escrowStatus to RELEASED and simulate payout.
+    If valid, change currentStatus to DELIVERED and set deliveredAt to start the 24h settlement window.
     """
     product = await db.trackingproduct.find_unique(where={"id": product_id})
     if not product:
@@ -14,43 +14,38 @@ async def verify_buyer_pin(product_id: str, pin: str) -> Dict[str, Any]:
     if product.buyerPin != pin:
         raise ValueError("PIN yang Anda masukkan salah.")
 
+    if product.currentStatus == "DELIVERED":
+        raise ValueError("Pesanan ini sudah dikonfirmasi sebelumnya.")
+        
     if product.escrowStatus == "RELEASED":
         raise ValueError("Dana untuk transaksi ini sudah dicairkan sebelumnya.")
 
-    # Update escrow state and user balance in a transaction
     now = datetime.now(timezone.utc)
     
     async with db.tx() as tx:
         updated_product = await tx.trackingproduct.update(
             where={"id": product_id},
             data={
-                "escrowStatus": "RELEASED",
-                "payoutReleasedAt": now,
+                "currentStatus": "DELIVERED",
+                "deliveredAt": now,
             }
         )
-        
-        if updated_product and updated_product.isEscrow and updated_product.netAmount > 0:
-            await tx.user.update(
-                where={"id": updated_product.userId},
-                data={"escrowBalance": {"increment": updated_product.netAmount}}
-            )
-
-    # In a real app, trigger a webhook to a payment gateway (e.g., Xendit, Midtrans)
-    # to release funds to the seller here.
+        # Note: We do NOT release the money yet. It will be released automatically
+        # after 24h by the auto_release_escrow_funds cron, or manually if disputed.
 
     return {
         "success": True,
-        "message": "PIN valid. Dana berhasil dicairkan ke penjual.",
-        "payoutReleasedAt": now.isoformat()
+        "message": "PIN valid. Barang telah diterima. Dana akan otomatis diteruskan ke penjual dalam 1x24 jam jika tidak ada kendala.",
+        "deliveredAt": now.isoformat()
     }
 
 
 async def auto_release_escrow_funds():
     """
-    Cron job to check all products with escrowStatus == HELD
-    and deliveredAt < 48 hours ago. Release them automatically.
+    Cron job to check all products with escrowStatus == HELD, currentStatus == DELIVERED
+    and deliveredAt < 24 hours ago. Release them automatically.
     """
-    cutoff_time = datetime.now(timezone.utc) - timedelta(hours=48)
+    cutoff_time = datetime.now(timezone.utc) - timedelta(hours=24)
     now = datetime.now(timezone.utc)
     
     # We must find the products first to update the users' balances
@@ -58,6 +53,7 @@ async def auto_release_escrow_funds():
     products = await db.trackingproduct.find_many(
         where={
             "escrowStatus": "HELD",
+            "currentStatus": "DELIVERED",
             "deliveredAt": {
                 "lt": cutoff_time
             }

@@ -139,32 +139,36 @@ async def analyze_tracking(
     checklist: list[str],
     seller_notes: str,
     image_url: str | None = None,
+    youtube_url: str | None = None,
 ) -> str:
     """
-    Call Gemini AI to analyze Tracking data.
+    Call AI to analyze Tracking data for risk mitigation and informative insights.
     Returns a single string summarizing the tracking status, condition, and tips.
+    Primary: claude-haiku-4-5, Fallback: gemini/gemini-3.1-flash-lite
     """
     settings = get_settings()
 
-    prompt = f"""Kamu adalah asisten logistik & Quality Control profesional.
-Analisis pengiriman paket ini dan berikan ringkasan padat dan berdaging.
+    prompt = f"""Kamu adalah asisten Logistik & Quality Control profesional yang bertugas memitigasi risiko bagi pembeli.
+Analisis pengiriman paket ini dan berikan ringkasan yang informatif, padat, dan berguna.
 
 === DATA PENGIRIMAN ===
 Nama Paket: {name}
-Checklist Kondisi: {chr(10).join(f"✓ {item}" for item in checklist) if checklist else "Tidak ada checklist."}
-Catatan Penjual: {seller_notes or "Tidak ada catatan."}
+Checklist QC: {chr(10).join(f"✓ {item}" for item in checklist) if checklist else "Tidak ada checklist."}
+Catatan Manual Penjual: {seller_notes or "Tidak ada catatan."}
+Link Video YouTube: {youtube_url or "Tidak dilampirkan."}
 
 === INSTRUKSI ===
-Buat 1 paragraf ringkasan (3-4 kalimat) yang merangkum:
-1. Kondisi paket saat dikirim (berdasarkan checklist & gambar jika ada).
-2. Kesesuaian dengan catatan penjual.
-3. Solusi singkat: tips unboxing atau hal yang harus diperhatikan pembeli saat menerima paket ini.
+Buat 1 paragraf ringkasan (3-4 kalimat) yang berisi:
+1. Kondisi paket berdasarkan pengecekan (QC, catatan penjual, gambar, dan video YouTube jika ada).
+2. Mitigasi Risiko: Berikan panduan kepada pembeli jika terjadi ketidaksesuaian saat menerima barang (contoh: wajib video unboxing).
+3. Hal informatif/berguna lainnya terkait perawatan atau penggunaan produk yang sedang dikirim.
 
 Gunakan bahasa yang profesional, ramah, dan meyakinkan. Jangan gunakan format heading atau list. Jadikan satu paragraf utuh yang mengalir.
 """
 
     img_str = image_url or ""
-    raw_input = f"track|{name}|{seller_notes}|{','.join(sorted(checklist))}|{img_str}"
+    yt_str = youtube_url or ""
+    raw_input = f"track_v4|{name}|{seller_notes}|{','.join(sorted(checklist))}|{img_str}|{yt_str}"
     input_hash = hashlib.sha256(raw_input.encode('utf-8')).hexdigest()
 
     try:
@@ -192,8 +196,9 @@ Gunakan bahasa yang profesional, ramah, dan meyakinkan. Jangan gunakan format he
         else:
             content = prompt
 
+        # Primary Model
         payload = {
-            "model": settings.gemini_model,
+            "model": "claude-haiku-4-5",
             "messages": [
                 {"role": "user", "content": content}
             ],
@@ -202,9 +207,17 @@ Gunakan bahasa yang profesional, ramah, dan meyakinkan. Jangan gunakan format he
         }
 
         async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(url, headers=headers, json=payload)
-            response.raise_for_status()
-            data = response.json()
+            try:
+                response = await client.post(url, headers=headers, json=payload)
+                response.raise_for_status()
+                data = response.json()
+            except Exception as primary_err:
+                print(f"[AI Service] Primary model failed: {primary_err}. Retrying with backup...")
+                # Backup Model
+                payload["model"] = "gemini/gemini-3.1-flash-lite"
+                response = await client.post(url, headers=headers, json=payload)
+                response.raise_for_status()
+                data = response.json()
 
         resp_text = data.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
         
@@ -225,9 +238,9 @@ Gunakan bahasa yang profesional, ramah, dan meyakinkan. Jangan gunakan format he
         return resp_text
 
     except Exception as e:
-        print(f"[AI Service] Error calling Gemini for tracking: {e}")
+        print(f"[AI Service] Error calling AI for tracking: {e}")
         notes_str = f" dengan catatan: '{seller_notes}'" if seller_notes else ""
-        return f"Paket '{name}' telah disiapkan dengan baik dan melalui {len(checklist)} poin pengecekan kondisi{notes_str}. Disarankan untuk merekam video unboxing saat paket tiba untuk keamanan ganda."
+        return f"Paket '{name}' telah disiapkan dengan baik dan melalui {len(checklist)} poin pengecekan kondisi{notes_str}. Untuk memitigasi risiko, kami sarankan Anda merekam video unboxing tanpa jeda saat paket tiba sebagai bukti jika terjadi ketidaksesuaian."
 
 
 def _parse_ai_response(

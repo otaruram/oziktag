@@ -345,3 +345,94 @@ async def reject_kyc_request(request_id: str, admin: dict = Depends(get_admin_us
         data={"status": "rejected"}
     )
     return {"message": "KYC ditolak."}
+
+@router.get("/disputes")
+async def get_all_disputes(page: int = 1, admin: dict = Depends(get_admin_user)):
+    """Get all dispute tickets."""
+    limit = 10
+    offset = (page - 1) * limit
+    total = await db.disputeticket.count()
+    tickets = await db.disputeticket.find_many(
+        include={"product": {"include": {"user": True}}},
+        order={"createdAt": "desc"},
+        take=limit,
+        skip=offset
+    )
+    
+    return {
+        "total": total,
+        "data": [
+            {
+                "id": t.id,
+                "trackingProductId": t.trackingProductId,
+                "productName": t.product.name if t.product else "Unknown",
+                "sellerEmail": t.product.user.email if t.product and t.product.user else "Unknown",
+                "buyerEmail": t.buyerEmail,
+                "buyerPhone": t.buyerPhone,
+                "reason": t.reason,
+                "videoUrl": t.videoUrl,
+                "status": t.status,
+                "createdAt": t.createdAt,
+            }
+            for t in tickets
+        ]
+    }
+
+class ResolveDisputeRequest(from_pydantic := BaseModel):
+    action: str  # "RELEASE" or "REFUND"
+
+@router.post("/disputes/{ticket_id}/resolve")
+async def resolve_dispute(ticket_id: str, request: ResolveDisputeRequest, admin: dict = Depends(get_admin_user)):
+    """Resolve a dispute ticket."""
+    ticket = await db.disputeticket.find_unique(
+        where={"id": ticket_id},
+        include={"product": True}
+    )
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Tiket sengketa tidak ditemukan")
+        
+    if ticket.status != "OPEN":
+        raise HTTPException(status_code=400, detail="Tiket sudah diproses sebelumnya")
+        
+    if request.action not in ["RELEASE", "REFUND"]:
+        raise HTTPException(status_code=400, detail="Action harus RELEASE atau REFUND")
+
+    async with db.tx() as tx:
+        if request.action == "RELEASE":
+            # Release funds to seller
+            await tx.disputeticket.update(
+                where={"id": ticket_id},
+                data={"status": "RESOLVED_RELEASE"}
+            )
+            updated_product = await tx.trackingproduct.update(
+                where={"id": ticket.trackingProductId},
+                data={
+                    "escrowStatus": "RELEASED",
+                    "payoutReleasedAt": datetime.now(timezone.utc)
+                }
+            )
+            if updated_product.isEscrow and updated_product.netAmount > 0:
+                await tx.user.update(
+                    where={"id": updated_product.userId},
+                    data={"escrowBalance": {"increment": updated_product.netAmount}}
+                )
+            msg = "Sengketa ditolak. Dana diteruskan ke penjual."
+            
+        else:
+            # Refund to buyer
+            await tx.disputeticket.update(
+                where={"id": ticket_id},
+                data={"status": "RESOLVED_REFUND"}
+            )
+            await tx.trackingproduct.update(
+                where={"id": ticket.trackingProductId},
+                data={
+                    "escrowStatus": "REFUNDED",
+                    "payoutReleasedAt": datetime.now(timezone.utc)
+                }
+            )
+            # Note: For refund, admin should manually transfer the money to buyer's bank account.
+            # since the funds are still held in our bank account (not added to seller's balance).
+            msg = "Sengketa diterima. Silakan transfer manual refund ke pembeli."
+            
+    return {"message": msg}
