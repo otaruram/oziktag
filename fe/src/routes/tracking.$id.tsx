@@ -8,6 +8,7 @@ import {
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
 import { DisputeModal } from "@/components/tracking/DisputeModal";
+import TrackingMap from "@/components/tracking/TrackingMap";
 
 export const Route = createFileRoute("/tracking/$id")({
   head: () => ({
@@ -444,6 +445,12 @@ function TrackingScan() {
           ) : (
             <p className="text-sm text-muted-foreground text-center py-4">Belum ada riwayat perjalanan.</p>
           )}
+
+          {/* Interactive Map */}
+          <div className="mt-6 pt-6 border-t border-border">
+            <h3 className="text-sm font-semibold mb-4 flex items-center gap-2"><MapPin className="h-4 w-4 text-blue-500" /> Peta Lokasi</h3>
+            <TrackingMap history={data.history || []} />
+          </div>
         </div>
 
         {/* Action Buttons */}
