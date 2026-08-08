@@ -104,35 +104,39 @@ graph TD
 ## 💳 Model Harga (Pay-As-You-Go)
 
 Oziktag menggunakan **Sistem Berbasis Kredit (Pay-As-You-Go)** alih-alih langganan bulanan yang kaku. Ini memastikan UMKM hanya membayar untuk apa yang mereka gunakan. 
-**1 Kredit = 1x Pembuatan QC AI (Kode QR + Analisis AI).**
+**1 Kredit = 1x Generate QR QC atau 1x Tracking Lite.**
 
 | Paket | Harga | Kredit | Biaya per QR | Target Pengguna |
 |---------|-------|---------|-------------|-------------|
-| **Starter** | Rp 20.000 | 50 | Rp 400 | UMKM Tahap Awal |
-| **Growth** | Rp 50.000 | 150 | Rp 333 | Bisnis Berkembang *(Paling Laris)* |
-| **Pro** | Rp 100.000 | 400 | Rp 250 | Produksi Volume Tinggi |
+| **Starter** | Rp 15.000 | 50 | Rp 300 | UMKM Tahap Awal |
+| **Growth** | Rp 35.000 | 150 | Rp 233 | Bisnis Berkembang *(Paling Laris)* |
+| **Pro** | Rp 79.000 | 400 | Rp 198 | Produksi Volume Tinggi |
 
-Semua paket termasuk fitur enterprise penuh: Analisis AI, kode QR aktif seumur hidup, dan halaman pemindaian publik tanpa iklan. 
+**Sumber Pendapatan Lainnya:**
+- **Artisan Elite Membership**: Rp 499.000 / tahun (Akses ke Elite Hub, badge khusus, prioritas dukungan).
+- **Escrow Fee**: (Harga Produk × 1.5%) + Rp 1.000 per transaksi yang menggunakan fitur perlindungan pembeli.
 
 **Kebal terhadap Fluktuasi Dolar (Skala Ekonomi):**
-Dengan menjual kredit dalam mata uang Rupiah (Rp 250 - Rp 400 per QR) sementara biaya variabel AI inti kami (Gemini 1.5 Flash) dipatok ke Dolar AS sebesar $0.35 per 1 juta token, biaya per proses AI kira-kira hanya **Rp 15**. Ini mencapai margin kotor **>90%**. Bahkan dalam skenario ekstrem hiperinflasi mata uang, biaya dasar AI sangat mikroskopis sehingga model harga tetap sangat menguntungkan tanpa pernah perlu menaikkan harga untuk UMKM.
+Dengan menjual kredit dalam mata uang Rupiah (Rp 198 - Rp 300 per QR) sementara biaya variabel AI inti kami (Gemini 1.5 Flash / Claude) dipatok sangat murah, biaya produksi HPP per proses AI kira-kira hanya **Rp 15 - Rp 50**. Ini mencapai margin kotor **>80%**. Model harga ini tetap sangat menguntungkan tanpa pernah perlu menaikkan harga untuk UMKM.
 
 ---
 
-## 🏗️ Infrastruktur & Biaya Operasional (Base Pay)
+## 🏗️ Infrastruktur, Biaya Operasional & BEP
 
 Untuk menjalankan Oziktag di tingkat enterprise, tumpukan infrastruktur berikut dan biaya dasarnya diperlukan. Pendekatan ini memastikan ketersediaan tinggi, skalabilitas, dan keamanan:
 
-1. **Supabase Pro (Database, Auth, Realtime)**: ~$25/bulan. Termasuk ruang database 100GB, bandwidth 50GB, dan 100.000 Pengguna Aktif Bulanan. Sangat penting untuk telemetri WebSocket dan Autentikasi.
-2. **ImageKit Pro (Media CDN & Penyimpanan)**: ~$49/bulan (atau pay-as-you-go). Digunakan untuk pengiriman gambar global yang cepat, optimasi gambar real-time, dan menyimpan foto produk QC mentah.
-3. **Google Gemini 1.5 Flash (Mesin AI)**: Bayar per token (sekitar $0.35 / 1 juta token). Digunakan untuk menyintesis daftar periksa QC menjadi analisis profesional. Biaya variabel yang sangat hemat biaya.
-4. **Hosting VPS (FastAPI Backend)**: ~Rp 100.000/bulan (misal Contabo, Hostinger, atau DigitalOcean). Menjalankan backend Python, Mesin Prisma, dan tugas mitigasi *cold-start* di latar belakang.
-5. **Domain (FE & BE)**: ~$15 - $25/tahun (misal `oziktag.com` dan `api.oziktag.com`).
-6. **Payment Gateway (misal Midtrans, Xendit, Louvin)**: **Tanpa Biaya Dasar Bulanan**. Menggunakan model bayar per transaksi (MDR). Misalnya, 0.7% untuk QRIS, atau ~2% untuk e-Wallet (GoPay, OVO), ditambah pajak yang berlaku (PPN).
-7. ***Opsional*: Custom SMTP (Resend / SendGrid)**: ~$20/bulan jika melebihi batas email transaksional gratis Supabase untuk pengiriman OTP/Email selamat datang.
-8. ***Opsional*: Cloudflare Pro (WAF & Perlindungan DDoS)**: ~$20/bulan untuk mitigasi bot tingkat lanjut dan *edge caching*.
+1. **Backend (Render / VPS)**: ~Rp 100.000 - 200.000/bulan.
+2. **Frontend (Vercel / Cloudflare Pages)**: Gratis (Tier Hobby).
+3. **Database & Auth (Supabase Pro)**: ~Rp 380.000/bulan (atau gratis di tahap awal).
+4. **Media CDN (ImageKit)**: Gratis (Tier 20GB/bulan).
+5. **AI API (Claude/Gemini)**: ~Rp 150.000 - 300.000/bulan (Sistem bayar per penggunaan).
+6. **Domain & Email Server**: ~Rp 50.000 - 100.000/bulan.
+7. **Payment Gateway (SumoPod)**: Menggunakan model pemotongan dari transaksi (MDR), tanpa biaya bulanan tetap.
 
-**Total Biaya Dasar Tetap (Minimum)**: ~**$80 - $90 per bulan** (tidak termasuk biaya variabel AI dan MDR Payment Gateway).
+**Total Estimasi Biaya Server/Infrastruktur**: **Rp 900.000 – Rp 1.000.000 per bulan.**
+
+### Analisis Break-Even Point (BEP) Cepat
+Hanya dengan biaya infrastruktur maksimal **Rp 1 Juta / bulan**, Oziktag hanya membutuhkan sekitar **26 - 29 pelanggan UMKM aktif** yang membeli paket *Growth* (Rp 35.000) setiap bulannya untuk mencapai titik impas (BEP). Setiap pertumbuhan pengguna di atas angka ini, beserta transaksi Escrow dan langganan Elite, akan langsung menjadi keuntungan bersih (*net profit*) bagi platform.
 
 ---
 
