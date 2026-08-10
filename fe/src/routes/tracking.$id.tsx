@@ -365,8 +365,8 @@ function TrackingScan() {
         </div>
 
         {/* YouTube Video */}
-        {role === "buyer" && ytId && (
-          <div className="rounded-2xl border border-border overflow-hidden shadow-sm relative group">
+        {ytId && (
+            <div className="rounded-2xl border border-border overflow-hidden shadow-sm relative group">
             <div className="relative bg-black aspect-video">
               <iframe src={`https://www.youtube-nocookie.com/embed/${ytId}?rel=0`} className="w-full h-full" allow="fullscreen; encrypted-media" allowFullScreen />
             </div>
@@ -377,7 +377,7 @@ function TrackingScan() {
         )}
 
         {/* Product Image */}
-        {role === "buyer" && data.image_url && (
+        {data.image_url && (
           <div className="rounded-2xl border border-border overflow-hidden shadow-sm relative group">
             <img src={data.image_url} alt={data.name} className="w-full h-56 object-cover" />
             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 backdrop-blur-[2px]">
@@ -392,7 +392,7 @@ function TrackingScan() {
         )}
 
         {/* AI Summary */}
-        {role === "buyer" && data.ai_summary && (
+        {data.ai_summary && (
           <div className="rounded-2xl border border-primary/20 bg-primary/5 p-5 shadow-sm">
             <button onClick={() => setShowAI(!showAI)} className="flex w-full items-center justify-between text-left">
               <span className="text-sm font-semibold text-primary flex items-center gap-2"><Sparkles className="h-4 w-4" /> Ringkasan Kualitas AI</span>
@@ -433,7 +433,7 @@ function TrackingScan() {
         )}
 
         {/* Checklist */}
-        {role === "buyer" && data.checklist_qc && data.checklist_qc.length > 0 && (
+        {data.checklist_qc && data.checklist_qc.length > 0 && (
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
             <h3 className="text-sm font-semibold mb-3">Checklist QC Penjual</h3>
             <div className="space-y-2">

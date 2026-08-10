@@ -226,11 +226,11 @@ async def get_tracking_data(product_id: str, role: str, pin: str | None = None) 
             "id": product.id,
             "name": product.name,
             "current_status": product.currentStatus,
-            "image_url": None,  # HIDDEN from courier
-            "ai_summary": None,  # HIDDEN from courier
-            "checklist_qc": [],  # HIDDEN from courier
-            "seller_notes": None,
-            "brand": None,
+            "image_url": product.imageUrl,
+            "ai_summary": product.aiSummary,
+            "checklist_qc": checklist,
+            "seller_notes": product.sellerNotes,
+            "brand": brand,
             "history": history,
             "created_at": product.createdAt.isoformat(),
             
@@ -238,7 +238,7 @@ async def get_tracking_data(product_id: str, role: str, pin: str | None = None) 
             "is_escrow": product.isEscrow,
             "price": product.price,
             "payment_url": product.paymentUrl,
-            "youtube_url": None,
+            "youtube_url": product.youtubeUrl,
         }
 
     # buyer or seller — full data
