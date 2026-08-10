@@ -447,6 +447,14 @@ function TrackingScan() {
           </div>
         )}
 
+        {/* Seller Notes */}
+        {data.seller_notes && (
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <h3 className="text-sm font-semibold mb-3">Catatan Penjual</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{data.seller_notes}</p>
+          </div>
+        )}
+
         {/* Timeline */}
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
           <h3 className="text-sm font-semibold mb-5 flex items-center gap-2"><MapPin className="h-4 w-4 text-muted-foreground" /> Riwayat Perjalanan</h3>
