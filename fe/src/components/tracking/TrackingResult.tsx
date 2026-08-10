@@ -2,6 +2,7 @@ import { useState } from "react";
 import { CheckCircle2, Copy, Sparkles, Download, Loader2, Receipt, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import ReactMarkdown from "react-markdown";
 
 interface TrackingResultProps {
   qrResult: { url: string; qrDataUrl: string; qrDataUrlPayment?: string; summary: string; buyerPin: string; isEscrow?: boolean };
@@ -130,7 +131,32 @@ export function TrackingResult({ qrResult, onClose }: TrackingResultProps) {
           <p className="text-xs font-medium text-primary mb-1 flex items-center gap-1">
             <Sparkles className="h-3 w-3" /> AI Summary
           </p>
-          <p className="text-sm text-muted-foreground leading-relaxed">{qrResult.summary}</p>
+          <div className="text-sm text-muted-foreground leading-relaxed">
+            <ReactMarkdown
+              components={{
+                p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
+                ul: ({node, ...props}) => <ul className="list-disc pl-5 mb-2 space-y-1" {...props} />,
+                ol: ({node, ...props}) => <ol className="list-decimal pl-5 mb-2 space-y-1" {...props} />,
+                li: ({node, ...props}) => <li className="pl-1" {...props} />,
+                strong: ({node, ...props}) => <strong className="font-semibold text-foreground" {...props} />,
+                h1: ({node, ...props}) => <h3 className="font-bold text-foreground mb-2 mt-4 text-base" {...props} />,
+                h2: ({node, ...props}) => <h4 className="font-semibold text-foreground mb-1 mt-3" {...props} />
+              }}
+            >
+              {(() => {
+                let text = qrResult.summary;
+                text = text.replace(/\\n/g, '\n');
+                text = text.replace(/([^\n])\n(#{1,3}\s)/g, '$1\n\n$2');
+                text = text.replace(/([^\n])\n(-{3,})/g, '$1\n\n$2');
+                text = text.replace(/([^\n])\n(- )/g, '$1\n\n$2');
+                text = text.replace(/([^\n])(#{1,3}\s)/g, '$1\n\n$2');
+                text = text.replace(/([^\n])(-{3,})/g, '$1\n\n$2');
+                text = text.replace(/([^\n])(- [✅⚠️❌🚚📦☕🌡️⏰🏠📋🔍💡📌🛡️📞🔒✉️📸🎥💰🔧📝🏷️📊🎯💬📢🔔💊🧴🧊🍳🧈])/g, '$1\n\n$2');
+                text = text.replace(/([^\n])(- \*\*)/g, '$1\n\n$2');
+                return text;
+              })()}
+            </ReactMarkdown>
+          </div>
         </div>
       )}
       
