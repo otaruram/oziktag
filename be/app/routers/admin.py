@@ -136,7 +136,7 @@ async def get_online_users(admin: dict = Depends(get_admin_user)):
 
 
 @router.post("/credits/add")
-async def add_credits(request: AdminAddCreditsRequest, admin: dict = Depends(get_admin_user)):
+async def admin_add_credits(request: AdminAddCreditsRequest, admin: dict = Depends(get_admin_user)):
     """Add credits to a specific user."""
     user = await db.user.find_unique(where={"id": request.user_id})
 
