@@ -241,10 +241,18 @@ def _parse_ai_response(
     catatan_penjual: str,
 ) -> dict:
     """Parse AI response into insight and solution."""
+    import re
+    
+    # Clean common markdown formatting before parsing to avoid regex/UI issues
+    clean_content = re.sub(r'\*\*', '', content)
+    clean_content = re.sub(r'^#+\s*', '', clean_content, flags=re.MULTILINE)
+    clean_content = re.sub(r'^\s*-\s*', '', clean_content, flags=re.MULTILINE)
+    clean_content = re.sub(r'^\s*---\s*', '', clean_content, flags=re.MULTILINE)
+    
     ai_insight = ""
     ai_solution = ""
 
-    lines = content.strip().split("\n")
+    lines = clean_content.strip().split("\n")
     current_section = None
 
     for line in lines:
@@ -261,13 +269,13 @@ def _parse_ai_response(
             ai_solution += " " + stripped
 
     if not ai_insight and not ai_solution:
-        parts = content.split("\n\n", 1)
-        ai_insight = parts[0].strip() if parts else content.strip()
+        parts = clean_content.split("\n\n", 1)
+        ai_insight = parts[0].strip() if parts else clean_content.strip()
         ai_solution = parts[1].strip() if len(parts) > 1 else ""
 
     return {
-        "ai_insight": ai_insight or f"Produk {nama_produk} telah melewati Quality Control.",
-        "ai_solution": ai_solution or f"Simpan produk di tempat yang sesuai untuk kategori {kategori}.",
+        "ai_insight": ai_insight.strip() or f"Produk {nama_produk} telah melewati Quality Control.",
+        "ai_solution": ai_solution.strip() or f"Simpan produk di tempat yang sesuai untuk kategori {kategori}.",
     }
 
 

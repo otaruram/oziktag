@@ -222,14 +222,16 @@ async def get_tracking_data(product_id: str, role: str, pin: str | None = None) 
 
     # Role-based filtering
     if role == "courier":
+        is_pending = product.currentStatus == "PENDING_PAYMENT"
+        
         return {
             "id": product.id,
-            "name": product.name,
+            "name": product.name if is_pending else "Paket Rahasia (Menunggu PIN Pembeli)",
             "current_status": product.currentStatus,
-            "image_url": product.imageUrl,
-            "ai_summary": product.aiSummary,
-            "checklist_qc": checklist,
-            "seller_notes": product.sellerNotes,
+            "image_url": product.imageUrl if is_pending else None,
+            "ai_summary": product.aiSummary if is_pending else None,
+            "checklist_qc": checklist if is_pending else [],
+            "seller_notes": product.sellerNotes if is_pending else None,
             "brand": brand,
             "history": history,
             "created_at": product.createdAt.isoformat(),
@@ -238,7 +240,7 @@ async def get_tracking_data(product_id: str, role: str, pin: str | None = None) 
             "is_escrow": product.isEscrow,
             "price": product.price,
             "payment_url": product.paymentUrl,
-            "youtube_url": product.youtubeUrl,
+            "youtube_url": product.youtubeUrl if is_pending else None,
         }
 
     # buyer or seller — full data
