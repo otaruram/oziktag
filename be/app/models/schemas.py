@@ -46,6 +46,7 @@ class UserProfile(BaseModel):
     escrow_request_status: Optional[str] = None
     can_use_escrow: bool = False
     is_elite: bool = False
+    escrow_success_count: int = 0
     elite_expires_at: Optional[str] = None
     receivesPromoEmails: bool = True
 

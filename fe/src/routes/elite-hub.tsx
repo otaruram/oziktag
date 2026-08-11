@@ -44,23 +44,37 @@ function EliteHub() {
   }
 
   if (!isEliteOrAdmin) {
+    const successCount = me?.escrow_success_count || 0;
+    const target = 50;
+    const progress = Math.min((successCount / target) * 100, 100);
+
     return (
       <AppShell>
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/15">
             <Lock className="h-8 w-8 text-primary" />
           </div>
-          <h1 className="mt-6 text-2xl font-semibold tracking-tight">Konten Eksklusif</h1>
-          <p className="mt-2 max-w-md text-sm text-muted-foreground">
-            Elite Hub hanya tersedia untuk member Artisan Elite.
-            Berlangganan untuk mengakses video pelatihan, tips QC kerajinan tangan, dan forum diskusi.
+          <h1 className="mt-6 text-2xl font-semibold tracking-tight">Oziktag Elite Hub Terkunci</h1>
+          <p className="mt-2 max-w-md text-sm text-muted-foreground leading-relaxed">
+            Elite Hub adalah komunitas eksklusif dan program loyalitas kami.
+            Dapatkan akses ke pendanaan BNI KUR Fast-Track, kelas ekspor Xpora, dan bebas biaya MDR dengan mencapai target pengiriman sukses!
           </p>
-          <Link
-            to="/pricing"
-            className="mt-6 inline-flex items-center gap-2 rounded-md bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity"
-          >
-            Lihat Paket Langganan <ArrowRight className="h-4 w-4" />
-          </Link>
+          
+          <div className="mt-8 w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div className="flex justify-between items-end mb-2">
+              <span className="text-sm font-medium">Progress Unlock</span>
+              <span className="text-sm font-bold">{successCount} / {target} Transaksi</span>
+            </div>
+            <div className="h-3 w-full rounded-full bg-muted overflow-hidden">
+              <div 
+                className="h-full bg-primary transition-all duration-1000 ease-out" 
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <p className="mt-4 text-xs text-muted-foreground">
+              Selesaikan {target - successCount > 0 ? target - successCount : 0} transaksi Escrow tanpa sengketa (retur) lagi untuk membuka fitur ini secara gratis selamanya.
+            </p>
+          </div>
         </div>
       </AppShell>
     );

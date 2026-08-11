@@ -111,6 +111,24 @@ async def get_user_profile_data(user_id: str) -> UserProfile:
     score += min(db_user.sisaKredit * 2, 100)
     score = min(score, 850)
 
+    # Calculate Escrow Success Count for Elite Hub Unlock
+    escrow_success_count = await db.trackingproduct.count(
+        where={
+            "userId": user_id,
+            "isEscrow": True,
+            "escrowStatus": "RELEASED"
+        }
+    )
+
+    # Auto-unlock Elite if 50 successful transactions are met
+    is_elite = db_user.isElite
+    if not is_elite and escrow_success_count >= 50:
+        is_elite = True
+        try:
+            await db.user.update(where={"id": user_id}, data={"isElite": True})
+        except Exception as e:
+            print(f"[User Service] Failed to auto-unlock Elite: {e}")
+
     # Update lastSeenAt silently to track active users (for retention checking)
     try:
         await db.user.update(
@@ -137,7 +155,8 @@ async def get_user_profile_data(user_id: str) -> UserProfile:
         escrow_requested=db_user.escrowRequested,
         escrow_request_status=db_user.escrowRequest.status if db_user.escrowRequest else None,
         can_use_escrow=db_user.canUseEscrow,
-        is_elite=db_user.isElite,
+        is_elite=is_elite,
+        escrow_success_count=escrow_success_count,
         elite_expires_at=db_user.eliteExpiresAt.isoformat() if db_user.eliteExpiresAt else None,
         receivesPromoEmails=db_user.receivesPromoEmails,
     )
