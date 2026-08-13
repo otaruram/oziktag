@@ -161,7 +161,7 @@ function Landing() {
                   <div className="mt-1 bg-muted p-2 rounded-md"><Lock className="h-5 w-5" /></div>
                   <div>
                     <strong className="block text-foreground">Sistem Escrow Terpadu</strong>
-                    <span className="text-sm text-muted-foreground">Pembayaran pembeli ditahan secara aman (Escrow) dan baru diteruskan ke penjual setelah barang diterima.</span>
+                    <span className="text-sm text-muted-foreground">Pembayaran pembeli ditahan secara aman (Escrow) dan baru diteruskan ke penjual setelah barang diterima. Biaya transaksi hanya 1,5% + Rp 1.000 per transaksi.</span>
                   </div>
                 </li>
               </ul>
