@@ -235,7 +235,7 @@ function Landing() {
               <h3 className="text-lg font-bold">Azdzikri Muhammad Hisyam Soleh</h3>
               <p className="mt-1 text-sm font-medium text-primary">Co-Founder</p>
               <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
-                Mendesain dan membangun antarmuka pengguna yang intuitif, responsif, dan modern untuk pengalaman terbaik.
+                Strategis Bisnis yang merumuskan arah pengembangan, kemitraan, dan strategi pasar untuk Oziktag.
               </p>
               <a
                 href="https://www.linkedin.com/in/azdzikri-muhammad-hisyam-soleh-086b43281/"
