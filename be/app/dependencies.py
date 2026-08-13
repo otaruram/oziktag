@@ -20,7 +20,8 @@ async def _sync_user_db(user) -> dict:
     user_id = str(user.id)
     email = user.email or ""
     name = user.user_metadata.get("full_name", "") if user.user_metadata else ""
-    admin_emails = ["okitr52@gmail.com", "adzikrim701@gmail.com"]
+    settings = get_settings()
+    admin_emails = [e.strip().lower() for e in settings.admin_email.split(",") if e.strip()]
     is_admin = email.lower() in admin_emails
     
     db_user = await db.user.find_unique(where={"id": user_id}, include={"kyc": True})
@@ -109,7 +110,8 @@ async def get_current_user(authorization: str = Header(...)):
 
 async def get_admin_user(current_user: dict = Depends(get_current_user)):
     """Ensure the current user is an admin."""
-    admin_emails = ["okitr52@gmail.com", "adzikrim701@gmail.com"]
+    settings = get_settings()
+    admin_emails = [e.strip().lower() for e in settings.admin_email.split(",") if e.strip()]
     if current_user["email"].lower() not in admin_emails:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -123,7 +125,8 @@ async def get_api_user(current_user: dict = Depends(get_current_user)):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
         
-    admin_emails = ["okitr52@gmail.com", "adzikrim701@gmail.com"]
+    settings = get_settings()
+    admin_emails = [e.strip().lower() for e in settings.admin_email.split(",") if e.strip()]
     is_admin = current_user["email"].lower() in admin_emails
     
     if not (is_admin or user.hasApiAccess):
@@ -150,7 +153,8 @@ async def get_kyc_user(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=404, detail="User not found")
         
     # Admin bypasses this check so they can manage the system
-    admin_emails = ["okitr52@gmail.com", "adzikrim701@gmail.com"]
+    settings = get_settings()
+    admin_emails = [e.strip().lower() for e in settings.admin_email.split(",") if e.strip()]
     is_admin = current_user.get("email", "").lower() in admin_emails
     
     if not is_admin and (not db_user.kyc or db_user.kyc.status not in ["verified", "approved"]):

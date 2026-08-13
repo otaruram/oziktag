@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     gemini_model: str = "gemini/gemini-2.5-flash-lite"
 
     # Admin
-    admin_email: str = "okitr52@gmail.com"
+    admin_email: str = ""
 
     # Pricing
     exchange_rate: float = 17000.0
