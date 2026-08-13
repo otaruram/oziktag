@@ -162,18 +162,7 @@ async def get_user_profile_data(user_id: str) -> UserProfile:
     )
 
 
-async def _ensure_unique_field(field: str, value: str) -> str:
-    """
-    Check if a value already exists in a table field.
-    If it does, append a random suffix to make it unique.
-    """
-    kwargs = {field: value}
-    existing = await db.kyc.find_unique(where=kwargs)
-    if existing:
-        # Append random suffix
-        suffix = f"_{uuid.uuid4().hex[:6]}_{int(time.time()) % 10000}"
-        value = f"{value}{suffix}"
-    return value
+
 
 
 async def process_kyc_submission(
@@ -199,12 +188,22 @@ async def process_kyc_submission(
     nik = nik.strip()
     npwp = npwp.strip() if npwp else None
 
-    # Ensure NIK uniqueness — append random suffix if duplicate
-    nik = await _ensure_unique_field("nik", nik)
+    # Check NIK uniqueness
+    existing_nik = await db.kyc.find_first(where={"nik": nik})
+    if existing_nik:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="NIK sudah terdaftar pada akun lain.",
+        )
 
-    # Ensure NPWP uniqueness if provided
+    # Check NPWP uniqueness if provided
     if npwp:
-        npwp = await _ensure_unique_field("npwp", npwp)
+        existing_npwp = await db.kyc.find_first(where={"npwp": npwp})
+        if existing_npwp:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="NPWP sudah terdaftar pada akun lain.",
+            )
 
     async with db.tx() as tx:
         # Insert KYC record

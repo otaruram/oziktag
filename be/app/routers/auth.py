@@ -79,8 +79,7 @@ async def update_email_preferences(
 @router.post("/kyc", response_model=KYCResponse)
 async def submit_kyc(request: KYCRequest, current_user: dict = Depends(get_current_user)):
     """
-    Submit KYC data. If NIK/NPWP already exists, auto-append random suffix
-    to keep it unique (dummy mode).
+    Submit KYC data.
     """
     user_id = current_user["id"]
     await process_kyc_submission(
@@ -97,7 +96,7 @@ async def submit_kyc(request: KYCRequest, current_user: dict = Depends(get_curre
     )
 
     return KYCResponse(
-        message="Form telah terverifikasi. (Catatan: Ini masih dummy, di proses asli nanti akan dicek secara realtime oleh admin).",
+        message="Data KYC Anda berhasil dikirim dan sedang diverifikasi oleh sistem.",
         status="verified",
     )
 

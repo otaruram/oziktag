@@ -21,8 +21,6 @@ function Register() {
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [form, setForm] = useState({
     brand: "",
-    email: "",
-    password: "",
     ktp: "",
     npwp: "",
     website: "",
@@ -90,51 +88,7 @@ function Register() {
     return <div className="min-h-screen flex items-center justify-center bg-background"><div className="animate-pulse flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-primary" /> Loading...</div></div>;
   }
 
-  const DUMMIES = [
-    { brand: "Kopi Senja Nusantara", email: "owner@kopisenja.id", ktp: "3174051203900001", npwp: "09.876.543.2-901.000", web: "www.kopisenja.id", desc: "Kopi gayo premium dengan rasa terbaik." },
-    { brand: "Batik Sekar Wangi", email: "hello@batiksekar.com", ktp: "3274051203900002", npwp: "09.876.543.2-901.001", web: "sekarwangi.com", desc: "Batik tulis khas pekalongan." },
-    { brand: "Sambal Bu Rudi Jkt", email: "admin@sambalburudi.id", ktp: "3374051203900003", npwp: "09.876.543.2-901.002", web: "", desc: "Sambal bawang bu rudi terpedas." },
-    { brand: "Kerajinan Kayu Jati", email: "craft@kayujati.id", ktp: "3474051203900004", npwp: "09.876.543.2-901.003", web: "kayucraft.id", desc: "Kerajinan ukiran dari kayu jati asli." },
-  ];
 
-  const autofill = async () => {
-    const d = DUMMIES[Math.floor(Math.random() * DUMMIES.length)];
-    
-    // Create dummy image files
-    const createDummyImage = async (text: string, color: string) => {
-      const canvas = document.createElement("canvas");
-      canvas.width = 400; canvas.height = 400;
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.fillStyle = color;
-        ctx.fillRect(0, 0, 400, 400);
-        ctx.fillStyle = "white";
-        ctx.font = "24px sans-serif";
-        ctx.fillText(text, 110, 200);
-      }
-      return new Promise<File>((resolve) => {
-        canvas.toBlob((b) => resolve(new File([b!], `${text.replace(/\s+/g, '-')}.jpg`, { type: "image/jpeg" })));
-      });
-    };
-    
-    const fotoProduk1 = await createDummyImage("Foto Produk 1", "#4f46e5");
-    const fotoProduk2 = await createDummyImage("Foto Produk 2", "#10b981");
-
-    setForm({
-      brand: d.brand,
-      email: d.email,
-      password: "demo-password-" + Math.floor(Math.random() * 1000),
-      ktp: d.ktp,
-      npwp: d.npwp,
-      website: d.web,
-      deskripsi_produk: d.desc,
-      foto_ktp: null,
-      foto_npwp: null,
-      foto_produk_1: fotoProduk1,
-      foto_produk_2: fotoProduk2,
-    });
-    toast.success("Data KYC dummy berhasil diisi");
-  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -210,18 +164,10 @@ function Register() {
         <Link to="/" className="mb-8 inline-flex items-center gap-2 font-semibold">
           <ShieldCheck className="h-5 w-5 text-primary" /> Oziktag
         </Link>
-        <h1 className="text-2xl font-semibold tracking-tight">Buat akun brand Anda</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Lengkapi Profil & Verifikasi KYC</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Lengkapi data berikut. Hanya butuh 1 menit.
+          Selesaikan pendaftaran profil UMKM Anda untuk mendapatkan akses ke fitur dashboard.
         </p>
-
-        <button
-          type="button"
-          onClick={autofill}
-          className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-md border border-primary/40 bg-primary/10 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/15"
-        >
-          <Sparkles className="h-4 w-4" /> Simulasi Auto-Fill (Demo)
-        </button>
 
         <form onSubmit={submit} className="mt-6 space-y-4">
           <Field label="Nama Brand / Toko">
@@ -233,26 +179,7 @@ function Register() {
               placeholder="Toko Saya"
             />
           </Field>
-          <Field label="Email">
-            <input
-              required
-              type="email"
-              value={form.email}
-              onChange={(e) => update("email", e.target.value)}
-              className={inputCls}
-              placeholder="email@brand.id"
-            />
-          </Field>
-          <Field label="Password">
-            <input
-              required
-              type="password"
-              value={form.password}
-              onChange={(e) => update("password", e.target.value)}
-              className={inputCls}
-              placeholder="Minimal 8 karakter"
-            />
-          </Field>
+
           <div className="rounded-lg border border-border bg-card p-4">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Verifikasi KYC
