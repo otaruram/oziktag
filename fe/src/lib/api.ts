@@ -2,7 +2,7 @@ import { supabase } from "./supabase";
 
 // Automatically use Render backend in Production, and localhost in Development
 export const API_BASE = import.meta.env.PROD 
-  ? "https://oziktag.onrender.com/api" 
+  ? "https://api.oziktag.my.id/api" 
   : "http://localhost:8000/api";
 
 export async function apiFetch(endpoint: string, options: RequestInit = {}) {

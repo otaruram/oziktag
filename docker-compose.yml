@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  backend:
+    build: 
+      context: ./be
+    container_name: oziktag-backend
+    restart: always
+    env_file:
+      - ./be/.env
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+    networks:
+      - oziktag-net
+
+networks:
+  oziktag-net:
+    driver: bridge

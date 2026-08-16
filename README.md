@@ -125,7 +125,7 @@ Dengan menjual kredit dalam mata uang Rupiah (Rp 198 - Rp 300 per QR) sementara 
 
 Untuk menjalankan Oziktag di tingkat enterprise, tumpukan infrastruktur berikut dan biaya dasarnya diperlukan. Pendekatan ini memastikan ketersediaan tinggi, skalabilitas, dan keamanan:
 
-1. **Backend (Render / VPS)**: ~Rp 100.000 - 200.000/bulan.
+1. **Backend (VPS / Docker)**: ~Rp 100.000 - 200.000/bulan.
 2. **Frontend (Vercel / Cloudflare Pages)**: Gratis (Tier Hobby).
 3. **Database & Auth (Supabase Pro)**: ~Rp 380.000/bulan (atau gratis di tahap awal).
 4. **Media CDN (ImageKit)**: Gratis (Tier 20GB/bulan).
@@ -213,7 +213,7 @@ Mulai Server API:
 ```bash
 python -m uvicorn app.main:app --reload --port 8000
 ```
-> Dokumentasi API akan tersedia di `http://localhost:8000/docs`
+> Dokumentasi API akan tersedia di `https://api.oziktag.my.id/docs` (atau `http://localhost:8000/docs` di lokal)
 
 ### 2. Pengaturan UI (Frontend)
 Buka terminal baru dan navigasi ke direktori frontend:

@@ -30,36 +30,31 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
 ```
 
-API docs available at: `http://localhost:8000/docs`
+API docs available at: `https://api.oziktag.my.id/docs` (or `http://localhost:8000/docs` locally)
 
 ---
 
-## Deploy to Render
+## Deploy to VPS
 
 ### Option 1: Docker (Recommended)
 
-1. Push this `be/` folder to a Git repo
-2. Create a new **Web Service** on Render
-3. Select **Docker** as environment
-4. Set root directory to `be/`
-5. Add all environment variables from `.env.example`
-6. Deploy!
+1. Push this `be/` folder to a Git repo and clone it on your VPS
+2. Run `docker build -t oziktag-backend .`
+3. Run `docker run -d -p 8000:8000 --env-file .env oziktag-backend`
+4. Or use `docker-compose` if you have it setup.
 
 ### Option 2: Python Native
 
-1. Create a new **Web Service** on Render
-2. Set build command: `pip install -r requirements.txt`
-3. Set start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-4. Set root directory to `be/`
-5. Add all environment variables
+1. Clone repo to your VPS
+2. `pip install -r requirements.txt`
+3. `uvicorn app.main:app --host 0.0.0.0 --port 8000`
+4. Use PM2 or systemd to keep it running in the background.
 
 ---
 
 ## Cold-Start Prevention
 
-The backend automatically pings `/health` every 12 minutes to prevent Render free-tier cold starts.
-
-**Additional option:** Setup [UptimeRobot](https://uptimerobot.com) (free) to ping your `/health` endpoint every 5 minutes.
+*(Render specific cold-start ping is no longer needed on a VPS, but the endpoint `/health` is available for uptime monitors).*
 
 ---
 
