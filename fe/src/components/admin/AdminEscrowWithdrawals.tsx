@@ -87,6 +87,9 @@ export function AdminEscrowWithdrawals() {
                     <TableCell>
                       <div className="font-medium">{w.user_name || "Unknown"}</div>
                       <div className="text-xs text-muted-foreground">{w.user_id}</div>
+                      <div className="text-[10px] mt-1 font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full inline-block">
+                        Saldo Dompet: Rp {(w.user_balance || 0).toLocaleString("id-ID")}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <div className="font-semibold text-primary">{w.bank_name}</div>
@@ -101,12 +104,12 @@ export function AdminEscrowWithdrawals() {
                       <div className="text-[10px] text-muted-foreground font-normal leading-tight mt-1">Potong biaya transfer Rp 2.500.<br/>Anda harus transfer sejumlah besar di atas.</div>
                     </TableCell>
                     <TableCell>
-                      <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${w.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
+                      <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${w.status?.toLowerCase() === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
                         {w.status}
                       </span>
                     </TableCell>
                     <TableCell className="text-right">
-                      {w.status === "PENDING" && (
+                      {w.status?.toLowerCase() === "pending" && (
                         <Button 
                           size="sm" 
                           onClick={() => {

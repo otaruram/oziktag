@@ -160,6 +160,7 @@ async def admin_get_withdraws(
             "id": w.id,
             "user_id": w.userId,
             "user_name": w.user.nama if w.user else "Unknown",
+            "user_balance": w.user.escrowBalance if w.user else 0,
             "amount": w.amount,
             "bank_name": w.bankName,
             "bank_account": w.bankAccount,
