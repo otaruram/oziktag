@@ -58,8 +58,8 @@ function WalletPage() {
     
     requestWithdrawMutation.mutate({
       amount: Number(amount),
-      bank_code: bankCode,
-      account_number: accountNumber,
+      bank_name: bankCode,
+      bank_account: accountNumber,
       account_name: accountName
     });
   };
