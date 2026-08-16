@@ -33,7 +33,7 @@ async def _call_ai(prompt: str, image_urls: list[str] | None = None) -> str:
 
     models = [
         "claude-haiku-4-5",
-        "gemini/gemini-3.1-flash-lite",
+        "gemini/gemini-3.5-flash",
         settings.gemini_model,
     ]
     # Deduplicate while preserving order
