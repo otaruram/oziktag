@@ -82,16 +82,16 @@ export function AdminEscrowWithdrawals() {
                 withdrawals?.map((w: any) => (
                   <TableRow key={w.id}>
                     <TableCell className="whitespace-nowrap">
-                      {new Date(w.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute:"2-digit" })}
+                      {new Date(w.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute:"2-digit" })}
                     </TableCell>
                     <TableCell>
-                      <div className="font-medium">{w.user?.name || "Unknown"}</div>
-                      <div className="text-xs text-muted-foreground">{w.user?.email}</div>
+                      <div className="font-medium">{w.user_name || "Unknown"}</div>
+                      <div className="text-xs text-muted-foreground">{w.user_id}</div>
                     </TableCell>
                     <TableCell>
-                      <div className="font-semibold text-primary">{w.bankCode}</div>
-                      <div className="text-xs">{w.accountNumber}</div>
-                      <div className="text-xs text-muted-foreground">a.n {w.accountName}</div>
+                      <div className="font-semibold text-primary">{w.bank_name}</div>
+                      <div className="text-xs">{w.bank_account}</div>
+                      <div className="text-xs text-muted-foreground">a.n {w.account_name}</div>
                     </TableCell>
                     <TableCell className="font-medium text-muted-foreground">
                       Rp {w.amount.toLocaleString("id-ID")}
