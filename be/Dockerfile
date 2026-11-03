@@ -2,10 +2,11 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies for Prisma (Node.js & npm are required for Prisma CLI to avoid nodeenv bug)
+# Install system dependencies for Prisma
 RUN apt-get update && apt-get install -y \
     libatomic1 \
     openssl \
+    curl \
     nodejs \
     npm \
     && rm -rf /var/lib/apt/lists/*
