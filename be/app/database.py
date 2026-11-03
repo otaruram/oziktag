@@ -2,9 +2,21 @@
 Database layer: Prisma for all DB operations, Supabase only for Auth.
 """
 
+import os
 from prisma import Prisma
 from supabase import create_client, Client
 from app.config import get_settings
+
+
+def _sanitize_db_env():
+    """Ensure DATABASE_URL and DIRECT_URL have no surrounding quotes from Docker env-file."""
+    for key in ("DATABASE_URL", "DIRECT_URL"):
+        val = os.environ.get(key)
+        if val:
+            os.environ[key] = val.strip().strip("\"'").strip()
+
+
+_sanitize_db_env()
 
 # ──────────────────────── Prisma Client ────────────────────────
 db = Prisma()
@@ -12,6 +24,7 @@ db = Prisma()
 
 async def connect_db():
     """Connect Prisma client. Call in FastAPI lifespan startup."""
+    _sanitize_db_env()
     await db.connect()
     print("[Database] Prisma connected")
 

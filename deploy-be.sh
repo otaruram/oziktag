@@ -6,7 +6,15 @@ echo "=== Memperbarui & Menjalankan Oziktag Backend di Docker ==="
 # 1. Hentikan & hapus container lama jika ada (mencegah error ContainerConfig)
 docker rm -f oziktag-backend 2>/dev/null || true
 
-# 2. Build image backend
+# 2. Pastikan file be/.env tidak memiliki tanda petik pembungkus pada DATABASE_URL & DIRECT_URL
+if [ -f "./be/.env" ]; then
+  sed -i 's/^DATABASE_URL="\(.*\)"$/DATABASE_URL=\1/' ./be/.env 2>/dev/null || true
+  sed -i "s/^DATABASE_URL='\(.*\)'$/DATABASE_URL=\1/" ./be/.env 2>/dev/null || true
+  sed -i 's/^DIRECT_URL="\(.*\)"$/DIRECT_URL=\1/' ./be/.env 2>/dev/null || true
+  sed -i "s/^DIRECT_URL='\(.*\)'$/DIRECT_URL=\1/" ./be/.env 2>/dev/null || true
+fi
+
+# 3. Build image backend
 echo "Building backend image..."
 docker build -t oziktag-backend ./be
 
@@ -22,3 +30,4 @@ docker run -d \
 
 echo "=== Backend Berhasil Dijalankan! ==="
 docker ps --filter "name=oziktag-backend"
+
