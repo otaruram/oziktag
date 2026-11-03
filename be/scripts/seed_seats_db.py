@@ -50,3 +50,4 @@ print(f"Total seats in database: {total}, Available: {available}")
 
 cur.close()
 conn.close()
+
