@@ -5,27 +5,22 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Design system definition.
- *
- * The @theme inline block maps CSS custom properties to Tailwind utility
- * classes (e.g. --color-primary -> bg-primary, text-primary).
- *
- * The :root and .dark blocks define the actual color values using oklch.
- * All colors MUST use oklch format.
- *
- * To add a new semantic color:
- * 1. Add the variable to :root (light value) and .dark (dark value)
- * 2. Register it in @theme inline as --color-<name>: var(--<name>)
+ * Hallmark Design System & Material Tokens
+ * Inspired by usehallmark.com (Cobalt & Studio Architecture)
+ * - Anti-AI-Slop: Distinct typographic rhythm, tactile surfaces, hairline borders.
+ * - Colors: Rich slate ink, crisp paper canvas, signature Oziktag Ember (#ea580c),
+ *   Trust Emerald (#10b981), Escrow Amber (#f59e0b), and Rose Red (#f43f5e).
  */
 
 @theme inline {
+  --radius-xs: calc(var(--radius) - 6px);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
+  --radius-3xl: calc(var(--radius) + 14px);
+  
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -45,97 +40,90 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-ring-offset-background: var(--background);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-emerald-trust: var(--emerald-trust);
+  --color-amber-escrow: var(--amber-escrow);
 }
 
 :root {
-  --radius: 0.625rem;
-  /* Light theme - Black and White */
-  --background: hsl(0 0% 100%);          /* white */
-  --foreground: hsl(0 0% 10%);        /* very dark gray/black */
-  --card: hsl(0 0% 100%);
-  --card-foreground: hsl(0 0% 10%);
+  --radius: 0.75rem;
+
+  /* Hallmark Light Material (Cobalt / Studio Paper) */
+  --background: hsl(210 20% 98%);          /* #f8fafc - Crisp architectural paper */
+  --foreground: hsl(222 47% 11%);          /* #0f172a - Deep obsidian ink */
+  
+  --card: hsl(0 0% 100%);                  /* Crisp elevated card */
+  --card-foreground: hsl(222 47% 11%);
+  
   --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(0 0% 10%);
-  --primary: hsl(0 0% 10%);              /* black primary */
-  --primary-foreground: hsl(0 0% 100%);     /* white text */
-  --secondary: hsl(0 0% 95%);           /* light gray */
-  --secondary-foreground: hsl(0 0% 10%);
-  --muted: hsl(0 0% 95%);
-  --muted-foreground: hsl(0 0% 40%);     /* medium gray */
-  --accent: hsl(0 0% 95%);
-  --accent-foreground: hsl(0 0% 10%);
-  --destructive: hsl(0 0% 30%);          /* dark gray (no colors allowed) */
+  --popover-foreground: hsl(222 47% 11%);
+
+  --primary: hsl(24 95% 53%);              /* #ea580c - Oziktag signature amber/orange */
+  --primary-foreground: hsl(0 0% 100%);
+
+  --brand: hsl(222 47% 11%);               /* Deep structural navy */
+  --brand-foreground: hsl(0 0% 100%);
+
+  --secondary: hsl(210 30% 96%);          /* Light stone gray */
+  --secondary-foreground: hsl(222 47% 11%);
+
+  --muted: hsl(210 25% 94%);              /* Soft paper tint */
+  --muted-foreground: hsl(215 16% 47%);   /* #64748b - Slate neutral text */
+
+  --accent: hsl(24 100% 97%);             /* Warm ember highlight */
+  --accent-foreground: hsl(24 95% 45%);
+
+  --destructive: hsl(350 89% 60%);        /* #f43f5e */
   --destructive-foreground: hsl(0 0% 100%);
-  --border: hsl(0 0% 85%);
-  --input: hsl(0 0% 85%);
-  --ring: hsl(0 0% 10%);
-  --success: hsl(0 0% 30%);
-  --success-foreground: hsl(0 0% 100%);
-  --gradient-trust: linear-gradient(135deg, hsl(0 0% 20%), hsl(0 0% 40%));
-  --shadow-elegant: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
-  --chart-1: hsl(0 0% 20%);
-  --chart-2: hsl(0 0% 40%);
-  --chart-3: hsl(0 0% 60%);
-  --chart-4: hsl(0 0% 70%);
-  --chart-5: hsl(0 0% 80%);
-  --sidebar: hsl(0 0% 98%);
-  --sidebar-foreground: hsl(0 0% 10%);
-  --sidebar-primary: hsl(0 0% 10%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(0 0% 90%);
-  --sidebar-accent-foreground: hsl(0 0% 10%);
-  --sidebar-border: hsl(0 0% 85%);
-  --sidebar-ring: hsl(0 0% 10%);
+
+  --border: hsl(214 32% 91%);             /* #e2e8f0 - Crisp hairline border */
+  --input: hsl(214 32% 91%);
+  --ring: hsl(24 95% 53%);
+
+  --emerald-trust: hsl(158 64% 42%);      /* #10b981 - Verified QC / Valid Gate */
+  --amber-escrow: hsl(38 92% 50%);        /* #f59e0b - Escrow Held */
+
+  --shadow-hallmark: 0 1px 3px 0 rgb(15 23 42 / 0.05), 0 1px 2px -1px rgb(15 23 42 / 0.05);
+  --shadow-hallmark-lg: 0 10px 30px -5px rgb(15 23 42 / 0.08), 0 4px 12px -2px rgb(15 23 42 / 0.04);
 }
 
 .dark {
-  /* Dark theme - Black and White */
-  --background: hsl(0 0% 5%);
-  --foreground: hsl(0 0% 95%);
-  --card: hsl(0 0% 10%);
-  --card-foreground: hsl(0 0% 95%);
-  --popover: hsl(0 0% 10%);
-  --popover-foreground: hsl(0 0% 95%);
-  --primary: hsl(0 0% 95%);
-  --primary-foreground: hsl(0 0% 10%);
-  --secondary: hsl(0 0% 15%);
-  --secondary-foreground: hsl(0 0% 95%);
-  --muted: hsl(0 0% 15%);
-  --muted-foreground: hsl(0 0% 60%);
-  --accent: hsl(0 0% 15%);
-  --accent-foreground: hsl(0 0% 95%);
-  --destructive: hsl(0 0% 40%);
-  --destructive-foreground: hsl(0 0% 95%);
-  --border: hsl(0 0% 20%);
-  --input: hsl(0 0% 20%);
-  --ring: hsl(0 0% 80%);
-  --chart-1: hsl(0 0% 80%);
-  --chart-2: hsl(0 0% 60%);
-  --chart-3: hsl(0 0% 40%);
-  --chart-4: hsl(0 0% 30%);
-  --chart-5: hsl(0 0% 20%);
-  --sidebar: hsl(0 0% 10%);
-  --sidebar-foreground: hsl(0 0% 95%);
-  --sidebar-primary: hsl(0 0% 95%);
-  --sidebar-primary-foreground: hsl(0 0% 10%);
-  --sidebar-accent: hsl(0 0% 20%);
-  --sidebar-accent-foreground: hsl(0 0% 95%);
-  --sidebar-border: hsl(0 0% 20%);
-  --sidebar-ring: hsl(0 0% 80%);
+  /* Hallmark Dark Material (Atmospheric Obsidian & Ink) */
+  --background: hsl(224 71% 4%);           /* #06090e */
+  --foreground: hsl(210 40% 98%);          /* #f8fafc */
+
+  --card: hsl(222 47% 8%);                 /* #0c1322 */
+  --card-foreground: hsl(210 40% 98%);
+
+  --popover: hsl(222 47% 8%);
+  --popover-foreground: hsl(210 40% 98%);
+
+  --primary: hsl(24 95% 53%);              /* #ea580c */
+  --primary-foreground: hsl(0 0% 100%);
+
+  --brand: hsl(210 40% 98%);
+  --brand-foreground: hsl(224 71% 4%);
+
+  --secondary: hsl(223 35% 13%);
+  --secondary-foreground: hsl(210 40% 98%);
+
+  --muted: hsl(223 35% 12%);
+  --muted-foreground: hsl(215 20% 65%);
+
+  --accent: hsl(24 50% 15%);
+  --accent-foreground: hsl(24 95% 65%);
+
+  --destructive: hsl(350 89% 60%);
+  --destructive-foreground: hsl(0 0% 100%);
+
+  --border: hsl(217 33% 17%);             /* #1e293b */
+  --input: hsl(217 33% 17%);
+  --ring: hsl(24 95% 53%);
+
+  --shadow-hallmark: 0 1px 3px 0 rgb(0 0 0 / 0.3);
+  --shadow-hallmark-lg: 0 12px 36px -4px rgb(0 0 0 / 0.45);
 }
 
 @layer base {
@@ -146,5 +134,42 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
   }
+
+  ::selection {
+    background-color: var(--color-primary);
+    color: white;
+  }
+}
+
+/* Hallmark Pattern Utilities */
+.hallmark-grid {
+  background-image: radial-gradient(hsl(215 16% 47% / 0.12) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.hallmark-card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-hallmark);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hallmark-card:hover {
+  border-color: hsl(215 16% 47% / 0.3);
+  box-shadow: var(--shadow-hallmark-lg);
+}
+
+.hallmark-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  text-transform: uppercase;
 }

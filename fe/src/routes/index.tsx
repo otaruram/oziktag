@@ -1,25 +1,45 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { ShieldCheck, QrCode, CheckCircle2, ArrowRight, Bot, Store, Camera, Database, MapPin, Lock, Ticket } from "lucide-react";
-import { toast } from "sonner";
+import { useEffect, useState } from "react";
+import { 
+  ShieldCheck, 
+  QrCode, 
+  CheckCircle2, 
+  ArrowRight, 
+  Bot, 
+  Camera, 
+  Database, 
+  MapPin, 
+  Lock, 
+  Ticket,
+  Sparkles,
+  ExternalLink,
+  Cpu,
+  Layers,
+  Check,
+  Building2,
+  Calendar,
+  Users
+} from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Oziktag — Digital Trust Seal untuk Pengrajin UMKM" },
+      { title: "Oziktag — Infrastruktur Kepercayaan Digital untuk Pengrajin & Event" },
       {
         name: "description",
         content:
-          "Validasi kualitas produk kerajinan tangan UMKM dengan QR Code tepercaya. Bangun kepercayaan pembeli dalam hitungan detik.",
+          "Platform sertifikasi kualitas produk kerajinan tangan UMKM berbasis AI Vision dan sistem tiket event interaktif dengan garansi pembayaran Escrow.",
       },
     ],
   }),
-  component: Landing,
+  component: LandingPage,
 });
 
-function Landing() {
+function LandingPage() {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<"PRODUCT_QC" | "EVENT_PASS">("EVENT_PASS");
+  const [demoStep, setDemoStep] = useState(1);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -28,7 +48,7 @@ function Landing() {
       }
     });
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
         router.navigate({ to: "/dashboard" });
       }
@@ -38,267 +58,494 @@ function Landing() {
       authListener.subscription.unsubscribe();
     };
   }, [router]);
-  return (
-    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-foreground selection:text-background overflow-hidden relative">
-      
-      {/* Background Dot Pattern */}
-      <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none" 
-           style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
 
-      <header className="sticky top-0 z-50 mx-auto flex max-w-6xl items-center justify-between px-6 py-4 border-b border-border/40 bg-background/80 backdrop-blur-md">
-        <Link to="/" className="flex items-center gap-2 font-bold text-lg tracking-tight hover:opacity-80 transition">
-          <ShieldCheck className="h-6 w-6 text-foreground" />
-          <span>Oziktag</span>
-        </Link>
-        <div className="flex items-center gap-2 sm:gap-3">
-          <Link
-            to="/events"
-            className="inline-flex items-center gap-2 rounded-full border border-emerald-600/30 bg-emerald-50 text-emerald-800 px-3.5 py-1.5 text-xs font-semibold hover:bg-emerald-100 transition shadow-xs"
-          >
-            <Ticket className="h-3.5 w-3.5 text-emerald-600" />
-            <span>Tiket Event 2026</span>
-            <span className="hidden sm:inline rounded-full bg-emerald-600 text-white px-1.5 py-0.5 text-[10px] font-bold">Summarecon</span>
+  return (
+    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-orange-500 selection:text-white relative overflow-hidden">
+      {/* Hallmark Architectural Grid Texture */}
+      <div 
+        className="absolute inset-0 pointer-events-none opacity-[0.035] dark:opacity-[0.05]"
+        style={{
+          backgroundImage: "linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)",
+          backgroundSize: "40px 40px"
+        }}
+      />
+
+      {/* Floating Hallmark Header */}
+      <header className="sticky top-0 z-50 border-b border-border/80 bg-background/85 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+          <Link to="/" className="flex items-center gap-2.5 group">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 text-white shadow-xs group-hover:scale-105 transition-transform duration-200">
+              <ShieldCheck className="h-5 w-5 text-orange-500" />
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="font-extrabold text-lg tracking-tight text-foreground">Oziktag</span>
+              <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
+            </div>
           </Link>
-          <Link
-            to="/auth"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-foreground text-background px-4 py-1.5 text-xs font-semibold hover:bg-foreground/90 transition"
-          >
-            Masuk / Daftar
-          </Link>
+
+          <nav className="hidden md:flex items-center gap-6 text-xs font-semibold text-muted-foreground">
+            <a href="#solusi" className="hover:text-foreground transition">Solusi Produk</a>
+            <a href="#event" className="hover:text-foreground transition">Tiket Summarecon</a>
+            <a href="#arsitektur" className="hover:text-foreground transition">Arsitektur Escrow</a>
+            <a href="#tim" className="hover:text-foreground transition">Tentang Kami</a>
+          </nav>
+
+          <div className="flex items-center gap-3">
+            <Link
+              to="/events"
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3.5 py-2 text-xs font-semibold hover:bg-secondary transition"
+            >
+              <Ticket className="h-3.5 w-3.5 text-emerald-600" />
+              <span>Tiket Event 2026</span>
+            </Link>
+            <Link
+              to="/auth"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-orange-600 px-4 py-2 text-xs font-bold text-white hover:bg-orange-700 transition shadow-xs"
+            >
+              Masuk / Daftar
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
         </div>
       </header>
 
       <main className="relative z-10">
-        {/* HERO SECTION */}
-        <section className="mx-auto max-w-4xl px-6 pt-24 pb-20 text-center">
-          <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-foreground/20 bg-foreground/5 px-4 py-1.5 text-xs font-semibold tracking-wide text-foreground uppercase">
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              Digital Trust Seal Pengrajin UMKM
-            </span>
-            <Link
-              to="/events"
-              className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 text-xs font-semibold text-emerald-800 hover:bg-emerald-500/20 transition"
-            >
-              <span className="flex h-2 w-2 rounded-full bg-emerald-600 animate-pulse" />
-              <span className="font-bold">Bandung Build Challenge 2026:</span>
-              <span>Tiket & Denah Kursi Summarecon Mall Bandung &rarr;</span>
-            </Link>
-          </div>
-          <h1 className="mt-8 text-balance text-4xl sm:text-5xl font-extrabold tracking-tight md:text-7xl leading-tight">
-            Bangun kepercayaan pembeli, <br className="hidden md:block"/>
-            <span className="text-muted-foreground">satu QR sekali tempel.</span>
-          </h1>
-          <p className="mx-auto mt-8 max-w-2xl text-lg text-muted-foreground leading-relaxed">
-            Oziktag membantu Pengrajin memvalidasi Quality Control (QC) produk kerajinan tangan 
-            lewat QR Code yang dianalisis AI. Simpel, cepat, dan 100% kredibel di mata pelanggan.
-          </p>
-          <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4">
-            <Link
-              to="/events"
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-8 py-3.5 text-sm font-bold text-white transition-transform active:scale-95 hover:bg-slate-800 shadow-md"
-            >
-              <Ticket className="h-4 w-4 text-emerald-400" />
-              Pesan Tiket & Kursi Event
-            </Link>
-            <Link
-              to="/auth"
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-foreground px-8 py-3.5 text-sm font-bold text-background transition-transform active:scale-95 hover:bg-foreground/90"
-            >
-              Mulai gratis sekarang <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              to="/docs"
-              className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-border bg-background px-8 py-3.5 text-sm font-bold transition-colors hover:bg-muted"
-            >
-              Lihat dokumentasi API (Khusus Developer)
-            </Link>
-          </div>
-          
-
-        </section>
-
-        {/* HOW IT WORKS */}
-        <section className="border-y border-border bg-muted/30">
-          <div className="mx-auto max-w-6xl px-6 py-24">
-            <div className="text-center mb-16">
-              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight md:text-4xl">Cara Kerja yang Transparan</h2>
-              <p className="mt-4 text-muted-foreground">Dari gudang Anda langsung ke tangan pembeli dengan jaminan AI.</p>
-            </div>
-            
-            <div className="grid md:grid-cols-3 gap-8 relative">
-              <div className="hidden md:block absolute top-8 left-[16.66%] right-[16.66%] h-[2px] bg-border z-0"></div>
-              
-              <div className="relative z-10 bg-card border border-border p-8 rounded-2xl shadow-sm text-center">
-                <div className="mx-auto w-16 h-16 bg-background border border-border rounded-full flex items-center justify-center mb-6">
-                  <Camera className="h-6 w-6 text-foreground" />
-                </div>
-                <h3 className="text-lg font-bold mb-2">1. Upload Produk</h3>
-                <p className="text-sm text-muted-foreground">Isi form QC ringkas dan upload foto riil produk sebelum dikemas.</p>
+        {/* HERO SECTION: Hallmark Asymmetrical Material Hero */}
+        <section className="mx-auto max-w-7xl px-6 pt-16 sm:pt-24 pb-20">
+          <div className="grid lg:grid-cols-12 gap-12 items-center">
+            {/* Left Column: Authentic Copy & Actions */}
+            <div className="lg:col-span-7 flex flex-col items-start">
+              <div className="inline-flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-50/60 dark:bg-orange-950/30 px-3 py-1 text-xs font-semibold text-orange-700 dark:text-orange-400 mb-6">
+                <span className="flex h-2 w-2 rounded-full bg-orange-500 animate-ping" />
+                <span>Bandung Build Challenge 2026 Edition</span>
+                <span className="text-muted-foreground">•</span>
+                <span className="font-mono text-[10px]">Summarecon Mall Bandung</span>
               </div>
 
-              <div className="relative z-10 bg-card border border-border p-8 rounded-2xl shadow-sm text-center">
-                <div className="mx-auto w-16 h-16 bg-foreground text-background border border-foreground rounded-full flex items-center justify-center mb-6">
-                  <Bot className="h-6 w-6" />
-                </div>
-                <h3 className="text-lg font-bold mb-2">2. Analisis AI</h3>
-                <p className="text-sm text-muted-foreground">Gemini AI memvalidasi foto dan memberikan insight jaminan kualitas secara objektif.</p>
-              </div>
+              <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-foreground leading-[1.1]">
+                Infrastruktur Kepercayaan Digital untuk <span className="underline decoration-orange-500 decoration-wavy decoration-2 underline-offset-8">Pengrajin & Event</span>
+              </h1>
 
-              <div className="relative z-10 bg-card border border-border p-8 rounded-2xl shadow-sm text-center">
-                <div className="mx-auto w-16 h-16 bg-background border border-border rounded-full flex items-center justify-center mb-6">
-                  <QrCode className="h-6 w-6 text-foreground" />
-                </div>
-                <h3 className="text-lg font-bold mb-2">3. Cetak & Tempel QR</h3>
-                <p className="text-sm text-muted-foreground">Sistem mencetak QR Code unik. Pembeli scan untuk melihat sertifikat digital.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* FEATURES */}
-        <section className="mx-auto max-w-6xl px-6 py-24">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight md:text-4xl leading-tight">
-                Teknologi Enterprise<br className="hidden sm:block"/>untuk Skala UMKM
-              </h2>
-              <p className="mt-4 text-muted-foreground text-lg mb-8">
-                Kami membangun sistem dengan arsitektur mutakhir untuk memastikan 
-                data tidak bisa dimanipulasi oleh pihak manapun.
+              <p className="mt-6 text-base sm:text-lg text-muted-foreground leading-relaxed max-w-2xl">
+                Oziktag menggabungkan AI Vision Quality Control dengan segel kriptografi QR dan sistem tiket event terintegrasi Escrow. Memastikan keaslian karya UMKM serta transparansi transaksi hingga ke pintu gate.
               </p>
-              
-              <ul className="space-y-6">
-                <li className="flex items-start gap-4">
-                  <div className="mt-1 bg-muted p-2 rounded-md"><Database className="h-5 w-5" /></div>
-                  <div>
-                    <strong className="block text-foreground">Relational Storage</strong>
-                    <span className="text-sm text-muted-foreground">Data disimpan secara presisi menggunakan PostgreSQL & Prisma.</span>
-                  </div>
-                </li>
-                <li className="flex items-start gap-4">
-                  <div className="mt-1 bg-muted p-2 rounded-md"><ShieldCheck className="h-5 w-5" /></div>
-                  <div>
-                    <strong className="block text-foreground">Verifikasi KYC Terpusat</strong>
-                    <span className="text-sm text-muted-foreground">Setiap toko divalidasi keasliannya mencegah pemalsuan produk.</span>
-                  </div>
-                </li>
-                <li className="flex items-start gap-4">
-                  <div className="mt-1 bg-muted p-2 rounded-md"><MapPin className="h-5 w-5" /></div>
-                  <div>
-                    <strong className="block text-foreground">Tracking Lite dengan GPS</strong>
-                    <span className="text-sm text-muted-foreground">Lacak resi perjalanan logistik yang aman dengan konfirmasi PIN Pembeli.</span>
-                  </div>
-                </li>
-                <li className="flex items-start gap-4">
-                  <div className="mt-1 bg-muted p-2 rounded-md"><Lock className="h-5 w-5" /></div>
-                  <div>
-                    <strong className="block text-foreground">Sistem Escrow Terpadu</strong>
-                    <span className="text-sm text-muted-foreground">Pembayaran pembeli ditahan secara aman (Escrow) dan baru diteruskan ke penjual setelah barang diterima. Biaya transaksi hanya 1,5% + Rp 1.000 per transaksi.</span>
-                  </div>
-                </li>
-              </ul>
-            </div>
-            
-            <div className="relative rounded-2xl border border-border bg-card p-2 overflow-hidden shadow-xl">
-              <div className="absolute inset-0 bg-gradient-to-tr from-muted/50 to-background z-0"></div>
-              <div className="relative z-10 bg-background border border-border rounded-xl p-6 h-full flex flex-col justify-center text-center py-16">
-                <QrCode className="h-24 w-24 mx-auto text-foreground mb-6" />
-                <div className="inline-flex mx-auto items-center gap-1.5 rounded-full bg-foreground/10 px-3 py-1 text-xs font-semibold text-foreground">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Terverifikasi Aman
+
+              {/* Action Buttons */}
+              <div className="mt-8 flex flex-wrap items-center gap-3 w-full sm:w-auto">
+                <Link
+                  to="/events"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-xl bg-orange-600 px-6 py-3.5 text-sm font-bold text-white hover:bg-orange-700 transition shadow-sm"
+                >
+                  <Ticket className="h-4 w-4" />
+                  Beli Tiket & Pilih Kursi
+                </Link>
+                <Link
+                  to="/auth"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 py-3.5 text-sm font-bold text-white hover:bg-slate-800 transition shadow-sm"
+                >
+                  Daftar Toko UMKM
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link
+                  to="/docs"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-5 py-3.5 text-sm font-semibold text-foreground hover:bg-secondary transition"
+                >
+                  <Cpu className="h-4 w-4 text-muted-foreground" />
+                  Dokumentasi API
+                </Link>
+              </div>
+
+              {/* Verified Trust Stats */}
+              <div className="mt-12 grid grid-cols-3 gap-6 border-t border-border/80 pt-6 w-full max-w-lg">
+                <div>
+                  <p className="text-2xl font-extrabold text-foreground font-mono">100%</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Anti Double-Booking</p>
                 </div>
-                <h4 className="mt-4 font-bold text-xl">Tas Anyaman Rotan Premium</h4>
-                <p className="text-sm text-muted-foreground mt-2">Koleksi Eksklusif 2026</p>
+                <div>
+                  <p className="text-2xl font-extrabold text-foreground font-mono">24 Jam</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Escrow Protection</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-extrabold text-emerald-600 font-mono">&lt; 120ms</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Gate QR Validation</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Hallmark Live Interactive Simulator */}
+            <div className="lg:col-span-5">
+              <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-[var(--shadow-hallmark-lg)] relative">
+                {/* Simulator Header Tabs */}
+                <div className="flex items-center justify-between pb-3 border-b border-border/80">
+                  <div className="flex gap-1 bg-secondary/80 p-1 rounded-xl">
+                    <button
+                      onClick={() => setActiveTab("EVENT_PASS")}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
+                        activeTab === "EVENT_PASS"
+                          ? "bg-slate-900 text-white shadow-xs"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      Tiket Event Pass
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("PRODUCT_QC")}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
+                        activeTab === "PRODUCT_QC"
+                          ? "bg-slate-900 text-white shadow-xs"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      Label QC Produk
+                    </button>
+                  </div>
+                  <span className="font-mono text-[10px] text-emerald-600 font-bold uppercase tracking-wider flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live Simulator
+                  </span>
+                </div>
+
+                {activeTab === "EVENT_PASS" ? (
+                  /* Simulator View: Summarecon Event Pass */
+                  <div className="mt-4 space-y-4">
+                    <div className="rounded-xl border border-border bg-slate-950 p-4 text-white">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="text-[10px] font-mono uppercase tracking-widest text-orange-400 font-bold">
+                            Official Pass
+                          </span>
+                          <h4 className="text-sm font-bold mt-0.5">Bandung Build Challenge 2026</h4>
+                          <p className="text-xs text-slate-400">Summarecon Mall Bandung (Sawarga Courtyard)</p>
+                        </div>
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-600 text-white">
+                          <Ticket className="h-5 w-5" />
+                        </div>
+                      </div>
+
+                      <div className="mt-4 grid grid-cols-3 gap-2 border-t border-slate-800 pt-3 text-center font-mono">
+                        <div className="bg-slate-900/80 p-2 rounded-lg">
+                          <span className="text-[9px] text-slate-500 block uppercase">Kursi</span>
+                          <span className="text-xs font-extrabold text-orange-400">VIP-A04</span>
+                        </div>
+                        <div className="bg-slate-900/80 p-2 rounded-lg">
+                          <span className="text-[9px] text-slate-500 block uppercase">Gate</span>
+                          <span className="text-xs font-extrabold text-white">Gate 1</span>
+                        </div>
+                        <div className="bg-slate-900/80 p-2 rounded-lg">
+                          <span className="text-[9px] text-slate-500 block uppercase">Escrow</span>
+                          <span className="text-xs font-extrabold text-emerald-400">HELD</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* QR Code Pass representation */}
+                    <div className="flex items-center gap-4 p-3 rounded-xl border border-dashed border-border bg-secondary/40">
+                      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-white border p-1 shadow-xs">
+                        <QrCode className="h-full w-full text-slate-900" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-bold text-foreground">Cryptographic Pass Token</span>
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                        </div>
+                        <p className="text-[11px] font-mono text-muted-foreground truncate mt-0.5">
+                          OZIK-PASS:7f4a9b2c...
+                        </p>
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          Otomatis mencairkan dana escrow ke dompet organizer saat discan di gate.
+                        </p>
+                      </div>
+                    </div>
+
+                    <Link
+                      to="/events"
+                      className="block w-full text-center rounded-lg bg-orange-600 py-2.5 text-xs font-bold text-white hover:bg-orange-700 transition"
+                    >
+                      Buka Denah Kursi Interaktif &rarr;
+                    </Link>
+                  </div>
+                ) : (
+                  /* Simulator View: Product QC Label */
+                  <div className="mt-4 space-y-4">
+                    <div className="rounded-xl border border-border bg-card p-4">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 text-emerald-800 px-2 py-0.5 text-[10px] font-bold">
+                            ✓ AI QC Score 98/100
+                          </span>
+                          <h4 className="text-sm font-bold mt-2">Tas Anyaman Rotan Motif Priangan</h4>
+                          <p className="text-xs text-muted-foreground">Batch: B-2026-11-03 • Toko Batik & Anyam Rahayu</p>
+                        </div>
+                        <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center border">
+                          <Camera className="h-6 w-6 text-muted-foreground" />
+                        </div>
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        <span className="rounded-md bg-secondary px-2 py-0.5 text-[10px] font-medium text-foreground">
+                          ✓ Kerapatan Anyaman Sempurna
+                        </span>
+                        <span className="rounded-md bg-secondary px-2 py-0.5 text-[10px] font-medium text-foreground">
+                          ✓ Finishing Serat Halus
+                        </span>
+                        <span className="rounded-md bg-secondary px-2 py-0.5 text-[10px] font-medium text-foreground">
+                          ✓ Bebas Cacat Permukaan
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between p-3 rounded-xl border border-border bg-slate-900 text-white">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-600">
+                          <QrCode className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold">Label Digital Siap Ditempel</p>
+                          <p className="text-[10px] text-slate-400 font-mono">1 QR = 1 Sertifikat Terproteksi</p>
+                        </div>
+                      </div>
+                      <Link
+                        to="/generator"
+                        className="rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-slate-900 hover:bg-slate-100 transition"
+                      >
+                        Coba Buat
+                      </Link>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </section>
 
-        {/* CTA */}
-        <section className="border-t border-border bg-foreground text-background py-24">
-          <div className="mx-auto max-w-3xl px-6 text-center">
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight md:text-5xl">Siap Meningkatkan Penjualan?</h2>
-            <p className="mt-6 text-background/80 text-lg">
-              Bergabung dengan ribuan pengrajin UMKM lain yang sudah membuktikan peningkatan 
-              kepercayaan pelanggan mereka bersama Oziktag.
+        {/* BENTO GRID SHOWCASE (Hallmark Material Architecture) */}
+        <section id="solusi" className="border-t border-border/80 bg-secondary/30 py-20">
+          <div className="mx-auto max-w-7xl px-6">
+            <div className="max-w-2xl">
+              <span className="text-xs font-bold text-orange-600 uppercase tracking-widest font-mono">
+                Pilar Arsitektur
+              </span>
+              <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">
+                Didesain Khusus untuk Standar Kepercayaan Tanpa Celah
+              </h2>
+              <p className="mt-4 text-muted-foreground text-sm sm:text-base">
+                Menghubungkan rantai pasok pengrajin lokal, transparansi pembeli, dan kenyamanan pengunjung event dalam satu protokol terpadu.
+              </p>
+            </div>
+
+            <div className="mt-12 grid md:grid-cols-3 gap-6">
+              {/* Card 1: AI Vision Quality Control */}
+              <div className="rounded-2xl border border-border bg-card p-6 shadow-xs flex flex-col justify-between">
+                <div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/10 text-orange-600 mb-5">
+                    <Bot className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-lg font-bold text-foreground">AI Vision Quality Control</h3>
+                  <p className="mt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                    Pengrajin mengunggah foto produk riil saat selesai produksi. Sistem multimodal AI secara otomatis memverifikasi kerapatan, simetri, dan cacat fisik sebelum QR dicetak.
+                  </p>
+                </div>
+                <div className="mt-6 pt-4 border-t border-border/60">
+                  <span className="font-mono text-[11px] text-muted-foreground flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                    Didukung Google Gemini Multimodal
+                  </span>
+                </div>
+              </div>
+
+              {/* Card 2: Interactive Seat Map & Event Pass */}
+              <div id="event" className="rounded-2xl border border-border bg-card p-6 shadow-xs flex flex-col justify-between">
+                <div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 mb-5">
+                    <Ticket className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-lg font-bold text-foreground">Interactive Seat & Gate Pass</h3>
+                  <p className="mt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                    Denah kursi 100-seat real-time untuk Summarecon Mall Bandung 2026. Fitur hold kursi 5 menit dengan kunci atomik mencegah perebutan tiket (anti double-booking).
+                  </p>
+                </div>
+                <div className="mt-6 pt-4 border-t border-border/60">
+                  <span className="font-mono text-[11px] text-muted-foreground flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                    Gate Scanner & Instant Check-in
+                  </span>
+                </div>
+              </div>
+
+              {/* Card 3: Escrow Payment & Dompet Penghasilan */}
+              <div id="arsitektur" className="rounded-2xl border border-border bg-card p-6 shadow-xs flex flex-col justify-between">
+                <div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 mb-5">
+                    <Lock className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-lg font-bold text-foreground">Sistem Escrow Terproteksi</h3>
+                  <p className="mt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                    Dana pembeli ditahan aman dalam pool Escrow Oziktag dan hanya dicairkan ke Dompet Penjual setelah barang dikonfirmasi sampai atau tiket discan di pintu gate.
+                  </p>
+                </div>
+                <div className="mt-6 pt-4 border-t border-border/60">
+                  <span className="font-mono text-[11px] text-muted-foreground flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                    Sesuai Regulasi Bank Indonesia
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* HOW IT WORKS SECTION */}
+        <section className="py-20 border-t border-border/80">
+          <div className="mx-auto max-w-7xl px-6">
+            <div className="text-center max-w-2xl mx-auto mb-16">
+              <span className="text-xs font-bold text-orange-600 uppercase tracking-widest font-mono">
+                Alur Protokol
+              </span>
+              <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-foreground">
+                Tiga Langkah Mudah Menuju Transparansi
+              </h2>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8 relative">
+              <div className="rounded-2xl border border-border bg-card p-6 text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary text-foreground mb-5 border">
+                  <span className="font-mono font-extrabold text-lg">01</span>
+                </div>
+                <h3 className="text-base font-bold text-foreground">Input Data & Validasi QC</h3>
+                <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+                  Pilih produk atau konfigurasikan acara Anda. Jalankan inspeksi kualitas dengan bantuan AI.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-border bg-card p-6 text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 text-white mb-5">
+                  <span className="font-mono font-extrabold text-lg text-orange-400">02</span>
+                </div>
+                <h3 className="text-base font-bold text-foreground">Cetak Label / E-Pass QR</h3>
+                <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+                  Sistem menghasilkan tanda pengenal digital yang tahan duplikasi dengan signature kriptografis.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-border bg-card p-6 text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary text-foreground mb-5 border">
+                  <span className="font-mono font-extrabold text-lg">03</span>
+                </div>
+                <h3 className="text-base font-bold text-foreground">Pencairan Dana Escrow</h3>
+                <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+                  Setelah pembeli scan atau panitia memverifikasi tiket di gate, dana masuk ke Dompet Penghasilan.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* FOUNDERS & TEAM (Hallmark Architectural Cards) */}
+        <section id="tim" className="border-t border-border/80 bg-secondary/30 py-20">
+          <div className="mx-auto max-w-7xl px-6">
+            <div className="text-center max-w-2xl mx-auto mb-16">
+              <span className="text-xs font-bold text-orange-600 uppercase tracking-widest font-mono">
+                Tim Pengembang
+              </span>
+              <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-foreground">
+                Inovator di Balik Oziktag
+              </h2>
+              <p className="mt-3 text-sm text-muted-foreground">
+                Dirancang dan dikembangkan untuk memenangkan Bandung Build Challenge 2026.
+              </p>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              {/* Oki */}
+              <div className="rounded-2xl border border-border bg-card p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-6 shadow-xs">
+                <div className="h-24 w-24 shrink-0 overflow-hidden rounded-2xl border-2 border-border shadow-xs">
+                  <img src="/oki.png" alt="Oki Taruna Ramadhan" className="h-full w-full object-cover object-top" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-foreground">Oki Taruna Ramadhan</h3>
+                  <p className="text-xs font-mono text-orange-600 font-semibold uppercase">Founder & Lead Engineer</p>
+                  <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+                    Merancang arsitektur backend FastAPI, Supabase database, atomic seat locking, dan algoritma verifikasi kriptografis gate pass.
+                  </p>
+                  <a
+                    href="https://www.linkedin.com/in/otaruram/"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-foreground hover:text-orange-600 transition"
+                  >
+                    Profil LinkedIn &rarr;
+                  </a>
+                </div>
+              </div>
+
+              {/* Azikri */}
+              <div className="rounded-2xl border border-border bg-card p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-6 shadow-xs">
+                <div className="h-24 w-24 shrink-0 overflow-hidden rounded-2xl border-2 border-border shadow-xs">
+                  <img src="/zikri.jpeg" alt="Azdzikri Muhammad Hisyam Soleh" className="h-full w-full object-cover" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-foreground">Azdzikri Muhammad Hisyam Soleh</h3>
+                  <p className="text-xs font-mono text-orange-600 font-semibold uppercase">Co-Founder & Product Strategist</p>
+                  <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+                    Merumuskan model bisnis Pay-As-You-Go, kemitraan Summarecon Mall Bandung, dan strategi kepatuhan regulasi OJK/Bank Indonesia.
+                  </p>
+                  <a
+                    href="https://www.linkedin.com/in/azdzikri-muhammad-hisyam-soleh-086b43281/"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-foreground hover:text-orange-600 transition"
+                  >
+                    Profil LinkedIn &rarr;
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* CALL TO ACTION */}
+        <section className="border-t border-border/80 bg-slate-950 text-white py-20">
+          <div className="mx-auto max-w-4xl px-6 text-center">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-500/20 px-3 py-1 text-xs font-mono font-bold text-orange-400 uppercase">
+              Mulai Dalam 2 Menit
+            </span>
+            <h2 className="mt-4 text-3xl sm:text-5xl font-extrabold tracking-tight">
+              Beri Pelanggan Anda Alasan Nyata untuk Percaya
+            </h2>
+            <p className="mt-4 text-sm sm:text-base text-slate-400 max-w-2xl mx-auto leading-relaxed">
+              Bergabung sekarang bersama ratusan UMKM yang meningkatkan daya saing melalui verifikasi AI dan integrasi transaksi aman.
             </p>
-            <div className="mt-10">
+            <div className="mt-8 flex flex-wrap justify-center gap-4">
               <Link
                 to="/auth"
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-background px-8 py-4 text-base font-bold text-foreground transition-transform active:scale-95 hover:bg-background/90"
+                className="rounded-xl bg-orange-600 px-8 py-3.5 text-sm font-bold text-white hover:bg-orange-700 transition shadow-sm"
               >
                 Mulai Uji Coba Gratis
+              </Link>
+              <Link
+                to="/events"
+                className="rounded-xl border border-slate-700 bg-slate-900 px-8 py-3.5 text-sm font-semibold text-white hover:bg-slate-800 transition"
+              >
+                Lihat Event & Kursi
               </Link>
             </div>
           </div>
         </section>
-
-        {/* FOUNDERS */}
-        <section className="mx-auto max-w-6xl px-6 py-24">
-          <div className="text-center mb-16">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-foreground/20 bg-foreground/5 px-4 py-1.5 text-xs font-semibold tracking-wide text-foreground uppercase">
-              Meet The Team
-            </span>
-            <h2 className="mt-6 text-2xl sm:text-3xl font-bold tracking-tight md:text-4xl">Tim di Balik Oziktag</h2>
-            <p className="mt-4 text-muted-foreground max-w-xl mx-auto">
-              Dibangun oleh tim yang bersemangat membantu UMKM Indonesia naik kelas melalui teknologi.
-            </p>
-          </div>
-          
-          <div className="flex flex-wrap justify-center gap-8 max-w-6xl mx-auto">
-            {/* Oki */}
-            <div className="group w-full max-w-xs relative rounded-2xl border border-border bg-card p-8 text-center transition-all hover:shadow-lg hover:border-foreground/20">
-              <div className="mx-auto mb-6 h-28 w-28 overflow-hidden rounded-full border-2 border-border shadow-md transition-transform group-hover:scale-105">
-                <img src="/oki.png" alt="Oki Taruna Ramadhan" className="h-full w-full object-cover object-top" />
-              </div>
-              <h3 className="text-lg font-bold">Oki Taruna Ramadhan</h3>
-              <p className="mt-1 text-sm font-medium text-primary">Founder</p>
-              <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
-                Merancang arsitektur server, API, dan integrasi AI untuk memastikan sistem berjalan andal dan aman.
-              </p>
-              <a
-                href="https://www.linkedin.com/in/otaruram/"
-                target="_blank"
-                rel="noreferrer"
-                className="mt-5 inline-flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-foreground hover:text-background"
-              >
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-                LinkedIn
-              </a>
-            </div>
-
-            {/* Azikri */}
-            <div className="group w-full max-w-xs relative rounded-2xl border border-border bg-card p-8 text-center transition-all hover:shadow-lg hover:border-foreground/20">
-              <div className="mx-auto mb-6 h-28 w-28 overflow-hidden rounded-full border-2 border-border shadow-md transition-transform group-hover:scale-105">
-                <img src="/zikri.jpeg" alt="Azdzikri Muhammad Hisyam Soleh" className="h-full w-full object-cover" />
-              </div>
-              <h3 className="text-lg font-bold">Azdzikri Muhammad Hisyam Soleh</h3>
-              <p className="mt-1 text-sm font-medium text-primary">Co-Founder</p>
-              <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
-                Strategis Bisnis yang merumuskan arah pengembangan, kemitraan, dan strategi pasar untuk Oziktag.
-              </p>
-              <a
-                href="https://www.linkedin.com/in/azdzikri-muhammad-hisyam-soleh-086b43281/"
-                target="_blank"
-                rel="noreferrer"
-                className="mt-5 inline-flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-foreground hover:text-background"
-              >
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-                LinkedIn
-              </a>
-            </div>
-
-          </div>
-        </section>
       </main>
-      
-      <footer className="border-t border-border bg-background py-10">
-        <div className="mx-auto max-w-6xl px-6 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
+
+      {/* FOOTER */}
+      <footer className="border-t border-border/80 bg-background py-8 text-xs text-muted-foreground">
+        <div className="mx-auto max-w-7xl px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 font-bold text-foreground">
-            <ShieldCheck className="h-5 w-5" />
-            Oziktag
+            <ShieldCheck className="h-5 w-5 text-orange-500" />
+            <span>Oziktag Protocol</span>
+            <span className="text-muted-foreground font-normal font-mono text-[11px]">v2.4-hallmark</span>
           </div>
-          <p>© {new Date().getFullYear()} Oziktag. All rights reserved.</p>
+          <div className="flex items-center gap-6 text-[11px]">
+            <Link to="/docs" className="hover:text-foreground transition">Dokumentasi</Link>
+            <Link to="/terms" className="hover:text-foreground transition">Ketentuan Layanan</Link>
+            <Link to="/privacy" className="hover:text-foreground transition">Kebijakan Privasi</Link>
+          </div>
+          <p className="text-[11px] font-mono">© {new Date().getFullYear()} Oziktag. Bandung Build Challenge.</p>
         </div>
       </footer>
     </div>
