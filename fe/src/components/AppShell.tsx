@@ -13,20 +13,21 @@ import {
   Wallet, 
   Ticket,
   ChevronDown,
-  Sparkles
+  Flame,
+  Hammer
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
 import { apiFetch } from "@/lib/api";
 
 const nav = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/events", label: "Tiket Event", icon: Ticket, badge: "Summarecon" },
-  { to: "/generator", label: "Generate QR", icon: QrCode },
-  { to: "/tracking", label: "Tracking", icon: MapPin },
+  { to: "/dashboard", label: "Studio Dashboard", icon: LayoutDashboard },
+  { to: "/events", label: "Tiket & Seat Map", icon: Ticket, badge: "Summarecon" },
+  { to: "/generator", label: "Cetak Segel QR", icon: QrCode },
+  { to: "/tracking", label: "Tracking Logistik", icon: MapPin },
   { to: "/wallet", label: "Dompet Escrow", icon: Wallet },
-  { to: "/elite-hub", label: "Elite Hub", icon: Crown },
-  { to: "/api-keys", label: "API", icon: Code2 },
+  { to: "/elite-hub", label: "Master Artisan", icon: Crown },
+  { to: "/api-keys", label: "Developer API", icon: Code2 },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -98,29 +99,32 @@ export function AppShell({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
-      {/* Hallmark Header */}
-      <header className="sticky top-0 z-40 border-b border-border/80 bg-background/85 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 py-3.5">
-          {/* Brand Logo */}
+    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans selection:bg-[#cc4a1e] selection:text-white">
+      {/* 80% Werkstatt Architectural Top Header */}
+      <header className="sticky top-0 z-40 border-b border-border/90 bg-background/90 backdrop-blur-md">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 py-3">
+          {/* Brand Lockup: Werkstatt Font + Kiln Terracotta Seal */}
           <div className="flex items-center gap-6">
-            <Link to="/dashboard" className="flex items-center gap-2.5 group">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 text-white shadow-xs group-hover:scale-105 transition-transform duration-200">
-                <ShieldCheck className="h-5 w-5 text-orange-500" />
+            <Link to="/dashboard" className="flex items-center gap-3 group">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#1f1b18] text-white shadow-xs group-hover:bg-[#cc4a1e] transition-colors duration-200">
+                <ShieldCheck className="h-5 w-5 text-orange-400" />
               </div>
               <div className="flex flex-col">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-extrabold text-base tracking-tight text-foreground">Oziktag</span>
-                  <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
+                <div className="flex items-center gap-2">
+                  <span className="font-extrabold text-base tracking-tight text-foreground font-mono">OZIKTAG</span>
+                  {/* 20% Kiln Pottery Stamp */}
+                  <span className="kiln-stamp px-1.5 py-0.5 rounded bg-[#cc4a1e]/10 text-[#cc4a1e] border border-[#cc4a1e]/20 text-[9px]">
+                    WERKSTATT // KILN
+                  </span>
                 </div>
                 <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest hidden sm:block">
-                  Trust & Ticketing
+                  Artisan Quality & Event Protocol
                 </span>
               </div>
             </Link>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center gap-1 pl-4 border-l border-border/60">
+            {/* Desktop Navigation: Bauhaus Werkstatt Precision Tabs */}
+            <nav className="hidden lg:flex items-center gap-1 pl-6 border-l border-border/80">
               {nav.map((item) => {
                 const active = path === item.to || (item.to !== "/dashboard" && path.startsWith(item.to));
                 const Icon = item.icon;
@@ -128,17 +132,17 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <Link
                     key={item.to}
                     to={item.to}
-                    className={`relative flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-150 ${
+                    className={`relative flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-semibold tracking-tight transition-all duration-150 ${
                       active
-                        ? "bg-slate-900 text-white shadow-xs"
+                        ? "bg-[#1f1b18] text-white shadow-xs"
                         : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                     }`}
                   >
-                    <Icon className={`h-3.5 w-3.5 ${active ? "text-orange-400" : "text-muted-foreground"}`} />
+                    <Icon className={`h-3.5 w-3.5 ${active ? "text-[#ea580c]" : "text-muted-foreground"}`} />
                     <span>{item.label}</span>
                     {item.badge && (
-                      <span className={`text-[9px] font-semibold px-1.5 py-0.2 rounded-full ${
-                        active ? "bg-orange-500/20 text-orange-300" : "bg-emerald-100 text-emerald-800"
+                      <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded ${
+                        active ? "bg-[#ea580c] text-white" : "bg-emerald-100 text-emerald-800"
                       }`}>
                         {item.badge}
                       </span>
@@ -149,53 +153,53 @@ export function AppShell({ children }: { children: ReactNode }) {
             </nav>
           </div>
 
-          {/* Right Area: Credits & User */}
+          {/* Right Action Cluster: Kiln Kilowatt Credit Counter & Artisan Profile */}
           <div className="flex items-center gap-3">
             {hasSession === false && (path === "/events" || path.startsWith("/events")) ? (
               <div className="flex items-center gap-2">
                 <Link
                   to="/auth"
-                  className="rounded-lg bg-orange-600 px-4 py-2 text-xs font-bold text-white hover:bg-orange-700 transition shadow-xs"
+                  className="rounded-md bg-[#cc4a1e] px-4 py-2 text-xs font-bold text-white hover:bg-[#b83f15] transition shadow-xs"
                 >
                   Masuk / Daftar
                 </Link>
               </div>
             ) : (
               <>
-                {/* Credits Pill */}
+                {/* Kiln Credit Tracker Pill */}
                 <Link
                   to="/pricing"
-                  className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium hover:border-orange-500/40 hover:bg-orange-50/30 transition shadow-xs"
-                  title={isApiRoute ? "Top-Up Kredit API" : "Top-Up Kredit QR"}
+                  className="flex items-center gap-2.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-mono hover:border-[#cc4a1e]/40 hover:bg-[#cc4a1e]/5 transition shadow-xs"
+                  title={isApiRoute ? "Top-Up Kredit API Studio" : "Top-Up Kredit Segel QR"}
                 >
-                  <div className="flex h-5 w-5 items-center justify-center rounded-md bg-orange-500/10 text-orange-600">
-                    {isApiRoute ? <Code2 className="h-3 w-3" /> : <Coins className="h-3 w-3" />}
+                  <div className="flex h-5 w-5 items-center justify-center rounded bg-[#cc4a1e]/15 text-[#cc4a1e]">
+                    {isApiRoute ? <Code2 className="h-3 w-3" /> : <Flame className="h-3 w-3" />}
                   </div>
-                  <div className="flex items-center gap-1 font-mono">
-                    <span className="font-bold text-foreground">
+                  <div className="flex items-center gap-1 font-semibold">
+                    <span className="text-foreground">
                       {isApiRoute ? (isAdmin ? "∞" : apiCredits) : (isAdmin ? "∞" : credits)}
                     </span>
-                    <span className="text-[10px] text-muted-foreground uppercase">{isApiRoute ? "API" : "QR"}</span>
+                    <span className="text-[10px] text-muted-foreground uppercase">{isApiRoute ? "API" : "CREDIT"}</span>
                   </div>
                 </Link>
 
-                {/* Profile Avatar / Menu */}
+                {/* Profile Dropdown with Werkstatt Border */}
                 <div className="relative">
                   <button
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="flex items-center gap-2 rounded-lg p-1 hover:bg-secondary transition"
+                    className="flex items-center gap-2 rounded-md p-1 hover:bg-secondary transition border border-border"
                   >
-                    <div className="relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-border bg-muted ring-1 ring-border">
+                    <div className="relative flex h-7 w-7 items-center justify-center overflow-hidden rounded bg-muted">
                       {avatar ? (
                         <img src={avatar} alt="Profile" className="h-full w-full object-cover" />
                       ) : (
                         <User className="h-4 w-4 text-muted-foreground" />
                       )}
                       {isAdmin && (
-                        <div className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-orange-500 ring-1 ring-white" />
+                        <div className="absolute top-0 right-0 h-2 w-2 rounded-full bg-[#cc4a1e]" />
                       )}
                     </div>
-                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground hidden sm:block" />
+                    <ChevronDown className="h-3 w-3 text-muted-foreground hidden sm:block" />
                   </button>
 
                   {isDropdownOpen && (
@@ -204,49 +208,49 @@ export function AppShell({ children }: { children: ReactNode }) {
                         className="fixed inset-0 z-40"
                         onClick={() => setIsDropdownOpen(false)}
                       />
-                      <div className="absolute right-0 top-full z-50 mt-2 w-52 rounded-xl border border-border bg-card p-1.5 shadow-[var(--shadow-hallmark-lg)] animate-in fade-in-50 zoom-in-95">
-                        <div className="px-3 py-2 border-b border-border/60 mb-1">
-                          <p className="text-xs font-bold text-foreground">Akun Oziktag</p>
-                          <p className="text-[11px] text-muted-foreground font-mono truncate">
-                            {isAdmin ? "Status: Administrator" : "Status: Verified UMKM"}
+                      <div className="absolute right-0 top-full z-50 mt-2 w-52 rounded-lg border border-border bg-card p-1.5 shadow-[var(--shadow-werkstatt-lg)] animate-in fade-in-50 zoom-in-95">
+                        <div className="px-3 py-2 border-b border-border/80 mb-1">
+                          <p className="text-xs font-bold text-foreground">Akun Studio</p>
+                          <p className="text-[10px] text-muted-foreground font-mono truncate">
+                            {isAdmin ? "Status: Studio Director" : "Status: Certified Artisan"}
                           </p>
                         </div>
                         <Link
                           to="/profile"
                           onClick={() => setIsDropdownOpen(false)}
-                          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                          className="flex w-full items-center gap-2 rounded px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
                         >
                           <User className="h-3.5 w-3.5" />
-                          Profil Bisnis
+                          Profil Bengkel / UMKM
                         </Link>
                         {isAdmin && (
                           <Link
                             to="/admin"
                             onClick={() => setIsDropdownOpen(false)}
-                            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-orange-600 hover:bg-orange-50 transition-colors"
+                            className="flex w-full items-center gap-2 rounded px-3 py-1.5 text-xs font-semibold text-[#cc4a1e] hover:bg-[#cc4a1e]/10 transition-colors"
                           >
                             <ShieldCheck className="h-3.5 w-3.5" />
-                            Admin Console
+                            Admin Workshop
                           </Link>
                         )}
                         <Link
                           to="/settings"
                           onClick={() => setIsDropdownOpen(false)}
-                          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                          className="flex w-full items-center gap-2 rounded px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
                         >
                           <Settings className="h-3.5 w-3.5" />
-                          Pengaturan
+                          Konfigurasi
                         </Link>
-                        <div className="my-1 h-px bg-border/60" />
+                        <div className="my-1 h-px bg-border/80" />
                         <button
                           onClick={(e) => {
                             setIsDropdownOpen(false);
                             handleLogout(e);
                           }}
-                          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 transition-colors"
+                          className="flex w-full items-center gap-2 rounded px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
                         >
                           <LogOut className="h-3.5 w-3.5" />
-                          Keluar
+                          Keluar Studio
                         </button>
                       </div>
                     </>
@@ -257,8 +261,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
 
-        {/* Mobile Navigation Scroll Strip */}
-        <div className="flex gap-1 overflow-x-auto border-t border-border/60 px-4 py-2 lg:hidden scrollbar-none">
+        {/* Mobile Navigation Strip (Werkstatt functional tabs) */}
+        <div className="flex gap-1 overflow-x-auto border-t border-border/80 px-4 py-2 lg:hidden scrollbar-none">
           {nav.map((item) => {
             const active = path === item.to || (item.to !== "/dashboard" && path.startsWith(item.to));
             const Icon = item.icon;
@@ -266,13 +270,13 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link
                 key={item.to}
                 to={item.to}
-                className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+                className={`flex shrink-0 items-center gap-1.5 rounded px-2.5 py-1 text-xs font-semibold transition ${
                   active 
-                    ? "bg-slate-900 text-white shadow-xs" 
+                    ? "bg-[#1f1b18] text-white shadow-xs" 
                     : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                 }`}
               >
-                <Icon className={`h-3.5 w-3.5 ${active ? "text-orange-400" : ""}`} />
+                <Icon className={`h-3 w-3 ${active ? "text-[#ea580c]" : ""}`} />
                 <span>{item.label}</span>
               </Link>
             );
@@ -280,24 +284,24 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      {/* Main Content Area */}
+      {/* Main Studio Content Canvas */}
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 sm:px-6 py-8">
         {children}
       </main>
 
-      {/* Hallmark Subtle Status Footer */}
-      <footer className="border-t border-border/60 bg-card py-6 text-xs text-muted-foreground">
-        <div className="mx-auto flex max-w-7xl flex-col sm:flex-row items-center justify-between gap-4 px-4 sm:px-6">
-          <div className="flex items-center gap-2">
-            <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="font-mono text-[11px]">Oziktag Protocol • Sistem Escrow & Gate Aktif</span>
+      {/* 80% Werkstatt Architectural Technical Footer */}
+      <footer className="border-t border-border/80 bg-card py-5 text-xs text-muted-foreground font-mono">
+        <div className="mx-auto flex max-w-7xl flex-col sm:flex-row items-center justify-between gap-3 px-4 sm:px-6">
+          <div className="flex items-center gap-2 text-[11px]">
+            <span className="flex h-2 w-2 rounded-full bg-[#cc4a1e] animate-pulse" />
+            <span>OZIKTAG BENGKEL PROTOKOL // KILN SPEC v3.0</span>
           </div>
           <div className="flex items-center gap-4 text-[11px]">
             <span>Bandung Build Challenge 2026</span>
             <span>•</span>
-            <span>Summarecon Mall Bandung</span>
+            <span>Summarecon Sawarga Courtyard</span>
             <span>•</span>
-            <Link to="/docs" className="hover:text-foreground transition underline underline-offset-2">Dokumentasi API</Link>
+            <Link to="/docs" className="hover:text-foreground underline underline-offset-2">Studio Docs</Link>
           </div>
         </div>
       </footer>

@@ -5,11 +5,10 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Hallmark Design System & Material Tokens
- * Inspired by usehallmark.com (Cobalt & Studio Architecture)
- * - Anti-AI-Slop: Distinct typographic rhythm, tactile surfaces, hairline borders.
- * - Colors: Rich slate ink, crisp paper canvas, signature Oziktag Ember (#ea580c),
- *   Trust Emerald (#10b981), Escrow Amber (#f59e0b), and Rose Red (#f43f5e).
+ * OZIKTAG HYBRID DESIGN SYSTEM
+ * 80% Werkstatt (Bauhaus Workshop, Architectural Linen, Carbon Ink, Disciplined Grids)
+ * 20% Kiln Pottery School (Warm Terracotta, Fired Clay Accents, Tactile Bisque Undertones)
+ * Inspired by usehallmark.com/themes/werkstatt + usehallmark.com/made/kiln-pottery-school
  */
 
 @theme inline {
@@ -41,89 +40,98 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  --color-brand: var(--brand);
-  --color-brand-foreground: var(--brand-foreground);
-  --color-emerald-trust: var(--emerald-trust);
-  --color-amber-escrow: var(--amber-escrow);
+  --color-terracotta: var(--terracotta);
+  --color-terracotta-dark: var(--terracotta-dark);
+  --color-bisque: var(--bisque);
+  --color-clay: var(--clay);
+  --color-werkstatt-ink: var(--werkstatt-ink);
+  --color-werkstatt-stone: var(--werkstatt-stone);
 }
 
 :root {
-  --radius: 0.75rem;
+  --radius: 0.625rem;
 
-  /* Hallmark Light Material (Cobalt / Studio Paper) */
-  --background: hsl(210 20% 98%);          /* #f8fafc - Crisp architectural paper */
-  --foreground: hsl(222 47% 11%);          /* #0f172a - Deep obsidian ink */
+  /* 80% Werkstatt Foundation: Warm Bauhaus Paper & Deep Studio Carbon */
+  --background: hsl(40 20% 98%);             /* #faf9f6 - Architectural warm linen paper */
+  --foreground: hsl(24 10% 12%);             /* #1f1b18 - Deep workshop carbon ink */
   
-  --card: hsl(0 0% 100%);                  /* Crisp elevated card */
-  --card-foreground: hsl(222 47% 11%);
+  --card: hsl(40 25% 99.5%);                 /* #ffffff with microscopic warm touch */
+  --card-foreground: hsl(24 10% 12%);
   
-  --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(222 47% 11%);
+  --popover: hsl(40 25% 99.5%);
+  --popover-foreground: hsl(24 10% 12%);
 
-  --primary: hsl(24 95% 53%);              /* #ea580c - Oziktag signature amber/orange */
+  /* 20% Kiln Pottery Flame: Fired Terracotta & Glaze Ember */
+  --primary: hsl(18 78% 46%);                /* #cc4a1e / #c25e36 - Fired terracotta */
   --primary-foreground: hsl(0 0% 100%);
 
-  --brand: hsl(222 47% 11%);               /* Deep structural navy */
-  --brand-foreground: hsl(0 0% 100%);
+  --secondary: hsl(40 18% 93%);              /* #eeebe4 - Studio unglazed stone */
+  --secondary-foreground: hsl(24 10% 12%);
 
-  --secondary: hsl(210 30% 96%);          /* Light stone gray */
-  --secondary-foreground: hsl(222 47% 11%);
+  --muted: hsl(40 16% 92%);                  /* #ebe8e0 - Studio slip clay */
+  --muted-foreground: hsl(25 8% 42%);        /* #6f6a64 - Stoneware muted ash */
 
-  --muted: hsl(210 25% 94%);              /* Soft paper tint */
-  --muted-foreground: hsl(215 16% 47%);   /* #64748b - Slate neutral text */
+  --accent: hsl(28 65% 94%);                 /* Warm bisque highlight */
+  --accent-foreground: hsl(18 78% 38%);
 
-  --accent: hsl(24 100% 97%);             /* Warm ember highlight */
-  --accent-foreground: hsl(24 95% 45%);
-
-  --destructive: hsl(350 89% 60%);        /* #f43f5e */
+  --destructive: hsl(4 72% 50%);             /* Iron oxide red */
   --destructive-foreground: hsl(0 0% 100%);
 
-  --border: hsl(214 32% 91%);             /* #e2e8f0 - Crisp hairline border */
-  --input: hsl(214 32% 91%);
-  --ring: hsl(24 95% 53%);
+  --border: hsl(40 14% 87%);                 /* #dfdbd2 - Precise architectural rule */
+  --input: hsl(40 14% 87%);
+  --ring: hsl(18 78% 46%);
 
-  --emerald-trust: hsl(158 64% 42%);      /* #10b981 - Verified QC / Valid Gate */
-  --amber-escrow: hsl(38 92% 50%);        /* #f59e0b - Escrow Held */
+  /* Bespoke Kiln & Werkstatt Colors */
+  --terracotta: hsl(18 78% 46%);             /* Rich pottery flame */
+  --terracotta-dark: hsl(18 82% 34%);        /* Fired brick */
+  --bisque: hsl(30 45% 95%);                 /* Bisque fired clay */
+  --clay: hsl(28 35% 82%);                   /* Dry studio clay */
+  --werkstatt-ink: hsl(24 10% 12%);          /* Workshop black */
+  --werkstatt-stone: hsl(40 15% 90%);        /* Weimar limestone */
 
-  --shadow-hallmark: 0 1px 3px 0 rgb(15 23 42 / 0.05), 0 1px 2px -1px rgb(15 23 42 / 0.05);
-  --shadow-hallmark-lg: 0 10px 30px -5px rgb(15 23 42 / 0.08), 0 4px 12px -2px rgb(15 23 42 / 0.04);
+  --shadow-werkstatt: 0 1px 2px 0 rgb(31 27 24 / 0.04), 0 1px 3px 0 rgb(31 27 24 / 0.03);
+  --shadow-werkstatt-lg: 0 12px 28px -4px rgb(31 27 24 / 0.08), 0 4px 10px -2px rgb(31 27 24 / 0.04);
 }
 
 .dark {
-  /* Hallmark Dark Material (Atmospheric Obsidian & Ink) */
-  --background: hsl(224 71% 4%);           /* #06090e */
-  --foreground: hsl(210 40% 98%);          /* #f8fafc */
+  /* Dark Kiln Studio: Smoked Clay, Fired Charcoal & Glowing Ember */
+  --background: hsl(24 12% 7%);              /* #13100e - Smoked kiln chamber */
+  --foreground: hsl(40 20% 95%);             /* #f5f4ef - Chalk marking */
 
-  --card: hsl(222 47% 8%);                 /* #0c1322 */
-  --card-foreground: hsl(210 40% 98%);
+  --card: hsl(24 10% 11%);                  /* #1f1b19 - Dark brick tile */
+  --card-foreground: hsl(40 20% 95%);
 
-  --popover: hsl(222 47% 8%);
-  --popover-foreground: hsl(210 40% 98%);
+  --popover: hsl(24 10% 11%);
+  --popover-foreground: hsl(40 20% 95%);
 
-  --primary: hsl(24 95% 53%);              /* #ea580c */
+  --primary: hsl(18 85% 52%);                /* Glowing kiln ember */
   --primary-foreground: hsl(0 0% 100%);
 
-  --brand: hsl(210 40% 98%);
-  --brand-foreground: hsl(224 71% 4%);
+  --secondary: hsl(24 10% 16%);              /* Charcoal ash */
+  --secondary-foreground: hsl(40 20% 95%);
 
-  --secondary: hsl(223 35% 13%);
-  --secondary-foreground: hsl(210 40% 98%);
+  --muted: hsl(24 10% 15%);
+  --muted-foreground: hsl(30 10% 65%);
 
-  --muted: hsl(223 35% 12%);
-  --muted-foreground: hsl(215 20% 65%);
+  --accent: hsl(18 45% 18%);
+  --accent-foreground: hsl(18 85% 65%);
 
-  --accent: hsl(24 50% 15%);
-  --accent-foreground: hsl(24 95% 65%);
-
-  --destructive: hsl(350 89% 60%);
+  --destructive: hsl(4 72% 50%);
   --destructive-foreground: hsl(0 0% 100%);
 
-  --border: hsl(217 33% 17%);             /* #1e293b */
-  --input: hsl(217 33% 17%);
-  --ring: hsl(24 95% 53%);
+  --border: hsl(24 10% 20%);                /* #36302c */
+  --input: hsl(24 10% 20%);
+  --ring: hsl(18 85% 52%);
 
-  --shadow-hallmark: 0 1px 3px 0 rgb(0 0 0 / 0.3);
-  --shadow-hallmark-lg: 0 12px 36px -4px rgb(0 0 0 / 0.45);
+  --terracotta: hsl(18 85% 52%);
+  --terracotta-dark: hsl(18 85% 40%);
+  --bisque: hsl(24 12% 16%);
+  --clay: hsl(24 10% 28%);
+  --werkstatt-ink: hsl(40 20% 95%);
+  --werkstatt-stone: hsl(24 10% 18%);
+
+  --shadow-werkstatt: 0 1px 3px 0 rgb(0 0 0 / 0.4);
+  --shadow-werkstatt-lg: 0 14px 36px -4px rgb(0 0 0 / 0.6);
 }
 
 @layer base {
@@ -134,42 +142,55 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
   }
 
   ::selection {
-    background-color: var(--color-primary);
+    background-color: var(--color-terracotta);
     color: white;
   }
 }
 
-/* Hallmark Pattern Utilities */
-.hallmark-grid {
-  background-image: radial-gradient(hsl(215 16% 47% / 0.12) 1px, transparent 1px);
-  background-size: 24px 24px;
+/* 80% Werkstatt Bauhaus Architectural Framework */
+.werkstatt-grid {
+  background-image: 
+    linear-gradient(to right, hsl(40 14% 87% / 0.5) 1px, transparent 1px),
+    linear-gradient(to bottom, hsl(40 14% 87% / 0.5) 1px, transparent 1px);
+  background-size: 32px 32px;
 }
 
-.hallmark-card {
+.werkstatt-card {
   background: var(--color-card);
   border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-hallmark);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: var(--shadow-werkstatt);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.hallmark-card:hover {
-  border-color: hsl(215 16% 47% / 0.3);
-  box-shadow: var(--shadow-hallmark-lg);
+.werkstatt-card:hover {
+  border-color: hsl(25 8% 42% / 0.4);
+  box-shadow: var(--shadow-werkstatt-lg);
 }
 
-.hallmark-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
+/* 20% Kiln Pottery School Tactile Craft Badges */
+.kiln-stamp {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.6875rem;
-  letter-spacing: 0.05em;
-  font-weight: 600;
+  letter-spacing: 0.08em;
+  font-weight: 700;
   text-transform: uppercase;
+  border-radius: 4px;
+}
+
+.kiln-pill-terracotta {
+  background: hsl(18 78% 46% / 0.12);
+  color: hsl(18 78% 38%);
+  border: 1px solid hsl(18 78% 46% / 0.25);
+}
+
+.kiln-pill-stoneware {
+  background: hsl(40 18% 93%);
+  color: hsl(24 10% 25%);
+  border: 1px solid hsl(40 14% 87%);
 }

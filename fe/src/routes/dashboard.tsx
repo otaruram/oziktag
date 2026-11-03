@@ -108,7 +108,7 @@ function Dashboard() {
     <AppShell>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-sm text-muted-foreground">Selamat datang di Ekosistem Oziktag,</p>
+          <p className="text-sm text-muted-foreground">Studio Bengkel Kerja Oziktag // Weimar & Kiln</p>
           <h1 className="text-3xl font-semibold tracking-tight">{brand}</h1>
         </div>
         <div className="flex flex-wrap items-center gap-2.5">
@@ -131,7 +131,7 @@ function Dashboard() {
             to="/generator"
             className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-xs font-bold text-primary-foreground shadow-[var(--shadow-elegant)] hover:opacity-90"
           >
-            <Plus className="h-4 w-4" /> Buat QR Code Kualitas
+            <Plus className="h-4 w-4" /> Cetak Segel Studio
           </Link>
         </div>
       </div>
