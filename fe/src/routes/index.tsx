@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { ShieldCheck, QrCode, CheckCircle2, ArrowRight, Bot, Store, Camera, Database, MapPin, Lock } from "lucide-react";
+import { ShieldCheck, QrCode, CheckCircle2, ArrowRight, Bot, Store, Camera, Database, MapPin, Lock, Ticket } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 
@@ -46,19 +46,45 @@ function Landing() {
            style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
 
       <header className="sticky top-0 z-50 mx-auto flex max-w-6xl items-center justify-between px-6 py-4 border-b border-border/40 bg-background/80 backdrop-blur-md">
-        <div className="flex items-center gap-2 font-bold text-lg tracking-tight">
+        <Link to="/" className="flex items-center gap-2 font-bold text-lg tracking-tight hover:opacity-80 transition">
           <ShieldCheck className="h-6 w-6 text-foreground" />
-          Oziktag
+          <span>Oziktag</span>
+        </Link>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Link
+            to="/events"
+            className="inline-flex items-center gap-2 rounded-full border border-emerald-600/30 bg-emerald-50 text-emerald-800 px-3.5 py-1.5 text-xs font-semibold hover:bg-emerald-100 transition shadow-xs"
+          >
+            <Ticket className="h-3.5 w-3.5 text-emerald-600" />
+            <span>Tiket Event 2026</span>
+            <span className="hidden sm:inline rounded-full bg-emerald-600 text-white px-1.5 py-0.5 text-[10px] font-bold">Summarecon</span>
+          </Link>
+          <Link
+            to="/auth"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-foreground text-background px-4 py-1.5 text-xs font-semibold hover:bg-foreground/90 transition"
+          >
+            Masuk / Daftar
+          </Link>
         </div>
       </header>
 
       <main className="relative z-10">
         {/* HERO SECTION */}
         <section className="mx-auto max-w-4xl px-6 pt-24 pb-20 text-center">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-foreground/20 bg-foreground/5 px-4 py-1.5 text-xs font-semibold tracking-wide text-foreground uppercase">
-            <CheckCircle2 className="h-3.5 w-3.5" />
-            Digital Trust Seal Pengrajin UMKM
-          </span>
+          <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-foreground/20 bg-foreground/5 px-4 py-1.5 text-xs font-semibold tracking-wide text-foreground uppercase">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              Digital Trust Seal Pengrajin UMKM
+            </span>
+            <Link
+              to="/events"
+              className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 text-xs font-semibold text-emerald-800 hover:bg-emerald-500/20 transition"
+            >
+              <span className="flex h-2 w-2 rounded-full bg-emerald-600 animate-pulse" />
+              <span className="font-bold">Bandung Build Challenge 2026:</span>
+              <span>Tiket & Denah Kursi Summarecon Mall Bandung &rarr;</span>
+            </Link>
+          </div>
           <h1 className="mt-8 text-balance text-4xl sm:text-5xl font-extrabold tracking-tight md:text-7xl leading-tight">
             Bangun kepercayaan pembeli, <br className="hidden md:block"/>
             <span className="text-muted-foreground">satu QR sekali tempel.</span>
@@ -68,6 +94,13 @@ function Landing() {
             lewat QR Code yang dianalisis AI. Simpel, cepat, dan 100% kredibel di mata pelanggan.
           </p>
           <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4">
+            <Link
+              to="/events"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-8 py-3.5 text-sm font-bold text-white transition-transform active:scale-95 hover:bg-slate-800 shadow-md"
+            >
+              <Ticket className="h-4 w-4 text-emerald-400" />
+              Pesan Tiket & Kursi Event
+            </Link>
             <Link
               to="/auth"
               className="inline-flex items-center justify-center gap-2 rounded-lg bg-foreground px-8 py-3.5 text-sm font-bold text-background transition-transform active:scale-95 hover:bg-foreground/90"

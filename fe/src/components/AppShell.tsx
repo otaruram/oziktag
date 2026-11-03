@@ -24,6 +24,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [avatar, setAvatar] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [hasSession, setHasSession] = useState<boolean | null>(null);
 
   const isApiRoute = path.startsWith("/api-keys");
 
@@ -34,9 +35,14 @@ export function AppShell({ children }: { children: ReactNode }) {
     const checkAuthAndFetch = async () => {
       const { data } = await supabase.auth.getSession();
       if (!data.session) {
+        setHasSession(false);
+        if (path === "/events" || path.startsWith("/events")) {
+          return;
+        }
         navRouter({ to: "/" });
         return;
       }
+      setHasSession(true);
       setAvatar(data.session.user.user_metadata?.avatar_url || "");
       // Fetch user data from backend
       try {
@@ -46,7 +52,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         setIsAdmin(me.is_admin);
         
         // Use real backend status instead of localStorage
-        if (!me.kyc_status && path !== "/register") {
+        if (!me.kyc_status && path !== "/register" && !path.startsWith("/events")) {
           navRouter({ to: "/register" });
           return;
         }
@@ -109,6 +115,17 @@ export function AppShell({ children }: { children: ReactNode }) {
             })}
             </nav>
           <div className="flex items-center gap-4">
+            {hasSession === false && (path === "/events" || path.startsWith("/events")) ? (
+              <div className="flex items-center gap-2">
+                <Link
+                  to="/auth"
+                  className="rounded-lg bg-foreground text-background px-3.5 py-1.5 text-xs font-semibold hover:bg-foreground/90 transition shadow-xs"
+                >
+                  Masuk / Daftar
+                </Link>
+              </div>
+            ) : (
+              <>
             <Link
               to="/pricing"
               className="flex items-center gap-1.5 rounded-md border border-border bg-card px-2 sm:px-3 py-1.5 text-xs"
@@ -185,6 +202,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </>
               )}
             </div>
+            </>
+            )}
           </div>
         </div>
         <div className="flex gap-2 overflow-x-auto overflow-y-hidden border-t border-border px-4 py-2 md:hidden scrollbar-none whitespace-nowrap">
