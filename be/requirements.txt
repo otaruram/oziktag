@@ -5,5 +5,5 @@ imagekitio==4.0.1
 httpx==0.28.1
 pydantic-settings==2.9.1
 python-multipart==0.0.20
-prisma==0.15.0 --no-deps
+prisma==0.15.0
 nodejs-bin==20.12.2
