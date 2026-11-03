@@ -17,6 +17,7 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as GeneratorRouteImport } from './routes/generator'
+import { Route as EventsRouteImport } from './routes/events'
 import { Route as EliteHubRouteImport } from './routes/elite-hub'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as DashboardRouteImport } from './routes/dashboard'
@@ -68,6 +69,11 @@ const PricingRoute = PricingRouteImport.update({
 const GeneratorRoute = GeneratorRouteImport.update({
   id: '/generator',
   path: '/generator',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EventsRoute = EventsRouteImport.update({
+  id: '/events',
+  path: '/events',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EliteHubRoute = EliteHubRouteImport.update({
@@ -139,6 +145,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/docs': typeof DocsRoute
   '/elite-hub': typeof EliteHubRoute
+  '/events': typeof EventsRoute
   '/generator': typeof GeneratorRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -161,6 +168,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/docs': typeof DocsRoute
   '/elite-hub': typeof EliteHubRoute
+  '/events': typeof EventsRoute
   '/generator': typeof GeneratorRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -184,6 +192,7 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/docs': typeof DocsRoute
   '/elite-hub': typeof EliteHubRoute
+  '/events': typeof EventsRoute
   '/generator': typeof GeneratorRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -208,6 +217,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/docs'
     | '/elite-hub'
+    | '/events'
     | '/generator'
     | '/pricing'
     | '/privacy'
@@ -230,6 +240,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/docs'
     | '/elite-hub'
+    | '/events'
     | '/generator'
     | '/pricing'
     | '/privacy'
@@ -252,6 +263,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/docs'
     | '/elite-hub'
+    | '/events'
     | '/generator'
     | '/pricing'
     | '/privacy'
@@ -275,6 +287,7 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   DocsRoute: typeof DocsRoute
   EliteHubRoute: typeof EliteHubRoute
+  EventsRoute: typeof EventsRoute
   GeneratorRoute: typeof GeneratorRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -346,6 +359,13 @@ declare module '@tanstack/react-router' {
       path: '/generator'
       fullPath: '/generator'
       preLoaderRoute: typeof GeneratorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/events': {
+      id: '/events'
+      path: '/events'
+      fullPath: '/events'
+      preLoaderRoute: typeof EventsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/elite-hub': {
@@ -443,6 +463,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   DocsRoute: DocsRoute,
   EliteHubRoute: EliteHubRoute,
+  EventsRoute: EventsRoute,
   GeneratorRoute: GeneratorRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,

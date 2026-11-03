@@ -11,7 +11,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.routers import auth, qc, scan, topup, admin, apikeys, developer, elite, tracking, wallet
+from app.routers import auth, qc, scan, topup, admin, apikeys, developer, elite, tracking, wallet, ticketing
 from app.database import connect_db, disconnect_db
 from app.services.escrow_service import auto_release_escrow_funds
 
@@ -128,6 +128,7 @@ app.include_router(developer.router)
 app.include_router(elite.router)
 app.include_router(tracking.router)
 app.include_router(wallet.router)
+app.include_router(ticketing.router)
 
 
 # ──────────────────────── Health Check ────────────────────────

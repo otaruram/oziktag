@@ -1,3 +1,9 @@
+import pydantic
+
+# Compatibility shim for environments with pydantic < 2.7 and pydantic-settings >= 2.9
+if not hasattr(pydantic, "Secret"):
+    pydantic.Secret = getattr(pydantic, "SecretStr", str)
+
 from pydantic_settings import BaseSettings
 from functools import lru_cache
 
@@ -36,6 +42,10 @@ class Settings(BaseSettings):
 
     # Admin
     admin_email: str = ""
+
+    # Event Ticketing (HMAC-SHA256 QR signing). Min 32 chars, no default on purpose.
+    # Generate: python -c "import secrets; print(secrets.token_urlsafe(48))"
+    ticket_hmac_secret: str = ""
 
     # Pricing
     exchange_rate: float = 17000.0

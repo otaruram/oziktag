@@ -316,3 +316,80 @@ model DisputeTicket {
 
   @@map("dispute_tickets")
 }
+
+// ============================================================
+// Event Ticketing & Seat Reservation (Oziktag x Summarecon Mall Bandung)
+// ============================================================
+enum SeatCategory {
+  VIP
+  REGULAR
+  WING
+}
+
+enum SeatStatus {
+  AVAILABLE
+  RESERVED
+  SOLD
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  REFUNDED
+}
+
+enum CheckInStatus {
+  UNUSED
+  USED
+}
+
+model Seat {
+  id            String       @id @default(uuid())
+  seatCode      String       @unique @map("seat_code") // e.g. "A-01"
+  rowLabel      String       @map("row_label")
+  colNumber     Int          @map("col_number")
+  category      SeatCategory @default(REGULAR)
+  price         Decimal      @db.Decimal(12, 2)
+  status        SeatStatus   @default(AVAILABLE)
+
+  // 5-minute TTL hold. Only a SHA-256 hash of the hold token is stored (never plaintext).
+  reservedUntil DateTime?    @map("reserved_until")
+  holdTokenHash String?      @map("hold_token_hash")
+  heldByUserId  String?      @map("held_by_user_id")
+
+  buyerName     String?      @map("buyer_name")
+  buyerContact  String?      @map("buyer_contact")
+  buyerEmail    String?      @map("buyer_email")
+
+  // SHA-256 of the HMAC signature embedded in the QR (binds DB row to the issued pass).
+  ticketHash    String?      @map("ticket_hash")
+
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  transactions  TicketTransaction[]
+
+  @@index([status, reservedUntil])
+  @@index([heldByUserId])
+  @@map("event_seats")
+}
+
+model TicketTransaction {
+  id            String        @id @default(uuid())
+  seatId        String        @map("seat_id")
+  userId        String?       @map("user_id")
+  amount        Decimal       @db.Decimal(12, 2)
+  paymentMethod String        @default("SIMULATED") @map("payment_method")
+  paymentStatus PaymentStatus @default(PENDING) @map("payment_status")
+  checkInStatus CheckInStatus @default(UNUSED) @map("check_in_status")
+  checkedInAt   DateTime?     @map("checked_in_at")
+  checkedInGate String?       @map("checked_in_gate")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  seat Seat @relation(fields: [seatId], references: [id], onDelete: Cascade)
+
+  @@index([seatId])
+  @@index([checkInStatus])
+  @@map("ticket_transactions")
+}

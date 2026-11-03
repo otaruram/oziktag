@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, QrCode, User, ShieldCheck, LogOut, Coins, Code2, Settings, Crown, MapPin, Wallet } from "lucide-react";
+import { LayoutDashboard, QrCode, User, ShieldCheck, LogOut, Coins, Code2, Settings, Crown, MapPin, Wallet, Ticket } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { getCredits } from "@/lib/oziktag-store";
 import { supabase } from "@/lib/supabase";
@@ -7,6 +7,7 @@ import { apiFetch } from "@/lib/api";
 
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/events", label: "Tiket Event", icon: Ticket },
   { to: "/generator", label: "Generate QR", icon: QrCode },
   { to: "/tracking", label: "Tracking", icon: MapPin },
   { to: "/api-keys", label: "API (Beta)", icon: Code2 },
