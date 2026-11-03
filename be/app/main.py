@@ -129,6 +129,7 @@ app.include_router(elite.router)
 app.include_router(tracking.router)
 app.include_router(wallet.router)
 app.include_router(ticketing.router)
+app.include_router(ticketing.gate_router)
 
 
 # ──────────────────────── Health Check ────────────────────────

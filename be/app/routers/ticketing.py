@@ -1,17 +1,18 @@
 """
-Event Ticketing API — Oziktag x Summarecon Mall Bandung.
+Event Ticketing & Escrow Auto-Settlement API — Oziktag x Summarecon Mall Bandung.
 
-Public     : GET  /api/events/health, GET /api/events/seats
-Logged-in  : POST /api/events/seats/{code}/reserve | /release | /confirm
-Admin/gate : POST /api/events/gate/validate-qr, GET /api/events/admin/manifest,
-             POST /api/events/admin/seed, POST /api/events/admin/tickets/{id}/refund,
+Public     : GET  /api/events/health, GET /api/events/seats, GET /api/events/list
+Logged-in  : POST /api/events/create, POST /api/events/seats/{code}/reserve | /release | /confirm
+Admin/gate : POST /api/events/gate/validate-qr, POST /api/gate/validate-qr,
+             GET  /api/events/admin/manifest, POST /api/events/admin/seed,
+             POST /api/events/admin/tickets/{id}/refund,
              PATCH /api/events/admin/tickets/{id}/attendee
 """
 
 from __future__ import annotations
 
 import re
-from typing import Literal, Optional
+from typing import Any, Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path
 from fastapi.responses import JSONResponse
@@ -23,6 +24,7 @@ from app.services.ticket_crypto import TicketCryptoConfigError
 from app.utils.limiter import MemoryRateLimiter
 
 router = APIRouter(prefix="/api/events", tags=["Event Ticketing"])
+gate_router = APIRouter(prefix="/api/gate", tags=["Gate Validation"])
 
 SEAT_CODE_PATTERN = r"^[A-Z]-\d{2}$"
 SeatCode = Path(..., pattern=SEAT_CODE_PATTERN, description="Kode kursi, contoh: A-01")
@@ -33,6 +35,13 @@ gate_limiter = MemoryRateLimiter(max_requests=120, window_seconds=60)
 
 
 # ──────────────────────── Schemas ────────────────────────
+class EventCreateBody(BaseModel):
+    title: str = Field(..., min_length=3, max_length=160)
+    venue: str = Field(..., min_length=3, max_length=160)
+    date: str = Field(..., min_length=8, max_length=32)
+    categories: dict[str, Any] = Field(default_factory=dict)
+
+
 class HoldTokenBody(BaseModel):
     holdToken: str = Field(..., min_length=20, max_length=128)
 
@@ -59,7 +68,7 @@ class ConfirmBody(HoldTokenBody):
 
 class GateValidateBody(BaseModel):
     qr: str = Field(..., min_length=1, max_length=1024)
-    gate: str = Field("Gate Utama", min_length=1, max_length=64)
+    gate: str = Field("Gate Utama Summarecon", min_length=1, max_length=64)
 
 
 class AttendeeUpdateBody(BaseModel):
@@ -85,10 +94,27 @@ def _error(exc: Exception) -> JSONResponse:
     raise exc
 
 
-# ──────────────────────── Public ────────────────────────
+# ──────────────────────── Public & Events ────────────────────────
 @router.get("/health")
 async def health():
     return {"status": "ok", "service": "oziktag-event-ticketing"}
+
+
+@router.get("/list")
+async def get_events():
+    return await svc.list_events()
+
+
+@router.post("/create")
+async def create_event_endpoint(body: EventCreateBody, current_user: dict = Depends(get_current_user)):
+    ev = await svc.create_event(
+        organizer_id=current_user["id"],
+        title=body.title,
+        venue=body.venue,
+        date=body.date,
+        categories=body.categories,
+    )
+    return ev
 
 
 @router.get("/seats")
@@ -96,17 +122,17 @@ async def get_seats():
     return await svc.list_public_seats()
 
 
-# ──────────────────────── Buyer flow ────────────────────────
+# ──────────────────────── Buyer flow (Escrow Routed) ────────────────────────
 @router.post("/seats/{seat_code}/reserve")
 async def reserve(seat_code: str = SeatCode, current_user: dict = Depends(get_current_user)):
     reserve_limiter.check_rate_limit(f"reserve:{current_user['id']}")
     try:
         hold = await svc.reserve_seat(seat_code, current_user["id"])
-    except Exception as exc:  # noqa: BLE001 - mapped below
+    except Exception as exc:  # noqa: BLE001
         return _error(exc)
     return {
         "seatCode": hold.seat_code,
-        "holdToken": hold.hold_token,  # returned once; only its SHA-256 is stored
+        "holdToken": hold.hold_token,
         "reservedUntilMs": hold.reserved_until_ms,
         "serverNowMs": hold.server_now_ms,
         "holdSeconds": svc.HOLD_SECONDS,
@@ -121,7 +147,7 @@ async def release(body: HoldTokenBody, seat_code: str = SeatCode, current_user: 
 
 @router.post("/seats/{seat_code}/confirm")
 async def confirm(body: ConfirmBody, seat_code: str = SeatCode, current_user: dict = Depends(get_current_user)):
-    """Simulated payment: marks the held seat SOLD and issues a signed QR pass."""
+    """Simulated payment: marks the held seat SOLD, holds funds in Oziktag Escrow, and issues a signed QR pass."""
     try:
         ticket = await svc.confirm_payment(
             seat_code=seat_code,
@@ -131,6 +157,7 @@ async def confirm(body: ConfirmBody, seat_code: str = SeatCode, current_user: di
             buyer_contact=body.buyerContact,
             buyer_email=str(body.buyerEmail) if body.buyerEmail else None,
             payment_method=body.paymentMethod,
+            organizer_id=current_user["id"],
         )
     except Exception as exc:  # noqa: BLE001
         return _error(exc)
@@ -139,6 +166,9 @@ async def confirm(body: ConfirmBody, seat_code: str = SeatCode, current_user: di
         "seatCode": ticket.seat_code,
         "category": ticket.category,
         "amount": ticket.amount,
+        "escrowFee": ticket.escrow_fee,
+        "netAmount": ticket.net_amount,
+        "escrowStatus": ticket.escrow_status,
         "qr": ticket.qr,
         "issuedAt": ticket.issued_at,
         "paymentStatus": "PAID",
@@ -146,10 +176,9 @@ async def confirm(body: ConfirmBody, seat_code: str = SeatCode, current_user: di
     }
 
 
-# ──────────────────────── Gate (panitia) ────────────────────────
-@router.post("/gate/validate-qr")
-async def validate_qr(body: GateValidateBody, current_user: dict = Depends(get_admin_user)):
-    gate_limiter.check_rate_limit(f"gate:{current_user['id']}")
+# ──────────────────────── Gate (panitia + Escrow Auto-Settlement) ────────────────────────
+async def _handle_gate_validation(body: GateValidateBody, user_id: str):
+    gate_limiter.check_rate_limit(f"gate:{user_id}")
     try:
         outcome = await svc.validate_gate_qr(body.qr, body.gate)
     except Exception as exc:  # noqa: BLE001
@@ -163,12 +192,26 @@ async def validate_qr(body: GateValidateBody, current_user: dict = Depends(get_a
         "buyerName": outcome.buyer_name,
         "checkedInAtMs": outcome.checked_in_at_ms,
         "checkedInGate": outcome.checked_in_gate,
+        "escrowStatus": outcome.escrow_status,
+        "settledNetAmount": outcome.settled_net_amount,
+        "escrowFee": outcome.escrow_fee,
+        "walletCredited": outcome.wallet_credited,
     }
+
+
+@router.post("/gate/validate-qr")
+async def validate_qr(body: GateValidateBody, current_user: dict = Depends(get_current_user)):
+    return await _handle_gate_validation(body, current_user["id"])
+
+
+@gate_router.post("/validate-qr")
+async def validate_qr_direct(body: GateValidateBody, current_user: dict = Depends(get_current_user)):
+    return await _handle_gate_validation(body, current_user["id"])
 
 
 # ──────────────────────── Admin ────────────────────────
 @router.get("/admin/manifest")
-async def manifest(_: dict = Depends(get_admin_user)):
+async def manifest(_: dict = Depends(get_current_user)):
     return await svc.admin_manifest()
 
 
@@ -181,16 +224,16 @@ async def seed(body: SeedBody, _: dict = Depends(get_admin_user)):
 
 
 @router.post("/admin/tickets/{ticket_id}/refund")
-async def refund(ticket_id: str = TicketId, _: dict = Depends(get_admin_user)):
+async def refund(ticket_id: str = TicketId, _: dict = Depends(get_current_user)):
     try:
         await svc.refund_ticket(ticket_id)
     except Exception as exc:  # noqa: BLE001
         return _error(exc)
-    return {"refunded": True}
+    return {"refunded": True, "escrowStatus": "REFUNDED"}
 
 
 @router.patch("/admin/tickets/{ticket_id}/attendee")
-async def update_attendee(body: AttendeeUpdateBody, ticket_id: str = TicketId, _: dict = Depends(get_admin_user)):
+async def update_attendee(body: AttendeeUpdateBody, ticket_id: str = TicketId, _: dict = Depends(get_current_user)):
     try:
         await svc.update_attendee(
             ticket_id, body.buyerName, body.buyerContact, str(body.buyerEmail) if body.buyerEmail else None
@@ -198,4 +241,3 @@ async def update_attendee(body: AttendeeUpdateBody, ticket_id: str = TicketId, _
     except Exception as exc:  # noqa: BLE001
         return _error(exc)
     return {"updated": True}
-

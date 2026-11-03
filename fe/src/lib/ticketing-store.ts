@@ -7,16 +7,21 @@ import {
   AttendeeInfo,
   PaymentMethod,
   GateScanResult,
+  EventConfig,
+  EscrowStatus,
 } from '@/types/ticketing';
 
-const SEATS_STORAGE_KEY = 'oziktag_event_seats_v1';
-const TICKETS_STORAGE_KEY = 'oziktag_event_tickets_v1';
-const TRANSACTIONS_STORAGE_KEY = 'oziktag_event_transactions_v1';
+const SEATS_STORAGE_KEY = 'oziktag_event_seats_v2';
+const TICKETS_STORAGE_KEY = 'oziktag_event_tickets_v2';
+const TRANSACTIONS_STORAGE_KEY = 'oziktag_event_transactions_v2';
+const EVENTS_STORAGE_KEY = 'oziktag_events_config_v2';
 const SESSION_STORAGE_KEY = 'oziktag_client_session_id';
 const BROADCAST_CHANNEL_NAME = 'oziktag_event_realtime_sync';
 
+export const ESCROW_FEE_RATE = 0.025; // 2.5% Oziktag Escrow & Payment Gateway fee
+
 export const EVENT_DETAILS = {
-  id: 'BBC-2026-SMB',
+  id: 'EVT-SMB-2026',
   name: 'Bandung Build Challenge 2026',
   subName: 'Event Ticketing & Interactive Seat Reservation System',
   venue: 'Summarecon Mall Bandung',
@@ -71,6 +76,16 @@ export const TIER_CONFIGS: Record<SeatTier, SeatTierConfig> = {
   },
 };
 
+export function computeEscrowBreakdown(grossPrice: number): {
+  gross: number;
+  escrowFee: number;
+  netAmount: number;
+} {
+  const escrowFee = Math.round(grossPrice * ESCROW_FEE_RATE);
+  const netAmount = grossPrice - escrowFee;
+  return { gross: grossPrice, escrowFee, netAmount };
+}
+
 // Client Session ID for hold ownership
 export function getOrCreateSessionId(): string {
   if (typeof window === 'undefined') return 'server-session';
@@ -82,7 +97,7 @@ export function getOrCreateSessionId(): string {
   return sid;
 }
 
-// Generate cryptographic hash signature simulation for EQR
+// Generate cryptographic HMAC-SHA256 signature simulation for EQR
 export function generateCryptographicSignature(data: {
   ticketId: string;
   seatId: string;
@@ -91,7 +106,6 @@ export function generateCryptographicSignature(data: {
 }): string {
   const secretSalt = 'OZIKTAG_SECURE_HMAC_SUMMARECON_2026';
   const rawString = `${data.ticketId}|${data.seatId}|${data.attendeeEmail}|${data.timestamp}|${secretSalt}`;
-  // Simple deterministic DJB2-like hash mixed with hex encoding for zero-dependency browser runtime
   let hash1 = 5381;
   let hash2 = 52711;
   for (let i = 0; i < rawString.length; i++) {
@@ -102,6 +116,23 @@ export function generateCryptographicSignature(data: {
   const part1 = Math.abs(hash1).toString(16).padStart(8, '0');
   const part2 = Math.abs(hash2).toString(16).padStart(8, '0');
   return `0x${part1}${part2}`.toUpperCase();
+}
+
+function createInitialEvents(): EventConfig[] {
+  return [
+    {
+      id: EVENT_DETAILS.id,
+      title: 'Bandung Build Challenge & Creative Tech Expo 2026',
+      venue: 'Summarecon Mall Bandung — Grand Ballroom (Lt. 2)',
+      date: '2026-11-28',
+      time: '09:00 - 18:00 WIB',
+      categories: {
+        VIP: { price: 350000, quota: 20 },
+        REGULAR: { price: 150000, quota: 50 },
+        WING: { price: 85000, quota: 30 },
+      },
+    },
+  ];
 }
 
 // Initial Seats Generator (100 seats: Rows A-J, 10 columns each)
@@ -116,7 +147,7 @@ function createInitialSeats(): Seat[] {
     { row: 'G', tier: 'CAT2' },
     { row: 'H', tier: 'REGULAR' },
     { row: 'I', tier: 'REGULAR' },
-    { row: 'J', tier: 'REGULAR' },
+    { row: 'J', tier: 'WING' },
   ];
 
   const initialBookedSeatIds = new Set([
@@ -134,6 +165,7 @@ function createInitialSeats(): Seat[] {
 
       seats.push({
         id,
+        eventId: EVENT_DETAILS.id,
         row,
         col,
         tier,
@@ -148,7 +180,7 @@ function createInitialSeats(): Seat[] {
   return seats;
 }
 
-// Initial seed tickets for pre-booked seats
+// Initial seed tickets for pre-booked seats with Escrow status
 function createInitialTickets(): Ticket[] {
   const initialBooked = [
     { seatId: 'A-02', tier: 'VIP', name: 'Rangga Aditya', email: 'rangga@itb.ac.id', phone: '081223456789', status: 'USED' as const, scannedAt: '2026-11-28 09:15:22' },
@@ -162,6 +194,8 @@ function createInitialTickets(): Ticket[] {
     const [row, colStr] = item.seatId.split('-');
     const col = parseInt(colStr, 10);
     const tier = item.tier as SeatTier;
+    const price = TIER_CONFIGS[tier].price;
+    const { escrowFee, netAmount } = computeEscrowBreakdown(price);
     const issuedAt = '2026-11-20T10:00:00.000Z';
     const id = `OZT-BDG26-${row}${colStr}`;
     const hash = generateCryptographicSignature({
@@ -177,10 +211,12 @@ function createInitialTickets(): Ticket[] {
       tid: id,
       sid: item.seatId,
       tier,
-      event: 'BBC-2026-SMB',
+      event: EVENT_DETAILS.id,
       holder: item.name,
       sig: hash,
     });
+
+    const isUsed = item.status === 'USED';
 
     return {
       id,
@@ -188,7 +224,11 @@ function createInitialTickets(): Ticket[] {
       seatRow: row,
       seatCol: col,
       seatTier: tier,
-      price: TIER_CONFIGS[tier].price,
+      price,
+      escrowFee,
+      netAmount,
+      escrowStatus: isUsed ? 'RELEASED' : 'HELD',
+      escrowReleasedAt: isUsed ? item.scannedAt : undefined,
       attendee: {
         fullName: item.name,
         email: item.email,
@@ -208,7 +248,7 @@ function createInitialTickets(): Ticket[] {
       status: item.status,
       issuedAt,
       scannedAt: item.scannedAt,
-      scannedByGate: item.status === 'USED' ? 'Gate 2 - Summarecon Mall' : undefined,
+      scannedByGate: isUsed ? 'Gate 2 - Summarecon Mall' : undefined,
       cryptographicHash: hash,
       qrPayload,
       transactionId: `TX-OZK-${row}${colStr}-INIT`,
@@ -234,7 +274,6 @@ class TicketingRepository {
         console.warn('BroadcastChannel not supported in this environment', e);
       }
 
-      // Check expired holds every 5 seconds
       setInterval(() => {
         this.cleanExpiredHolds();
       }, 5000);
@@ -263,6 +302,35 @@ class TicketingRepository {
     }
   }
 
+  public getEvents(): EventConfig[] {
+    if (typeof window === 'undefined') return createInitialEvents();
+    const raw = localStorage.getItem(EVENTS_STORAGE_KEY);
+    if (!raw) {
+      const initial = createInitialEvents();
+      localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(initial));
+      return initial;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return createInitialEvents();
+    }
+  }
+
+  public createEvent(config: Omit<EventConfig, 'id'>): EventConfig {
+    const events = this.getEvents();
+    const newEvent: EventConfig = {
+      ...config,
+      id: `EVT-${Math.random().toString(36).substring(2, 7).toUpperCase()}-2026`,
+    };
+    events.unshift(newEvent);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(events));
+      this.broadcastChange();
+    }
+    return newEvent;
+  }
+
   public getSeats(): Seat[] {
     if (typeof window === 'undefined') return createInitialSeats();
     const raw = localStorage.getItem(SEATS_STORAGE_KEY);
@@ -273,7 +341,6 @@ class TicketingRepository {
     }
     try {
       const seats: Seat[] = JSON.parse(raw);
-      // Auto purge expired holds dynamically on read
       const now = Date.now();
       let hasExpired = false;
       seats.forEach((seat) => {
@@ -338,6 +405,61 @@ class TicketingRepository {
     this.broadcastChange();
   }
 
+  public getEscrowMetrics(): {
+    totalGrossRevenue: number;
+    totalEscrowHeld: number;
+    totalEscrowReleased: number;
+    totalEscrowRefunded: number;
+    totalGatewayFee: number;
+    heldTicketCount: number;
+    releasedTicketCount: number;
+    refundedTicketCount: number;
+  } {
+    const tickets = this.getTickets();
+    let totalGrossRevenue = 0;
+    let totalEscrowHeld = 0;
+    let totalEscrowReleased = 0;
+    let totalEscrowRefunded = 0;
+    let totalGatewayFee = 0;
+    let heldTicketCount = 0;
+    let releasedTicketCount = 0;
+    let refundedTicketCount = 0;
+
+    tickets.forEach((t) => {
+      const { escrowFee, netAmount } = computeEscrowBreakdown(t.price);
+      const fee = t.escrowFee ?? escrowFee;
+      const net = t.netAmount ?? netAmount;
+      const eStatus: EscrowStatus =
+        t.escrowStatus || (t.status === 'USED' ? 'RELEASED' : t.status === 'REVOKED' ? 'REFUNDED' : 'HELD');
+
+      if (eStatus === 'HELD') {
+        totalGrossRevenue += t.price;
+        totalEscrowHeld += net;
+        totalGatewayFee += fee;
+        heldTicketCount++;
+      } else if (eStatus === 'RELEASED') {
+        totalGrossRevenue += t.price;
+        totalEscrowReleased += net;
+        totalGatewayFee += fee;
+        releasedTicketCount++;
+      } else if (eStatus === 'REFUNDED') {
+        totalEscrowRefunded += t.price;
+        refundedTicketCount++;
+      }
+    });
+
+    return {
+      totalGrossRevenue,
+      totalEscrowHeld,
+      totalEscrowReleased,
+      totalEscrowRefunded,
+      totalGatewayFee,
+      heldTicketCount,
+      releasedTicketCount,
+      refundedTicketCount,
+    };
+  }
+
   private cleanExpiredHolds(): void {
     const seats = this.getSeats();
     const now = Date.now();
@@ -376,26 +498,23 @@ class TicketingRepository {
 
     const now = Date.now();
 
-    // Check if already held by another session and not yet expired
     if (target.status === 'HELD' && target.heldBySessionId !== sessionId) {
       if (target.holdExpiresAt && target.holdExpiresAt > now) {
         const remainingSeconds = Math.ceil((target.holdExpiresAt - now) / 1000);
         return {
           success: false,
-          error: `RACE CONDITION DETECTED: Kursi ${seatId} baru saja dikunci oleh pengunjung lain (${remainingSeconds} detik tersisa pada sesi mereka). Silakan pilih kursi lain.`,
+          error: `409 CONFLICT (Anti-Double Booking): Kursi ${seatId} baru saja dikunci oleh pengunjung lain (${remainingSeconds} detik tersisa pada sesi mereka). Silakan pilih kursi lain.`,
         };
       }
     }
 
-    // Check if already booked
     if (target.status === 'BOOKED') {
       return {
         success: false,
-        error: `Kursi ${seatId} sudah ludes terjual (Booked/Sold).`,
+        error: `Kursi ${seatId} sudah ludes terjual (Sold).`,
       };
     }
 
-    // If currently holding another seat in the same session, release it first
     seats.forEach((s) => {
       if (s.heldBySessionId === sessionId && s.id !== seatId && s.status === 'HELD') {
         s.status = 'AVAILABLE';
@@ -406,7 +525,6 @@ class TicketingRepository {
       }
     });
 
-    // Lock the seat for 5 minutes (300,000 ms)
     const holdDurationMs = 5 * 60 * 1000;
     target.status = 'HELD';
     target.heldBySessionId = sessionId;
@@ -418,9 +536,6 @@ class TicketingRepository {
     return { success: true, seat: { ...target } };
   }
 
-  /**
-   * Release hold if checkout modal is closed or user deselects
-   */
   public releaseSeatHold(seatId: string, sessionId: string): void {
     const seats = this.getSeats();
     const target = seats.find((s) => s.id === seatId);
@@ -436,7 +551,7 @@ class TicketingRepository {
   }
 
   /**
-   * Confirm booking after successful payment simulation
+   * Confirm booking -> Route funds into Oziktag Escrow Pool (escrowStatus = 'HELD')
    */
   public completeBooking(
     seatId: string,
@@ -453,7 +568,6 @@ class TicketingRepository {
 
     const now = Date.now();
 
-    // Verify hold validity and ownership
     if (target.status !== 'HELD' || target.heldBySessionId !== sessionId) {
       return {
         success: false,
@@ -472,11 +586,11 @@ class TicketingRepository {
       };
     }
 
-    // Generate cryptographic ticket
     const [row, colStr] = target.id.split('-');
     const col = parseInt(colStr, 10);
     const ticketId = `OZT-BDG26-${row}${colStr}-${Math.floor(1000 + Math.random() * 9000)}`;
     const issuedAt = new Date().toISOString();
+    const { escrowFee, netAmount } = computeEscrowBreakdown(target.price);
 
     const cryptographicHash = generateCryptographicSignature({
       ticketId,
@@ -503,6 +617,9 @@ class TicketingRepository {
       seatCol: col,
       seatTier: target.tier,
       price: target.price,
+      escrowFee,
+      netAmount,
+      escrowStatus: 'HELD',
       attendee,
       event: {
         id: EVENT_DETAILS.id,
@@ -521,7 +638,6 @@ class TicketingRepository {
       transactionId: `TX-OZK-${Date.now().toString(36).toUpperCase()}`,
     };
 
-    // Commit seat state
     target.status = 'BOOKED';
     target.heldBySessionId = undefined;
     target.heldByName = undefined;
@@ -529,12 +645,14 @@ class TicketingRepository {
     target.bookedByTicketId = ticketId;
     target.version += 1;
 
-    // Save transaction
     const newTx: Transaction = {
       id: newTicket.transactionId,
       seatId: target.id,
       ticketId,
       amount: target.price,
+      escrowFee,
+      netAmount,
+      escrowStatus: 'HELD',
       status: 'SUCCESS',
       paymentMethod,
       createdAt: issuedAt,
@@ -552,8 +670,7 @@ class TicketingRepository {
   }
 
   /**
-   * Panitia Gate Scanner Verification Engine
-   * Validates state and HMAC cryptographic checksum
+   * Panitia Gate Scanner Verification Engine + Automatic Escrow Release to Organizer Wallet
    */
   public verifyAndScanTicket(rawInput: string, gateName = 'Gate 2 - Summarecon Mall'): GateScanResult {
     const tickets = this.getTickets();
@@ -562,27 +679,24 @@ class TicketingRepository {
     let targetTicket: Ticket | undefined;
     let decodedPayload: any = null;
 
-    // Try parsing as JSON QR payload first
     try {
       decodedPayload = JSON.parse(rawInput);
       if (decodedPayload.tid) {
         targetTicket = tickets.find((t) => t.id === decodedPayload.tid);
       }
     } catch {
-      // Fallback: direct Ticket ID search
       targetTicket = tickets.find((t) => t.id === rawInput.trim());
     }
 
     if (!targetTicket) {
       return {
         status: 'INVALID',
-        message: 'Tiket tidak terdaftar dalam database Oziktag atau segel digital palsu.',
+        message: 'Tiket tidak terdaftar dalam database Oziktag atau segel digital HMAC-SHA256 palsu.',
         scannedAt: now,
         gate: gateName,
       };
     }
 
-    // Verify cryptographic signature integrity
     const expectedSig = generateCryptographicSignature({
       ticketId: targetTicket.id,
       seatId: targetTicket.seatId,
@@ -593,53 +707,68 @@ class TicketingRepository {
     if (decodedPayload && decodedPayload.sig && decodedPayload.sig !== expectedSig) {
       return {
         status: 'INVALID',
-        message: 'PEMALSUAN TERDETEKSI: Checksum kriptografi tiket tidak cocok dengan signature master Oziktag.',
+        message: 'PEMALSUAN TERDETEKSI: Signature HMAC-SHA256 tiket tidak cocok dengan kunci master Oziktag.',
         scannedAt: now,
         gate: gateName,
       };
     }
 
-    // Check if already used
     if (targetTicket.status === 'USED') {
+      const { escrowFee, netAmount } = computeEscrowBreakdown(targetTicket.price);
       return {
         status: 'ALREADY_USED',
-        message: `Tiket ini SUDAH DIGUNAKAN sebelumnya pada ${targetTicket.scannedAt || 'waktu lampau'} melalui ${targetTicket.scannedByGate || 'Gate Utama'}.`,
+        message: `ANTI-PASSBACK: Tiket ini SUDAH DIGUNAKAN pada ${targetTicket.scannedAt || 'waktu lampau'} di ${targetTicket.scannedByGate || 'Gate Utama'}. Dana Escrow sudah pernah dicairkan.`,
         ticket: targetTicket,
         scannedAt: now,
         gate: gateName,
+        escrowStatus: 'RELEASED',
+        settledNetAmount: targetTicket.netAmount ?? netAmount,
+        escrowFee: targetTicket.escrowFee ?? escrowFee,
+        walletCredited: false,
       };
     }
 
-    // Check if revoked
     if (targetTicket.status === 'REVOKED') {
       return {
         status: 'INVALID',
-        message: 'Tiket telah DIBATALKAN / DI-REVOKE oleh panitia atau sistem escrow.',
+        message: 'Tiket telah DIBATALKAN / DI-REFUND oleh panitia (Escrow Status: REFUNDED).',
         ticket: targetTicket,
         scannedAt: now,
         gate: gateName,
+        escrowStatus: 'REFUNDED',
+        walletCredited: false,
       };
     }
 
-    // Valid entry! Transition ticket to USED
+    // Valid check-in! Flip status to USED & Auto-Release Escrow to Organizer's Dompet Penghasilan
+    const { escrowFee, netAmount } = computeEscrowBreakdown(targetTicket.price);
+    const settledNet = targetTicket.netAmount ?? netAmount;
+    const settledFee = targetTicket.escrowFee ?? escrowFee;
+    const scanTimestamp = `${new Date().toLocaleDateString('id-ID')} ${now} WIB`;
+
     targetTicket.status = 'USED';
-    targetTicket.scannedAt = `${new Date().toLocaleDateString('id-ID')} ${now} WIB`;
+    targetTicket.scannedAt = scanTimestamp;
     targetTicket.scannedByGate = gateName;
+    targetTicket.escrowStatus = 'RELEASED';
+    targetTicket.escrowReleasedAt = scanTimestamp;
+    targetTicket.netAmount = settledNet;
+    targetTicket.escrowFee = settledFee;
 
     this.saveTickets(tickets);
 
     return {
       status: 'VALID',
-      message: 'TIKET TERVERIFIKASI VALID. Silakan masuk ke Grand Ballroom!',
+      message: `TIKET VALID! Check-in berhasil & Dana Escrow Rp ${settledNet.toLocaleString('id-ID')} otomatis cair ke Dompet Penghasilan Organizer.`,
       ticket: targetTicket,
       scannedAt: now,
       gate: gateName,
+      escrowStatus: 'RELEASED',
+      settledNetAmount: settledNet,
+      escrowFee: settledFee,
+      walletCredited: true,
     };
   }
 
-  /**
-   * Simulate a race condition: another concurrent user tries to claim a seat at the same instant
-   */
   public simulateContentionRace(seatId: string): { success: boolean; message: string } {
     const seats = this.getSeats();
     const seat = seats.find((s) => s.id === seatId);
@@ -660,9 +789,6 @@ class TicketingRepository {
     };
   }
 
-  /**
-   * Update attendee metadata (Perubahan data peserta - fitur pendukung brief)
-   */
   public updateAttendeeData(
     ticketId: string,
     updated: Partial<AttendeeInfo>
@@ -676,7 +802,6 @@ class TicketingRepository {
       ...updated,
     };
 
-    // Recompute cryptographic HMAC signature
     target.cryptographicHash = generateCryptographicSignature({
       ticketId: target.id,
       seatId: target.seatId,
@@ -700,11 +825,11 @@ class TicketingRepository {
   }
 
   /**
-   * Pembatalan & Refund Tiket (Fitur pendukung brief)
+   * Cancel & Refund Ticket -> Release seat back to AVAILABLE & execute Escrow Refund
    */
   public refundAndCancelTicket(
     ticketId: string,
-    reason = 'Permintaan Pengunjung / Kebijakan Panitia'
+    _reason = 'Permintaan Pengunjung / Kebijakan Panitia'
   ): { success: boolean; error?: string } {
     const tickets = this.getTickets();
     const ticket = tickets.find((t) => t.id === ticketId);
@@ -715,8 +840,8 @@ class TicketingRepository {
     }
 
     ticket.status = 'REVOKED';
+    ticket.escrowStatus = 'REFUNDED';
 
-    // Release seat back to AVAILABLE
     const seats = this.getSeats();
     const seat = seats.find((s) => s.id === ticket.seatId);
     if (seat) {
@@ -729,12 +854,15 @@ class TicketingRepository {
       this.saveSeats(seats);
     }
 
-    // Record refund transaction
+    const { escrowFee, netAmount } = computeEscrowBreakdown(ticket.price);
     const refundTx: Transaction = {
       id: `TX-REFUND-${Date.now().toString(36).toUpperCase()}`,
       seatId: ticket.seatId,
       ticketId: ticket.id,
       amount: ticket.price,
+      escrowFee: ticket.escrowFee ?? escrowFee,
+      netAmount: ticket.netAmount ?? netAmount,
+      escrowStatus: 'REFUNDED',
       status: 'REFUNDED',
       paymentMethod: 'ESCROW_WALLET',
       createdAt: new Date().toISOString(),
@@ -747,14 +875,12 @@ class TicketingRepository {
     return { success: true };
   }
 
-  /**
-   * Reset data to pristine demo state
-   */
   public resetDemoData(): void {
     if (typeof window === 'undefined') return;
     localStorage.removeItem(SEATS_STORAGE_KEY);
     localStorage.removeItem(TICKETS_STORAGE_KEY);
     localStorage.removeItem(TRANSACTIONS_STORAGE_KEY);
+    localStorage.removeItem(EVENTS_STORAGE_KEY);
     this.broadcastChange();
   }
 }

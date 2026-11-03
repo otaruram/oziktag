@@ -1,11 +1,13 @@
 /**
- * Oziktag Event Ticketing & Interactive Seat Reservation Types
+ * Oziktag Event Ticketing, Interactive Seat Map & Escrow Auto-Settlement Types
  * Specifically tailored for Summarecon Mall Bandung - Bandung Build Challenge 2026
  */
 
 export type SeatTier = 'VIP' | 'REGULAR' | 'WING' | 'CAT1' | 'CAT2';
 
 export type SeatStatus = 'AVAILABLE' | 'HELD' | 'BOOKED';
+
+export type EscrowStatus = 'HELD' | 'RELEASED' | 'REFUNDED';
 
 export interface SeatTierConfig {
   tier: SeatTier;
@@ -16,8 +18,33 @@ export interface SeatTierConfig {
   perks: string[];
 }
 
+export interface EventCategoryQuota {
+  price: number;
+  quota: number;
+}
+
+export interface EventConfig {
+  id: string;
+  organizerId?: string;
+  title: string;
+  venue: string;
+  date: string;
+  time?: string;
+  categories: {
+    VIP: EventCategoryQuota;
+    REGULAR: EventCategoryQuota;
+    WING: EventCategoryQuota;
+  };
+  totalSeats?: number;
+  soldSeats?: number;
+  grossRevenue?: number;
+  escrowHeld?: number;
+  escrowReleased?: number;
+}
+
 export interface Seat {
   id: string; // e.g. "A-01", "B-05"
+  eventId?: string;
   row: string; // "A", "B", ...
   col: number; // 1, 2, ...
   tier: SeatTier;
@@ -47,6 +74,10 @@ export interface Ticket {
   seatCol: number;
   seatTier: SeatTier;
   price: number;
+  escrowFee: number; // 2.5% Oziktag Escrow & Payment Gateway fee
+  netAmount: number; // 97.5% net settlement to Organizer Dompet Penghasilan
+  escrowStatus: EscrowStatus;
+  escrowReleasedAt?: string;
   attendee: AttendeeInfo;
   event: {
     id: string;
@@ -72,12 +103,18 @@ export interface Transaction {
   seatId: string;
   ticketId: string;
   amount: number;
+  escrowFee: number;
+  netAmount: number;
+  escrowStatus: EscrowStatus;
   status: 'PENDING' | 'SUCCESS' | 'EXPIRED' | 'REFUNDED';
   paymentMethod: PaymentMethod;
   createdAt: string;
   completedAt?: string;
+  escrowReleasedAt?: string;
   attendee: AttendeeInfo;
 }
+
+export type EscrowTransaction = Transaction;
 
 export type GateScanStatus = 'VALID' | 'ALREADY_USED' | 'INVALID' | 'EXPIRED';
 
@@ -87,6 +124,10 @@ export interface GateScanResult {
   ticket?: Ticket;
   scannedAt: string;
   gate: string;
+  escrowStatus?: EscrowStatus;
+  settledNetAmount?: number;
+  escrowFee?: number;
+  walletCredited?: boolean;
 }
 
 export interface VenueSummary {
@@ -100,6 +141,8 @@ export interface VenueSummary {
   bookedSeats: number;
   occupancyRate: number;
   totalRevenue: number;
+  escrowHeldAmount: number;
+  escrowReleasedAmount: number;
   checkInRate: number;
   checkedInCount: number;
 }

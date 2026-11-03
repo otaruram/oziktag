@@ -318,7 +318,7 @@ model DisputeTicket {
 }
 
 // ============================================================
-// Event Ticketing & Seat Reservation (Oziktag x Summarecon Mall Bandung)
+// Event Ticketing, Seat Map & Escrow Auto-Settlement (Oziktag x Summarecon Mall Bandung)
 // ============================================================
 enum SeatCategory {
   VIP
@@ -343,9 +343,32 @@ enum CheckInStatus {
   USED
 }
 
+enum EscrowStatus {
+  HELD
+  RELEASED
+  REFUNDED
+}
+
+model Event {
+  id          String   @id @default(uuid())
+  organizerId String?  @map("organizer_id")
+  title       String
+  venue       String
+  date        String
+  categories  Json     @default("{}")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  seats       Seat[]
+
+  @@index([organizerId])
+  @@map("events")
+}
+
 model Seat {
   id            String       @id @default(uuid())
-  seatCode      String       @unique @map("seat_code") // e.g. "A-01"
+  eventId       String?      @map("event_id")
+  seatCode      String       @unique @map("seat_code") // e.g. "A-01" or "VIP-A1"
   rowLabel      String       @map("row_label")
   colNumber     Int          @map("col_number")
   category      SeatCategory @default(REGULAR)
@@ -367,29 +390,39 @@ model Seat {
   createdAt     DateTime     @default(now()) @map("created_at")
   updatedAt     DateTime     @updatedAt @map("updated_at")
 
+  event         Event?              @relation(fields: [eventId], references: [id], onDelete: SetNull)
   transactions  TicketTransaction[]
 
+  @@index([eventId])
   @@index([status, reservedUntil])
   @@index([heldByUserId])
   @@map("event_seats")
 }
 
 model TicketTransaction {
-  id            String        @id @default(uuid())
-  seatId        String        @map("seat_id")
-  userId        String?       @map("user_id")
-  amount        Decimal       @db.Decimal(12, 2)
-  paymentMethod String        @default("SIMULATED") @map("payment_method")
-  paymentStatus PaymentStatus @default(PENDING) @map("payment_status")
-  checkInStatus CheckInStatus @default(UNUSED) @map("check_in_status")
-  checkedInAt   DateTime?     @map("checked_in_at")
-  checkedInGate String?       @map("checked_in_gate")
-  createdAt     DateTime      @default(now()) @map("created_at")
-  updatedAt     DateTime      @updatedAt @map("updated_at")
+  id               String        @id @default(uuid())
+  seatId           String        @map("seat_id")
+  userId           String?       @map("user_id")
+  buyerId          String?       @map("buyer_id")
+  organizerId      String?       @map("organizer_id")
+  amount           Decimal       @db.Decimal(12, 2)
+  escrowFee        Decimal       @default(0) @db.Decimal(12, 2) @map("escrow_fee")
+  netAmount        Decimal       @default(0) @db.Decimal(12, 2) @map("net_amount")
+  paymentMethod    String        @default("SIMULATED") @map("payment_method")
+  paymentStatus    PaymentStatus @default(PENDING) @map("payment_status")
+  checkInStatus    CheckInStatus @default(UNUSED) @map("check_in_status")
+  escrowStatus     EscrowStatus  @default(HELD) @map("escrow_status")
+  checkedInAt      DateTime?     @map("checked_in_at")
+  checkedInGate    String?       @map("checked_in_gate")
+  escrowReleasedAt DateTime?     @map("escrow_released_at")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
 
   seat Seat @relation(fields: [seatId], references: [id], onDelete: Cascade)
 
   @@index([seatId])
   @@index([checkInStatus])
+  @@index([escrowStatus])
+  @@index([organizerId])
   @@map("ticket_transactions")
 }
