@@ -92,13 +92,6 @@ function LandingPage() {
 
           <div className="flex items-center gap-3">
             <Link
-              to="/events"
-              className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3.5 py-2 text-xs font-semibold hover:bg-secondary transition"
-            >
-              <Ticket className="h-3.5 w-3.5 text-emerald-600" />
-              <span>Tiket Event 2026</span>
-            </Link>
-            <Link
               to="/auth"
               className="inline-flex items-center gap-1.5 rounded-lg bg-orange-600 px-4 py-2 text-xs font-bold text-white hover:bg-orange-700 transition shadow-xs"
             >
@@ -133,22 +126,15 @@ function LandingPage() {
               {/* Action Buttons */}
               <div className="mt-8 flex flex-wrap items-center gap-3 w-full sm:w-auto">
                 <Link
-                  to="/events"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-xl bg-orange-600 px-6 py-3.5 text-sm font-bold text-white hover:bg-orange-700 transition shadow-sm"
-                >
-                  <Ticket className="h-4 w-4" />
-                  Beli Tiket & Pilih Kursi
-                </Link>
-                <Link
                   to="/auth"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 py-3.5 text-sm font-bold text-white hover:bg-slate-800 transition shadow-sm"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-orange-600 px-7 py-3.5 text-sm font-bold text-white hover:bg-orange-700 transition shadow-sm"
                 >
                   Daftar Toko UMKM
                   <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
                   to="/docs"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-5 py-3.5 text-sm font-semibold text-foreground hover:bg-secondary transition"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-6 py-3.5 text-sm font-semibold text-foreground hover:bg-secondary transition"
                 >
                   <Cpu className="h-4 w-4 text-muted-foreground" />
                   Dokumentasi API
