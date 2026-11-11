@@ -25,47 +25,11 @@ async def get_wallet_balance(current_user: dict = Depends(get_current_user)):
         order={"createdAt": "desc"}
     )
     
-    # Get all escrow transactions (tracking products that are escrow)
+    # Get all escrow transactions (QR Shield / tracking products with escrow protection)
     escrow_transactions = await db.trackingproduct.find_many(
         where={"userId": user.id, "isEscrow": True},
         order={"createdAt": "desc"}
     )
-
-    # Also get Event Ticket Escrow transactions (Oziktag Event Ticketing Auto-Settlement)
-    ticket_escrows = []
-    try:
-        ticket_rows = await db.query_raw(
-            """
-            SELECT t.id, s.seat_code, s.category::text AS category, s.buyer_name,
-                   t.amount::numeric AS price, t.net_amount::numeric AS net_amount,
-                   t.escrow_fee::numeric AS escrow_fee,
-                   t.escrow_status::text AS escrow_status,
-                   t.check_in_status::text AS check_in_status,
-                   t.created_at, t.checked_in_at, t.escrow_released_at
-              FROM ticket_transactions t
-              JOIN event_seats s ON s.id = t.seat_id
-             WHERE t.organizer_id = $1 OR $2 = TRUE
-             ORDER BY t.created_at DESC
-             LIMIT 50
-            """,
-            user.id,
-            bool(user.isAdmin),
-        )
-        for tr in ticket_rows:
-            ticket_escrows.append({
-                "id": tr["id"],
-                "name": f"[Tiket Event Summarecon] Kursi {tr['seat_code']} ({tr['category']}) — {tr['buyer_name'] or 'Attendee'}",
-                "price": int(float(tr["price"] or 0)),
-                "netAmount": int(float(tr["net_amount"] or 0)),
-                "escrowFee": int(float(tr["escrow_fee"] or 0)),
-                "escrowStatus": tr["escrow_status"],
-                "currentStatus": "DELIVERED" if tr["check_in_status"] == "USED" else "CHECKIN_PENDING",
-                "createdAt": str(tr["created_at"]),
-                "deliveredAt": str(tr["checked_in_at"]) if tr["checked_in_at"] else None,
-                "payoutReleasedAt": str(tr["escrow_released_at"]) if tr["escrow_released_at"] else None,
-            })
-    except Exception as e:
-        print(f"[Wallet] Ticket escrow query fallback: {e}")
 
     combined_escrow = [
         {
@@ -80,7 +44,7 @@ async def get_wallet_balance(current_user: dict = Depends(get_current_user)):
             "deliveredAt": t.deliveredAt.isoformat() if t.deliveredAt else None,
             "payoutReleasedAt": t.payoutReleasedAt.isoformat() if t.payoutReleasedAt else None,
         } for t in escrow_transactions
-    ] + ticket_escrows
+    ]
 
     return {
         "balance": user.escrowBalance,

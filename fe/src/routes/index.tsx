@@ -1,44 +1,94 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { 
-  ShieldCheck, 
-  QrCode, 
-  CheckCircle2, 
-  ArrowRight, 
-  Bot, 
-  Camera, 
-  Database, 
-  MapPin, 
-  Lock, 
-  Ticket,
-  Sparkles,
+import {
+  ShieldCheck,
+  Shield,
+  QrCode,
+  CheckCircle2,
+  ArrowRight,
+  Bot,
+  Lock,
   Cpu,
-  Layers,
+  MapPin,
+  KeyRound,
+  Plus,
+  Minus,
   Flame,
-  Hammer,
+  Sparkles,
+  Wallet,
   Scale,
-  Award,
-  CircleDot
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Oziktag — Studio Sertifikasi Kualitas & Tiket Terakota" },
+      { title: "Oziktag — QR Trust Seal, QR Shield & Escrow Karya Budaya Nusantara" },
       {
         name: "description",
         content:
-          "Platform sertifikasi kualitas produk pengrajin UMKM berbasis AI Vision dan sistem tiket event terintegrasi dengan garansi pembayaran Escrow.",
+          "Solusi digital untuk industri & ekonomi budaya Indonesia: AI QR Trust Seal, QR Shield anti-tukar pengiriman GPS+PIN, dan pembayaran Escrow 24 jam.",
       },
     ],
   }),
   component: LandingPage,
 });
 
+const FAQS = [
+  {
+    q: "Bagaimana QR Trust Seal melindungi karya kriya dan wastra dari pemalsuan?",
+    a: "Setiap produk budaya yang difoto saat selesai produksi dianalisis oleh AI Vision (Gemini/Claude Multimodal) beserta checklist kualitas studio. Sistem menghasilkan QR Trust Seal unik yang terikat pada hash gambar riil dan riwayat toko terverifikasi KYC, sehingga pembeli cukup memindai QR untuk mengecek keaslian bahan, detail teknik pengerjaan, dan tips perawatan tradisionalnya.",
+  },
+  {
+    q: "Apa fungsi QR Shield saat pengiriman produk berlangsung?",
+    a: "QR Shield adalah segel keamanan logistik berlapis: label QR kardus merekam lokasi GPS kurir saat penjemputan/transit dan mengunci transaksi dengan PIN rahasia 6-digit milik pembeli. Dana hanya dapat diproses cair setelah pembeli memasukkan PIN penerima, atau pembeli dapat mengajukan sengketa dengan bukti video unboxing sebelum 24 jam berakhir.",
+  },
+  {
+    q: "Apakah Oziktag menyimpan dana transaksi sendiri (Regulasi OJK & Bank Indonesia)?",
+    a: "Tidak. Oziktag tidak menampung dana masyarakat secara langsung. Seluruh arus dana Escrow diproses melalui mitra payment gateway/perbankan pihak ketiga yang berizin agar sepenuhnya patuh terhadap regulasi OJK dan Bank Indonesia.",
+  },
+  {
+    q: "Bagaimana mekanisme penahanan Escrow 24 jam bekerja?",
+    a: "Setelah barang diterima dan dikonfirmasi menggunakan PIN Pembeli, status berubah menjadi DELIVERED dan memasuki masa tunggu perlindungan selama 1×24 jam. Jika tidak ada pengajuan sengketa dari pembeli dalam jendela 24 jam tersebut, sistem otomatis meneruskan dana bersih ke Dompet Penghasilan pengrajin/penjual.",
+  },
+  {
+    q: "Berapa biaya penggunaan Oziktag untuk pelaku budaya & UMKM?",
+    a: "Oziktag menerapkan skema hemat Pay-As-You-Go (1 QR = 1 Kredit) tanpa biaya langganan bulanan yang memberatkan pengrajin kecil, dengan biaya pemrosesan Escrow transparan sebesar 1,5% + Rp 1.000 per transaksi terproteksi.",
+  },
+];
+
+const CULTURAL_SECTORS = [
+  {
+    code: "01",
+    title: "Wastra & Fesyen Nusantara",
+    desc: "Membedakan batik tulis/cap asli, tenun ikat, dan songket dari cetakan massal lewat dokumentasi proses & tips perawatan lerak.",
+  },
+  {
+    code: "02",
+    title: "Kriya Nusantara",
+    desc: "Validasi kerapatan anyaman rotan/bambu, ketahanan glasir keramik terakota, dan kehalusan ukiran kayu sebelum dikirim ke kolektor.",
+  },
+  {
+    code: "03",
+    title: "Kuliner & Rempah Nusantara",
+    desc: "Menjamin keutuhan segel kemasan kopi spesialti daerah, bumbu warisan, dan tanggal kedaluwarsa yang diverifikasi AI Vision.",
+  },
+  {
+    code: "04",
+    title: "Produk Edukasi Budaya",
+    desc: "Sertifikasi keaslian alat musik tradisional, alat peraga aksara, dan permainan rakyat beserta panduan penggunaan interaktif.",
+  },
+  {
+    code: "05",
+    title: "Aroma & Perawatan Tradisional",
+    desc: "Jaminan kemurnian minyak atsiri, jamu, dan racikan perawatan herbal Nusantara dengan perlindungan anti-pecah QR Shield.",
+  },
+];
+
 function LandingPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"PRODUCT_QC" | "EVENT_PASS">("EVENT_PASS");
+  const [activePillar, setActivePillar] = useState<"QR_SEAL" | "QR_SHIELD" | "ESCROW">("QR_SEAL");
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -59,42 +109,42 @@ function LandingPage() {
   }, [router]);
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-[#cc4a1e] selection:text-white relative overflow-hidden">
-      {/* 80% Werkstatt Architectural Grid Pattern */}
-      <div 
-        className="absolute inset-0 pointer-events-none opacity-[0.05] dark:opacity-[0.08]"
-        style={{
-          backgroundImage: "linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)",
-          backgroundSize: "36px 36px"
-        }}
-      />
+    <div className="min-h-screen bg-[#121212] text-[#f4ecdd] font-sans selection:bg-orange-600 selection:text-white relative overflow-hidden">
+      {/* 80% Werkstatt Architectural Blueprint Lines */}
+      <div className="absolute inset-0 pointer-events-none werkstatt-grid opacity-80" />
 
-      {/* Floating Werkstatt Studio Header */}
-      <header className="sticky top-0 z-50 border-b border-border/80 bg-background/90 backdrop-blur-md">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3.5">
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="flex h-8 w-8 items-center justify-center rounded bg-[#1f1b18] text-white shadow-xs group-hover:bg-[#cc4a1e] transition-colors">
-              <ShieldCheck className="h-4 w-4 text-orange-400" />
+      {/* Top Navigation Bar (budayago.id + Werkstatt 1px line) */}
+      <header className="sticky top-0 z-50 border-b border-[#383838] bg-[#121212]/90 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-8 py-4">
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-600 text-white shadow-xs group-hover:bg-orange-500 transition-colors">
+              <ShieldCheck className="h-5 w-5" />
             </div>
-            <div className="flex items-center gap-2">
-              <span className="font-extrabold text-lg tracking-tight text-foreground font-mono">OZIKTAG</span>
-              <span className="kiln-stamp px-1.5 py-0.5 rounded bg-[#cc4a1e]/10 text-[#cc4a1e] border border-[#cc4a1e]/20 text-[9px]">
-                WERKSTATT // KILN
+            <div className="flex items-center gap-2.5">
+              <span className="font-extrabold text-lg tracking-tight text-[#f4ecdd]">OZIKTAG</span>
+              <span className="kiln-stamp hidden sm:inline-flex px-2 py-0.5 bg-[#fac603]/15 text-[#fac603] border border-[#fac603]/30 text-[9px]">
+                BUDAYA DIGITAL
               </span>
             </div>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-8 text-xs font-mono uppercase tracking-wider text-muted-foreground">
-            <a href="#werkstatt-qc" className="hover:text-foreground transition">01 / Studio QC</a>
-            <a href="#summarecon-event" className="hover:text-foreground transition">02 / Summarecon Pass</a>
-            <a href="#escrow-arsitektur" className="hover:text-foreground transition">03 / Escrow Pool</a>
-            <a href="#bengkel-tim" className="hover:text-foreground transition">04 / Bengkel Tim</a>
+          <nav className="hidden md:flex items-center gap-8 text-xs font-mono uppercase tracking-wider text-[#bdbdbd]">
+            <a href="#pilar" className="hover:text-[#f4ecdd] transition">01 / Pilar Produk</a>
+            <a href="#budaya" className="hover:text-[#f4ecdd] transition">02 / Karya Budaya</a>
+            <a href="#alur" className="hover:text-[#f4ecdd] transition">03 / Alur & FAQ</a>
+            <a href="#tim" className="hover:text-[#f4ecdd] transition">04 / Tim</a>
           </nav>
 
           <div className="flex items-center gap-3">
             <Link
+              to="/docs"
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-[#383838] bg-[#1c1c1c] px-3.5 py-2 text-xs font-mono font-semibold text-[#f4ecdd] hover:bg-[#262626] transition"
+            >
+              API Docs
+            </Link>
+            <Link
               to="/auth"
-              className="inline-flex items-center gap-1.5 rounded bg-[#cc4a1e] px-4 py-2 text-xs font-bold text-white hover:bg-[#b83f15] transition shadow-xs tracking-tight"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-orange-600 px-4 py-2 text-xs font-bold text-white hover:bg-orange-700 transition shadow-xs"
             >
               Masuk Studio
               <ArrowRight className="h-3.5 w-3.5" />
@@ -104,201 +154,257 @@ function LandingPage() {
       </header>
 
       <main className="relative z-10">
-        {/* HERO SECTION: 80% Werkstatt Structural Composition + 20% Kiln Pottery Soul */}
-        <section className="mx-auto max-w-7xl px-6 pt-16 sm:pt-24 pb-20 border-b border-border/70">
+        {/* HERO SECTION */}
+        <section className="mx-auto max-w-7xl px-4 sm:px-8 pt-16 sm:pt-24 pb-20 border-b border-[#383838]">
           <div className="grid lg:grid-cols-12 gap-12 items-center">
-            {/* Left Column: Bold Bauhaus Workshop Headline */}
+            {/* Left Column: Budaya GO! Editorial Authority */}
             <div className="lg:col-span-7 flex flex-col items-start">
-              {/* Kiln Craft Pill Badge */}
-              <div className="inline-flex items-center gap-2 rounded border border-[#cc4a1e]/30 bg-[#cc4a1e]/10 px-3 py-1 text-xs font-mono font-bold text-[#cc4a1e] mb-6">
-                <Flame className="h-3.5 w-3.5 animate-pulse" />
-                <span>BANDUNG BUILD CHALLENGE 2026</span>
-                <span className="text-muted-foreground">•</span>
-                <span>SUMMARECON MALL BANDUNG</span>
+              <div className="inline-flex items-center gap-2 rounded-md border border-[#383838] bg-[#1c1c1c] px-3 py-1.5 text-xs font-mono text-[#fac603] mb-6">
+                <Flame className="h-3.5 w-3.5 text-[#ff792f]" />
+                <span className="font-bold tracking-wider uppercase">Solusi Digital Ekonomi & Industri Budaya</span>
               </div>
 
-              <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-foreground leading-[1.08] font-sans">
-                Presisi Bengkel Kerja, <br className="hidden sm:block"/>
-                <span className="text-[#cc4a1e]">Kehangatan Sentuhan Pengrajin.</span>
+              <h1 className="text-4xl sm:text-5xl xl:text-[62px] font-extrabold tracking-tight text-[#f4ecdd] leading-[1.08]">
+                Karya Budaya Terjaga.{" "}
+                <span className="text-[#ff792f]">Kepercayaan Terbukti.</span>
               </h1>
 
-              <p className="mt-6 text-base sm:text-lg text-muted-foreground leading-relaxed max-w-2xl">
-                Oziktag menggabungkan arsitektur modular <strong>Werkstatt</strong> untuk verifikasi digital dengan jiwa seni kriya <strong>Kiln Pottery</strong>. Dari inspeksi serat rotan dan keramik studio hingga tiket gerbang Summarecon bergaransi Escrow 24 jam.
+              <p className="mt-6 text-base sm:text-lg text-[#bdbdbd] leading-relaxed max-w-2xl">
+                Platform proteksi keaslian dan transaksi produk kriya serta wastra Nusantara berbasis{" "}
+                <strong className="text-[#f4ecdd]">QR Trust Seal (AI Vision QC)</strong>,{" "}
+                <strong className="text-[#f4ecdd]">QR Shield (GPS Kurir & PIN Pembeli)</strong>, dan{" "}
+                <strong className="text-[#f4ecdd]">Escrow 24 Jam</strong> melalui payment gateway mitra berizin OJK/BI.
               </p>
 
-              {/* Action Buttons: Clean Werkstatt Primary in Terracotta */}
+              {/* Primary Buttons (.agents/AGENTS.md bg-orange-600 rule) */}
               <div className="mt-8 flex flex-wrap items-center gap-3 w-full sm:w-auto">
                 <Link
                   to="/auth"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg bg-[#cc4a1e] px-7 py-3.5 text-sm font-bold text-white hover:bg-[#b83f15] transition shadow-xs tracking-tight"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg bg-orange-600 px-7 py-3.5 text-sm font-bold text-white hover:bg-orange-700 transition shadow-sm"
                 >
-                  Daftar Toko UMKM
+                  Daftar Pelaku Budaya / UMKM
                   <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
                   to="/docs"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-6 py-3.5 text-sm font-mono font-semibold text-foreground hover:bg-secondary transition"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg border border-[#383838] bg-[#1c1c1c] px-6 py-3.5 text-sm font-mono font-semibold text-[#f4ecdd] hover:bg-[#262626] transition"
                 >
-                  <Cpu className="h-4 w-4 text-muted-foreground" />
-                  Spesifikasi API
+                  <Cpu className="h-4 w-4 text-[#2ea4a9]" />
+                  Dokumentasi API
                 </Link>
               </div>
 
-              {/* Workshop Technical Metric Grid (Werkstatt Rules) */}
-              <div className="mt-12 grid grid-cols-3 gap-6 border-t border-border/80 pt-6 w-full max-w-lg font-mono">
+              {/* Technical Proof Bar (Werkstatt discipline) */}
+              <div className="mt-12 grid grid-cols-3 gap-4 sm:gap-8 border-t border-[#383838] pt-6 w-full max-w-xl font-mono">
                 <div>
-                  <p className="text-2xl font-extrabold text-foreground">100%</p>
-                  <p className="text-[11px] text-muted-foreground uppercase mt-0.5">Anti-Tamper Lock</p>
+                  <p className="text-xl sm:text-2xl font-extrabold text-[#fac603]">1 QR = 1</p>
+                  <p className="text-[11px] text-[#bdbdbd] uppercase mt-1">Kredit Pay-As-You-Go</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-extrabold text-[#cc4a1e]">24 Jam</p>
-                  <p className="text-[11px] text-muted-foreground uppercase mt-0.5">Escrow Hold Pool</p>
+                  <p className="text-xl sm:text-2xl font-extrabold text-[#2ea4a9]">GPS + PIN</p>
+                  <p className="text-[11px] text-[#bdbdbd] uppercase mt-1">QR Shield Logistik</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-extrabold text-foreground">&lt; 120ms</p>
-                  <p className="text-[11px] text-muted-foreground uppercase mt-0.5">Gate Verification</p>
+                  <p className="text-xl sm:text-2xl font-extrabold text-[#ff792f]">24 JAM</p>
+                  <p className="text-[11px] text-[#bdbdbd] uppercase mt-1">Escrow Safe Window</p>
                 </div>
               </div>
             </div>
 
-            {/* Right Column: 20% Kiln Pottery School Craft Simulator Card */}
+            {/* Right Column: Interactive 3-Pillar Product Demonstrator */}
             <div className="lg:col-span-5">
-              <div className="rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-werkstatt-lg)] relative">
-                {/* Kiln Bisque Studio Simulator Header */}
-                <div className="flex items-center justify-between pb-3 border-b border-border/80">
-                  <div className="flex gap-1 bg-secondary p-1 rounded-lg">
+              <div className="rounded-2xl border border-[#383838] bg-[#1c1c1c] p-5 shadow-[var(--shadow-werkstatt-lg)]">
+                {/* Simulator Tab Switcher */}
+                <div className="flex items-center justify-between gap-2 pb-4 border-b border-[#383838]">
+                  <div className="flex gap-1 bg-[#121212] p-1 rounded-lg border border-[#383838]">
                     <button
-                      onClick={() => setActiveTab("EVENT_PASS")}
-                      className={`px-3 py-1 rounded text-xs font-mono font-bold transition ${
-                        activeTab === "EVENT_PASS"
-                          ? "bg-[#1f1b18] text-white shadow-xs"
-                          : "text-muted-foreground hover:text-foreground"
+                      type="button"
+                      onClick={() => setActivePillar("QR_SEAL")}
+                      className={`px-2.5 py-1.5 rounded text-[11px] font-mono font-bold transition ${
+                        activePillar === "QR_SEAL"
+                          ? "bg-orange-600 text-white"
+                          : "text-[#bdbdbd] hover:text-[#f4ecdd]"
                       }`}
                     >
-                      Summarecon Pass
+                      01 QR Seal
                     </button>
                     <button
-                      onClick={() => setActiveTab("PRODUCT_QC")}
-                      className={`px-3 py-1 rounded text-xs font-mono font-bold transition ${
-                        activeTab === "PRODUCT_QC"
-                          ? "bg-[#1f1b18] text-white shadow-xs"
-                          : "text-muted-foreground hover:text-foreground"
+                      type="button"
+                      onClick={() => setActivePillar("QR_SHIELD")}
+                      className={`px-2.5 py-1.5 rounded text-[11px] font-mono font-bold transition ${
+                        activePillar === "QR_SHIELD"
+                          ? "bg-orange-600 text-white"
+                          : "text-[#bdbdbd] hover:text-[#f4ecdd]"
                       }`}
                     >
-                      Segel Studio QC
+                      02 QR Shield
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActivePillar("ESCROW")}
+                      className={`px-2.5 py-1.5 rounded text-[11px] font-mono font-bold transition ${
+                        activePillar === "ESCROW"
+                          ? "bg-orange-600 text-white"
+                          : "text-[#bdbdbd] hover:text-[#f4ecdd]"
+                      }`}
+                    >
+                      03 Escrow
                     </button>
                   </div>
-                  <span className="kiln-stamp px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px]">
-                    ● LIVE VERIFIED
+                  <span className="kiln-stamp px-2 py-0.5 bg-[#2ea4a9]/15 text-[#2ea4a9] border border-[#2ea4a9]/30 text-[9px]">
+                    ● FUNGSIONAL
                   </span>
                 </div>
 
-                {activeTab === "EVENT_PASS" ? (
-                  /* Summarecon Event Pass Simulation */
+                {activePillar === "QR_SEAL" && (
                   <div className="mt-4 space-y-4">
-                    <div className="rounded-lg border border-border bg-[#1f1b18] p-4 text-white">
-                      <div className="flex items-center justify-between">
+                    <div className="rounded-xl border border-[#383838] bg-[#121212] p-4">
+                      <div className="flex items-start justify-between gap-3">
                         <div>
-                          <span className="text-[9px] font-mono uppercase tracking-widest text-orange-400 font-bold block">
-                            Summarecon Sawarga Courtyard
+                          <span className="kiln-stamp inline-block px-2 py-0.5 bg-[#fac603]/15 text-[#fac603] border border-[#fac603]/30 text-[9px]">
+                            ✓ VERIFIED WASTRA NUSANTARA
                           </span>
-                          <h4 className="text-sm font-bold mt-0.5 font-sans">Bandung Build Challenge 2026</h4>
-                          <p className="text-xs text-stone-400 font-mono">Seat Category: VIP Terakota</p>
+                          <h3 className="text-base font-bold text-[#f4ecdd] mt-2">
+                            Batik Tulis Mega Mendung Cirebon
+                          </h3>
+                          <p className="text-xs font-mono text-[#bdbdbd] mt-0.5">
+                            Batch: BATIK-CRB-2026 • Sanggar Trusmi
+                          </p>
                         </div>
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#cc4a1e] text-white">
-                          <Ticket className="h-5 w-5" />
-                        </div>
-                      </div>
-
-                      <div className="mt-4 grid grid-cols-3 gap-2 border-t border-stone-800 pt-3 text-center font-mono">
-                        <div className="bg-stone-900/90 p-2 rounded">
-                          <span className="text-[9px] text-stone-500 block uppercase">No. Kursi</span>
-                          <span className="text-xs font-bold text-orange-400">VIP-A04</span>
-                        </div>
-                        <div className="bg-stone-900/90 p-2 rounded">
-                          <span className="text-[9px] text-stone-500 block uppercase">Gate</span>
-                          <span className="text-xs font-bold text-white">Gate 1</span>
-                        </div>
-                        <div className="bg-stone-900/90 p-2 rounded">
-                          <span className="text-[9px] text-stone-500 block uppercase">Escrow</span>
-                          <span className="text-xs font-bold text-emerald-400">HELD</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* QR Code Pass Representation with Kiln Ceramic Texture */}
-                    <div className="flex items-center gap-4 p-3 rounded-lg border border-border bg-[#faf9f6] dark:bg-stone-900">
-                      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded bg-white border p-1 shadow-xs">
-                        <QrCode className="h-full w-full text-[#1f1b18]" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-bold text-foreground font-mono">HMAC-SHA256 Pass Token</span>
-                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                        </div>
-                        <p className="text-[10px] font-mono text-muted-foreground truncate mt-0.5">
-                          OZIK-KILN:7f4a9b2c8e1d...
-                        </p>
-                        <p className="text-[10px] text-muted-foreground mt-1">
-                          Pelepasan otomatis escrow ke saldo Dompet Penghasilan begitu pass discan panitia.
-                        </p>
-                      </div>
-                    </div>
-
-                    <Link
-                      to="/events"
-                      className="block w-full text-center rounded bg-[#cc4a1e] py-2.5 text-xs font-bold text-white hover:bg-[#b83f15] transition font-mono tracking-tight"
-                    >
-                      Buka Denah Kursi Interaktif &rarr;
-                    </Link>
-                  </div>
-                ) : (
-                  /* Pottery / Craft Studio QC Inspection Representation */
-                  <div className="mt-4 space-y-4">
-                    <div className="rounded-lg border border-border bg-[#faf9f6] dark:bg-stone-900 p-4">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <span className="kiln-stamp px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[9px]">
-                            ✓ QC PASSED • SCORE 98/100
-                          </span>
-                          <h4 className="text-sm font-bold mt-2 font-sans">Gerabah & Keramik Studio Priangan</h4>
-                          <p className="text-xs text-muted-foreground font-mono">Batch: KILN-2026-11 • Studio Keramik Rahayu</p>
-                        </div>
-                        <div className="h-10 w-10 rounded bg-muted flex items-center justify-center border">
-                          <Camera className="h-5 w-5 text-muted-foreground" />
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-white p-1.5">
+                          <QrCode className="h-full w-full text-[#121212]" />
                         </div>
                       </div>
 
                       <div className="mt-3 flex flex-wrap gap-1.5 font-mono text-[10px]">
-                        <span className="rounded bg-secondary px-2 py-0.5 text-foreground">
-                          ✓ Pembakaran 1220°C Stabil
+                        <span className="rounded bg-[#1c1c1c] border border-[#383838] px-2 py-1 text-[#f4ecdd]">
+                          ✓ Pewarnaan Malam Alami
                         </span>
-                        <span className="rounded bg-secondary px-2 py-0.5 text-foreground">
-                          ✓ Bebas Retak Glasir
-                        </span>
-                        <span className="rounded bg-secondary px-2 py-0.5 text-foreground">
-                          ✓ Finishing Halus
+                        <span className="rounded bg-[#1c1c1c] border border-[#383838] px-2 py-1 text-[#f4ecdd]">
+                          ✓ Tembusan Depan-Belakang Rapi
                         </span>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-[#1f1b18] text-white">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded bg-[#cc4a1e]">
-                          <QrCode className="h-4 w-4 text-white" />
-                        </div>
+                    <div className="rounded-xl border border-[#2ea4a9]/30 bg-[#2ea4a9]/10 p-3.5 text-xs space-y-1.5">
+                      <div className="flex items-center gap-1.5 font-mono font-bold text-[#2ea4a9] text-[11px]">
+                        <Bot className="h-3.5 w-3.5" />
+                        ANALISIS AI VISION &amp; TIPS PELESTARIAN
+                      </div>
+                      <p className="text-[#f4ecdd]/90 leading-relaxed text-[12px]">
+                        Garis gradasi 7 warna awan konsisten tanpa cacat cetak. Rawat kain dengan mencuci lembut memakai{" "}
+                        <strong>ekstrak buah lerak</strong> dan hindari jemur di matahari langsung.
+                      </p>
+                    </div>
+
+                    <Link
+                      to="/generator"
+                      className="block w-full text-center rounded-lg bg-orange-600 py-2.5 text-xs font-bold text-white hover:bg-orange-700 transition"
+                    >
+                      Buat QR Trust Seal Produk Anda &rarr;
+                    </Link>
+                  </div>
+                )}
+
+                {activePillar === "QR_SHIELD" && (
+                  <div className="mt-4 space-y-4">
+                    <div className="rounded-xl border border-[#383838] bg-[#121212] p-4">
+                      <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-xs font-bold font-sans">Segel Terakota Digital</p>
-                          <p className="text-[10px] text-stone-400 font-mono">1 QR = 1 Sertifikat Kualitas</p>
+                          <span className="text-[10px] font-mono uppercase tracking-widest text-[#2ea4a9] font-bold">
+                            Dual-QR Segel Kardus &amp; Kurir
+                          </span>
+                          <h3 className="text-base font-bold text-[#f4ecdd] mt-0.5">
+                            Gerabah Terakota Kasongan
+                          </h3>
+                          <p className="text-xs font-mono text-[#bdbdbd]">
+                            Status: IN_TRANSIT • GPS Kurir Terkunci
+                          </p>
+                        </div>
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#2ea4a9]/20 text-[#2ea4a9]">
+                          <Shield className="h-5 w-5" />
                         </div>
                       </div>
-                      <Link
-                        to="/generator"
-                        className="rounded bg-white px-3 py-1.5 text-xs font-bold text-[#1f1b18] hover:bg-stone-100 transition font-mono"
-                      >
-                        Cetak Segel
-                      </Link>
+
+                      <div className="mt-4 grid grid-cols-2 gap-2.5 font-mono">
+                        <div className="rounded-lg border border-[#383838] bg-[#1c1c1c] p-2.5">
+                          <span className="text-[9px] text-[#bdbdbd] uppercase block">PIN Rahasia Pembeli</span>
+                          <span className="text-sm font-extrabold tracking-[0.2em] text-[#fac603]">482910</span>
+                        </div>
+                        <div className="rounded-lg border border-[#383838] bg-[#1c1c1c] p-2.5">
+                          <span className="text-[9px] text-[#bdbdbd] uppercase block">Checkpoint GPS</span>
+                          <span className="text-xs font-bold text-[#2ea4a9] flex items-center gap-1 mt-0.5">
+                            <MapPin className="h-3 w-3" /> -7.848, 110.335
+                          </span>
+                        </div>
+                      </div>
                     </div>
+
+                    <div className="rounded-xl border border-[#383838] bg-[#121212] p-3.5 text-xs space-y-1">
+                      <p className="font-mono font-bold text-[#ff792f] text-[11px] flex items-center gap-1.5">
+                        <KeyRound className="h-3.5 w-3.5" /> ANTI-PENIPUAN TUKAR BARANG
+                      </p>
+                      <p className="text-[#bdbdbd] leading-relaxed">
+                        Pembeli hanya memasukkan PIN 6-digit setelah membuka paket. Jika barang tidak sesuai, ajukan{" "}
+                        <strong className="text-[#f4ecdd]">Sengketa + Video Unboxing</strong> sebelum dana cair.
+                      </p>
+                    </div>
+
+                    <Link
+                      to="/tracking"
+                      className="block w-full text-center rounded-lg bg-orange-600 py-2.5 text-xs font-bold text-white hover:bg-orange-700 transition"
+                    >
+                      Buka Panel QR Shield &amp; Resi Aman &rarr;
+                    </Link>
+                  </div>
+                )}
+
+                {activePillar === "ESCROW" && (
+                  <div className="mt-4 space-y-4">
+                    <div className="rounded-xl border border-[#383838] bg-[#121212] p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="text-[10px] font-mono uppercase tracking-widest text-[#fac603] font-bold">
+                            Payment Gateway Mitra (OJK / BI)
+                          </span>
+                          <h3 className="text-base font-bold text-[#f4ecdd] mt-0.5">
+                            Settlement Escrow 1×24 Jam
+                          </h3>
+                        </div>
+                        <Lock className="h-5 w-5 text-[#fac603]" />
+                      </div>
+
+                      <div className="space-y-2 border-t border-[#383838] pt-3 text-xs font-mono">
+                        <div className="flex justify-between text-[#bdbdbd]">
+                          <span>Harga Karya Budaya</span>
+                          <span className="text-[#f4ecdd]">Rp 500.000</span>
+                        </div>
+                        <div className="flex justify-between text-[#bdbdbd]">
+                          <span>Biaya Proteksi (1,5% + Rp 1.000)</span>
+                          <span className="text-[#ff792f]">- Rp 8.500</span>
+                        </div>
+                        <div className="flex justify-between border-t border-[#383838] pt-2 font-bold text-sm">
+                          <span className="text-[#f4ecdd]">Dana Bersih Penjual</span>
+                          <span className="text-[#2ea4a9]">Rp 491.500</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl border border-[#fac603]/30 bg-[#fac603]/10 p-3.5 text-xs">
+                      <p className="font-mono font-bold text-[#fac603] text-[11px] flex items-center gap-1.5">
+                        <Scale className="h-3.5 w-3.5" /> KEPATUHAN REGULASI BANK INDONESIA
+                      </p>
+                      <p className="text-[#f4ecdd]/90 mt-1 leading-relaxed">
+                        Oziktag tidak menyimpan dana sendiri. Dana ditahan aman oleh payment gateway pihak ketiga hingga 24 jam pasca konfirmasi diterima, lalu cair ke Dompet Penghasilan.
+                      </p>
+                    </div>
+
+                    <Link
+                      to="/wallet"
+                      className="block w-full text-center rounded-lg bg-orange-600 py-2.5 text-xs font-bold text-white hover:bg-orange-700 transition"
+                    >
+                      Kelola Dompet Penghasilan Escrow &rarr;
+                    </Link>
                   </div>
                 )}
               </div>
@@ -306,212 +412,341 @@ function LandingPage() {
           </div>
         </section>
 
-        {/* 80% WERKSTATT BENTO WORKSHOP UNITS */}
-        <section id="werkstatt-qc" className="py-20 border-b border-border/70 bg-secondary/30">
-          <div className="mx-auto max-w-7xl px-6">
-            <div className="max-w-2xl">
-              <span className="text-xs font-bold text-[#cc4a1e] uppercase tracking-widest font-mono">
-                [ UNIT MODULAR WERKSTATT ]
-              </span>
-              <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground font-sans">
-                Empat Pilar Infrastruktur Kepercayaan
-              </h2>
-              <p className="mt-3 text-muted-foreground text-sm sm:text-base">
-                Dirancang dengan ketelitian bengkel kerja modern: setiap data terikat kriptografi, transparan, dan dapat diverifikasi langsung oleh pembeli.
+        {/* CULTURAL MANIFESTO STRIP (budayago.id horizontal pillar bar) */}
+        <section className="border-b border-[#383838] bg-[#1c1c1c]">
+          <div className="mx-auto max-w-7xl px-4 sm:px-8 py-12 grid lg:grid-cols-12 gap-8 items-center">
+            <div className="lg:col-span-5">
+              <p className="text-xs font-mono uppercase tracking-widest text-[#fac603] font-bold">
+                Indonesia Cultural Power
               </p>
-            </div>
-
-            <div className="mt-12 grid md:grid-cols-3 gap-6">
-              {/* Unit 01: AI Vision Craft Inspector */}
-              <div className="rounded-xl border border-border bg-card p-6 shadow-xs flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="font-mono text-xs text-[#cc4a1e] font-bold">MODUL 01</span>
-                    <Bot className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <h3 className="text-lg font-bold text-foreground font-sans">AI Vision Studio Inspector</h3>
-                  <p className="mt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                    Pengrajin mengunggah foto produk riil saat selesai produksi. Sistem multimodal AI secara otomatis memverifikasi kerapatan anyaman, kehalusan glasir, dan simetri fisik.
-                  </p>
-                </div>
-                <div className="mt-6 pt-4 border-t border-border/80 font-mono text-[11px] text-muted-foreground flex items-center gap-1.5">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                  Didukung Gemini Vision Multimodal
-                </div>
-              </div>
-
-              {/* Unit 02: Summarecon Sawarga Seat Grid */}
-              <div id="summarecon-event" className="rounded-xl border border-border bg-card p-6 shadow-xs flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="font-mono text-xs text-[#cc4a1e] font-bold">MODUL 02</span>
-                    <Ticket className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <h3 className="text-lg font-bold text-foreground font-sans">Summarecon Seat Grid</h3>
-                  <p className="mt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                    Denah kursi 100-seat real-time untuk Summarecon Mall Bandung 2026. Fitur hold kursi 5 menit dengan kunci atomik mencegah perebutan tiket (anti double-booking).
-                  </p>
-                </div>
-                <div className="mt-6 pt-4 border-t border-border/80 font-mono text-[11px] text-muted-foreground flex items-center gap-1.5">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                  Scanner Gate Real-Time &lt; 120ms
-                </div>
-              </div>
-
-              {/* Unit 03: Escrow Treasury Pool */}
-              <div id="escrow-arsitektur" className="rounded-xl border border-border bg-card p-6 shadow-xs flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="font-mono text-xs text-[#cc4a1e] font-bold">MODUL 03</span>
-                    <Lock className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <h3 className="text-lg font-bold text-foreground font-sans">Pool Escrow Terproteksi</h3>
-                  <p className="mt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                    Dana pembeli ditahan aman dalam pool Escrow Oziktag dan hanya dicairkan ke Dompet Penjual setelah barang dikonfirmasi sampai atau tiket discan di pintu gate.
-                  </p>
-                </div>
-                <div className="mt-6 pt-4 border-t border-border/80 font-mono text-[11px] text-muted-foreground flex items-center gap-1.5">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                  Patuh Regulasi OJK & BI
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* WORKSHOP PROTOCOL STEPS (Werkstatt Technical Line) */}
-        <section className="py-20 border-b border-border/70">
-          <div className="mx-auto max-w-7xl px-6">
-            <div className="text-center max-w-2xl mx-auto mb-16">
-              <span className="text-xs font-bold text-[#cc4a1e] uppercase tracking-widest font-mono">
-                [ ALUR KERJA STUDIO ]
-              </span>
-              <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-foreground font-sans">
-                Tiga Langkah Dari Meja Kerja ke Pembeli
+              <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold text-[#f4ecdd]">
+                Budaya yang hidup.{" "}
+                <span className="text-[#bdbdbd]">Transaksi yang tepercaya.</span>
               </h2>
             </div>
-
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="rounded-xl border border-border bg-card p-6 text-center">
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded bg-secondary text-foreground mb-4 border font-mono font-extrabold text-base">
-                  01
-                </div>
-                <h3 className="text-base font-bold text-foreground font-sans">Input Karya & Validasi QC</h3>
-                <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
-                  Unggah detail produk anyaman, keramik, atau konfigurasi acara Summarecon Anda. Jalankan inspeksi kualitas dengan bantuan AI.
-                </p>
+            <div className="lg:col-span-7 grid sm:grid-cols-3 gap-4 font-mono">
+              <div className="rounded-xl border border-[#383838] bg-[#121212] p-4">
+                <span className="text-xs font-bold text-[#ff792f]">01</span>
+                <p className="mt-1.5 text-xs font-bold text-[#f4ecdd]">QR Trust Seal AI</p>
+                <p className="mt-1 text-[11px] text-[#bdbdbd] font-sans">Uji foto &amp; sertifikat autentik produk budaya.</p>
               </div>
-
-              <div className="rounded-xl border border-border bg-card p-6 text-center">
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded bg-[#1f1b18] text-orange-400 mb-4 font-mono font-extrabold text-base">
-                  02
-                </div>
-                <h3 className="text-base font-bold text-foreground font-sans">Cetak Segel Terakota QR</h3>
-                <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
-                  Sistem menghasilkan tanda pengenal digital yang tahan duplikasi dengan signature kriptografis HMAC-SHA256.
-                </p>
+              <div className="rounded-xl border border-[#383838] bg-[#121212] p-4">
+                <span className="text-xs font-bold text-[#2ea4a9]">02</span>
+                <p className="mt-1.5 text-xs font-bold text-[#f4ecdd]">QR Shield Logistik</p>
+                <p className="mt-1 text-[11px] text-[#bdbdbd] font-sans">Segel kardus, GPS kurir &amp; PIN 6-digit pembeli.</p>
               </div>
-
-              <div className="rounded-xl border border-border bg-card p-6 text-center">
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded bg-secondary text-foreground mb-4 border font-mono font-extrabold text-base">
-                  03
-                </div>
-                <h3 className="text-base font-bold text-foreground font-sans">Pencairan Dana Escrow</h3>
-                <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
-                  Setelah pembeli scan atau panitia memverifikasi tiket di gate, dana masuk ke Dompet Penghasilan untuk dicairkan.
-                </p>
+              <div className="rounded-xl border border-[#383838] bg-[#121212] p-4">
+                <span className="text-xs font-bold text-[#fac603]">03</span>
+                <p className="mt-1.5 text-xs font-bold text-[#f4ecdd]">Escrow 24 Jam</p>
+                <p className="mt-1 text-[11px] text-[#bdbdbd] font-sans">Rekber aman patuh regulasi Bank Indonesia.</p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* BENGKEL TIM & FOUNDERS (Bauhaus Workshop Guild Format) */}
-        <section id="bengkel-tim" className="py-20 bg-secondary/30 border-b border-border/70">
-          <div className="mx-auto max-w-7xl px-6">
-            <div className="text-center max-w-2xl mx-auto mb-16">
-              <span className="text-xs font-bold text-[#cc4a1e] uppercase tracking-widest font-mono">
-                [ BENGKEL KERJA OZIKTAG ]
-              </span>
-              <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-foreground font-sans">
-                Tim Pengembang Protokol
-              </h2>
-              <p className="mt-2 text-xs sm:text-sm text-muted-foreground font-mono">
-                Didedikasikan untuk pemberdayaan UMKM Indonesia di Bandung Build Challenge 2026.
-              </p>
-            </div>
-
-            <div className="grid sm:grid-cols-2 gap-8 max-w-4xl mx-auto">
-              {/* Oki */}
-              <div className="rounded-xl border border-border bg-card p-6 sm:p-7 flex flex-col sm:flex-row items-center gap-6 shadow-xs">
-                <div className="h-24 w-24 shrink-0 overflow-hidden rounded-lg border-2 border-border shadow-xs">
-                  <img src="/oki.png" alt="Oki Taruna Ramadhan" className="h-full w-full object-cover object-top" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-foreground font-sans">Oki Taruna Ramadhan</h3>
-                  <p className="text-xs font-mono text-[#cc4a1e] font-semibold uppercase">Founder & Systems Architect</p>
-                  <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
-                    Merancang backend FastAPI, arsitektur Supabase PostgreSQL, kunci atomik anti double-booking, dan protokol kriptografi gate scanner.
-                  </p>
-                  <a
-                    href="https://www.linkedin.com/in/otaruram/"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-3 inline-flex items-center gap-1.5 text-xs font-mono font-semibold text-foreground hover:text-[#cc4a1e] transition"
-                  >
-                    LinkedIn Profile &rarr;
-                  </a>
-                </div>
-              </div>
-
-              {/* Azikri */}
-              <div className="rounded-xl border border-border bg-card p-6 sm:p-7 flex flex-col sm:flex-row items-center gap-6 shadow-xs">
-                <div className="h-24 w-24 shrink-0 overflow-hidden rounded-lg border-2 border-border shadow-xs">
-                  <img src="/zikri.jpeg" alt="Azdzikri Muhammad Hisyam Soleh" className="h-full w-full object-cover" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-foreground font-sans">Azdzikri Muhammad Hisyam Soleh</h3>
-                  <p className="text-xs font-mono text-[#cc4a1e] font-semibold uppercase">Co-Founder & Business Strategist</p>
-                  <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
-                    Merumuskan model bisnis Pay-As-You-Go berbiaya rendah, kemitraan Summarecon Mall Bandung, serta strategi kepatuhan regulasi OJK & BI.
-                  </p>
-                  <a
-                    href="https://www.linkedin.com/in/azdzikri-muhammad-hisyam-soleh-086b43281/"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-3 inline-flex items-center gap-1.5 text-xs font-mono font-semibold text-foreground hover:text-[#cc4a1e] transition"
-                  >
-                    LinkedIn Profile &rarr;
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* CALL TO ACTION */}
-        <section className="py-20 bg-[#1f1b18] text-white">
-          <div className="mx-auto max-w-4xl px-6 text-center">
-            <span className="kiln-stamp px-2.5 py-1 rounded bg-[#cc4a1e]/20 text-orange-400 border border-[#cc4a1e]/30 text-xs">
-              MULAI SEKARANG
+        {/* SECTION 01: TIGA PILAR UTAMA PRODUK (QR, QR Shield, Escrow) */}
+        <section id="pilar" className="mx-auto max-w-7xl px-4 sm:px-8 py-20 border-b border-[#383838]">
+          <div className="max-w-2xl">
+            <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#ff792f]">
+              [ 01 / ARSITEKTUR PRODUK FUNGSIONAL ]
             </span>
-            <h2 className="mt-4 text-3xl sm:text-5xl font-extrabold tracking-tight font-sans">
-              Bangun Kepercayaan Pelanggan dengan Standar Studio
+            <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-[#f4ecdd]">
+              Tiga Pilar Infrastruktur Kepercayaan Oziktag
             </h2>
-            <p className="mt-4 text-sm sm:text-base text-stone-400 max-w-2xl mx-auto leading-relaxed">
-              Bergabung bersama ratusan pengrajin UMKM yang meningkatkan daya saing melalui verifikasi AI objektif dan transaksi bergaransi aman.
+            <p className="mt-3 text-sm sm:text-base text-[#bdbdbd]">
+              Dibangun untuk menuntaskan krisis pemalsuan produk kerajinan lokal serta ketakutan penipuan jual-beli daring lintas daerah.
+            </p>
+          </div>
+
+          <div className="mt-12 grid md:grid-cols-3 gap-6">
+            {/* Pilar 01: QR Trust Seal */}
+            <div className="budaya-card rounded-2xl p-6 sm:p-7 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <span className="font-mono text-xs font-bold text-[#ff792f] tracking-wider">01 / QR TRUST SEAL</span>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-600/15 text-[#ff792f]">
+                    <QrCode className="h-5 w-5" />
+                  </div>
+                </div>
+                <h3 className="text-xl font-bold text-[#f4ecdd]">Validasi Kualitas AI &amp; Sertifikat QR</h3>
+                <p className="mt-3 text-xs sm:text-sm text-[#bdbdbd] leading-relaxed">
+                  Pengrajin mengunggah foto produk dan checklist kualitas studio. AI Vision memvalidasi klaim produk secara objektif serta menyusun halaman sertifikat publik bebas iklan lengkap dengan panduan perawatan tradisional.
+                </p>
+              </div>
+              <div className="mt-6 pt-4 border-t border-[#383838] flex items-center justify-between text-xs font-mono">
+                <span className="text-[#2ea4a9] flex items-center gap-1.5">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Model Pay-As-You-Go
+                </span>
+                <span className="text-[#bdbdbd]">1 QR = 1 Kredit</span>
+              </div>
+            </div>
+
+            {/* Pilar 02: QR Shield */}
+            <div className="budaya-card rounded-2xl p-6 sm:p-7 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <span className="font-mono text-xs font-bold text-[#2ea4a9] tracking-wider">02 / QR SHIELD</span>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#2ea4a9]/15 text-[#2ea4a9]">
+                    <Shield className="h-5 w-5" />
+                  </div>
+                </div>
+                <h3 className="text-xl font-bold text-[#f4ecdd]">Perisai Logistik GPS &amp; PIN Pembeli</h3>
+                <p className="mt-3 text-xs sm:text-sm text-[#bdbdbd] leading-relaxed">
+                  Segel QR fisik pada paket merekam koordinat GPS kurir secara transparan dan mengunci penerimaan menggunakan PIN 6-digit rahasia pembeli. Dilengkapi fitur Sengketa dengan unggahan bukti video unboxing.
+                </p>
+              </div>
+              <div className="mt-6 pt-4 border-t border-[#383838] flex items-center justify-between text-xs font-mono">
+                <span className="text-[#2ea4a9] flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5" /> Anti-Tukar Paket
+                </span>
+                <span className="text-[#bdbdbd]">Leaflet GPS + Video</span>
+              </div>
+            </div>
+
+            {/* Pilar 03: Escrow */}
+            <div className="budaya-card rounded-2xl p-6 sm:p-7 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <span className="font-mono text-xs font-bold text-[#fac603] tracking-wider">03 / ESCROW POOL</span>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fac603]/15 text-[#fac603]">
+                    <Wallet className="h-5 w-5" />
+                  </div>
+                </div>
+                <h3 className="text-xl font-bold text-[#f4ecdd]">Escrow 24 Jam &amp; Dompet Penjual</h3>
+                <p className="mt-3 text-xs sm:text-sm text-[#bdbdbd] leading-relaxed">
+                  Dana ditahan di payment gateway mitra pihak ketiga (patuh OJK &amp; BI) selama masa verifikasi 24 jam pasca barang tiba. Setelah aman tanpa sengketa, saldo otomatis cair dan siap ditarik ke bank atau e-wallet UMKM.
+                </p>
+              </div>
+              <div className="mt-6 pt-4 border-t border-[#383838] flex items-center justify-between text-xs font-mono">
+                <span className="text-[#fac603] flex items-center gap-1.5">
+                  <Lock className="h-3.5 w-3.5" /> Auto-Release 24H
+                </span>
+                <span className="text-[#bdbdbd]">Fee 1,5% + Rp 1rb</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* SECTION 02: AKAR BUDAYA NUSANTARA (25% BUDAYA GO! FIT) */}
+        <section id="budaya" className="py-20 bg-[#1c1c1c] border-b border-[#383838]">
+          <div className="mx-auto max-w-7xl px-4 sm:px-8">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+              <div className="max-w-2xl">
+                <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#fac603]">
+                  [ 02 / AKAR BUDAYA &amp; KRIYA NUSANTARA ]
+                </span>
+                <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-[#f4ecdd]">
+                  Didedikasikan untuk Lima Sektor Karya Budaya Indonesia
+                </h2>
+                <p className="mt-3 text-sm sm:text-base text-[#bdbdbd]">
+                  Setiap kategori produk memiliki profil inspeksi AI dan panduan pelestarian tradisional tersendiri di halaman sertifikat publik Oziktag.
+                </p>
+              </div>
+              <Link
+                to="/auth"
+                className="shrink-0 inline-flex items-center gap-2 rounded-lg border border-[#383838] bg-[#121212] px-4 py-2.5 text-xs font-mono font-bold text-[#f4ecdd] hover:border-[#fac603] transition"
+              >
+                <Sparkles className="h-3.5 w-3.5 text-[#fac603]" />
+                Sertifikasi Karya Anda
+              </Link>
+            </div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
+              {CULTURAL_SECTORS.map((sector) => (
+                <div
+                  key={sector.code}
+                  className="rounded-xl border border-[#383838] bg-[#121212] p-5 flex flex-col justify-between hover:border-[#ff792f]/60 transition"
+                >
+                  <div>
+                    <span className="font-mono text-lg font-extrabold text-[#fac603]">{sector.code}</span>
+                    <h3 className="mt-2 text-sm font-bold text-[#f4ecdd] leading-snug">{sector.title}</h3>
+                    <p className="mt-2 text-xs text-[#bdbdbd] leading-relaxed">{sector.desc}</p>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-[#383838] font-mono text-[10px] text-[#2ea4a9] uppercase">
+                    QR Seal + Shield Ready
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* SECTION 03: ALUR KERJA END-TO-END (budayago.id vertical/step timeline) */}
+        <section id="alur" className="mx-auto max-w-7xl px-4 sm:px-8 py-20 border-b border-[#383838]">
+          <div className="max-w-2xl mb-14">
+            <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#2ea4a9]">
+              [ 03 / ALUR END-TO-END ]
+            </span>
+            <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-[#f4ecdd]">
+              Dari Bengkel Pengrajin ke Tangan Pembeli dengan Aman
+            </h2>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              {
+                num: "01",
+                title: "Verifikasi KYC Pengrajin",
+                desc: "Pelaku budaya mendaftar dengan identitas KTP & foto riil karya untuk memastikan keaslian sumber bengkel.",
+                accent: "text-[#fac603]",
+              },
+              {
+                num: "02",
+                title: "Cetak QR Trust Seal AI",
+                desc: "Unggah foto & checklist QC; AI mengevaluasi kualitas lalu mencetak label QR sertifikat digital (1 QR = 1 Kredit).",
+                accent: "text-[#ff792f]",
+              },
+              {
+                num: "03",
+                title: "Kirim dengan QR Shield",
+                desc: "Buat resi QR Shield ber-Escrow. Kurir merekam GPS dan pembeli membuka paket lalu memasukkan PIN 6-digit.",
+                accent: "text-[#2ea4a9]",
+              },
+              {
+                num: "04",
+                title: "Dana Cair Setelah 24 Jam",
+                desc: "Jika aman tanpa video sengketa selama 24 jam, saldo otomatis masuk ke Dompet Penghasilan untuk ditarik.",
+                accent: "text-[#d5f76c]",
+              },
+            ].map((step) => (
+              <div key={step.num} className="rounded-2xl border border-[#383838] bg-[#1c1c1c] p-6">
+                <span className={`font-mono text-2xl font-extrabold ${step.accent}`}>{step.num}</span>
+                <h3 className="mt-3 text-base font-bold text-[#f4ecdd]">{step.title}</h3>
+                <p className="mt-2 text-xs sm:text-sm text-[#bdbdbd] leading-relaxed">{step.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* SECTION: FAQ ACCORDION (Persis gaya budayago.id!) */}
+        <section className="bg-[#1c1c1c] py-20 border-b border-[#383838]" id="faq">
+          <div className="mx-auto max-w-5xl px-4 sm:px-8">
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#f4ecdd]">
+              Masih ada pertanyaan?
+            </h2>
+            <p className="mt-2 text-sm text-[#bdbdbd]">
+              Penjelasan teknis seputar AI QR Trust Seal, QR Shield anti-penipuan, dan kepatuhan regulasi Escrow 24 jam.
+            </p>
+
+            <div className="mt-8 flex flex-col">
+              {FAQS.map((item, idx) => {
+                const isOpen = openFaq === idx;
+                return (
+                  <div key={item.q}>
+                    <button
+                      type="button"
+                      onClick={() => setOpenFaq(isOpen ? null : idx)}
+                      aria-expanded={isOpen}
+                      className="flex w-full min-h-[72px] items-center justify-between gap-5 py-5 text-left cursor-pointer focus:outline-none"
+                    >
+                      <span className="text-base sm:text-lg font-semibold leading-snug text-[#f4ecdd]">
+                        {item.q}
+                      </span>
+                      <span className="shrink-0 text-[#d5f76c]">
+                        {isOpen ? <Minus className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
+                      </span>
+                    </button>
+                    {isOpen && (
+                      <p className="pb-6 text-sm sm:text-base leading-relaxed text-[#bdbdbd]">
+                        {item.a}
+                      </p>
+                    )}
+                    {idx < FAQS.length - 1 && <div className="h-px w-full bg-[#383838]" />}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* SECTION 04: TIM PENGEMBANG */}
+        <section id="tim" className="mx-auto max-w-7xl px-4 sm:px-8 py-20 border-b border-[#383838]">
+          <div className="text-center max-w-2xl mx-auto mb-14">
+            <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#ff792f]">
+              [ 04 / TIM PENGEMBANG OZIKTAG ]
+            </span>
+            <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-[#f4ecdd]">
+              Dibangun untuk Kemajuan Ekonomi Budaya
+            </h2>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            <div className="budaya-card rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-6">
+              <div className="h-24 w-24 shrink-0 overflow-hidden rounded-xl border border-[#383838]">
+                <img src="/oki.png" alt="Oki Taruna Ramadhan" className="h-full w-full object-cover object-top" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-[#f4ecdd]">Oki Taruna Ramadhan</h3>
+                <p className="text-xs font-mono text-[#ff792f] font-bold uppercase mt-0.5">
+                  Founder &amp; Systems Architect
+                </p>
+                <p className="mt-2 text-xs text-[#bdbdbd] leading-relaxed">
+                  Merancang infrastruktur FastAPI, integrasi AI Vision QC, sistem QR Shield GPS + PIN Pembeli, serta mekanisme auto-release Escrow 24 jam via Supabase.
+                </p>
+                <a
+                  href="https://www.linkedin.com/in/otaruram/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-3 inline-flex items-center gap-1.5 text-xs font-mono font-semibold text-[#fac603] hover:underline"
+                >
+                  LinkedIn Profile &rarr;
+                </a>
+              </div>
+            </div>
+
+            <div className="budaya-card rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-6">
+              <div className="h-24 w-24 shrink-0 overflow-hidden rounded-xl border border-[#383838]">
+                <img
+                  src="/zikri.jpeg"
+                  alt="Azdzikri Muhammad Hisyam Soleh"
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-[#f4ecdd]">Azdzikri Muhammad Hisyam Soleh</h3>
+                <p className="text-xs font-mono text-[#ff792f] font-bold uppercase mt-0.5">
+                  Co-Founder &amp; Business Strategist
+                </p>
+                <p className="mt-2 text-xs text-[#bdbdbd] leading-relaxed">
+                  Merumuskan model bisnis Pay-As-You-Go ramah UMKM budaya (BEP ~26 pengrajin/bulan), struktur kepatuhan OJK/Bank Indonesia, dan kemitraan sanggar.
+                </p>
+                <a
+                  href="https://www.linkedin.com/in/azdzikri-muhammad-hisyam-soleh-086b43281/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-3 inline-flex items-center gap-1.5 text-xs font-mono font-semibold text-[#fac603] hover:underline"
+                >
+                  LinkedIn Profile &rarr;
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA BOTTOM */}
+        <section className="py-20 bg-[#1c1c1c]">
+          <div className="mx-auto max-w-4xl px-4 sm:px-8 text-center">
+            <span className="kiln-stamp inline-block px-3 py-1 bg-orange-600/20 text-[#ff792f] border border-orange-600/30">
+              SIAPKAN KARYA ANDA
+            </span>
+            <h2 className="mt-4 text-3xl sm:text-5xl font-extrabold tracking-tight text-[#f4ecdd]">
+              Lindungi Nilai Karya Budaya Anda Sekarang
+            </h2>
+            <p className="mt-4 text-sm sm:text-base text-[#bdbdbd] max-w-2xl mx-auto">
+              Mulai terbitkan QR Trust Seal AI, amankan pengiriman dengan QR Shield, dan terima pembayaran aman melalui Escrow 24 jam.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-4">
               <Link
                 to="/auth"
-                className="rounded-lg bg-[#cc4a1e] px-8 py-3.5 text-sm font-bold text-white hover:bg-[#b83f15] transition shadow-xs tracking-tight"
+                className="rounded-lg bg-orange-600 px-8 py-3.5 text-sm font-bold text-white hover:bg-orange-700 transition shadow-sm"
               >
-                Mulai Uji Coba Gratis
+                Mulai Gratis Sekarang
               </Link>
               <Link
                 to="/docs"
-                className="rounded-lg border border-stone-700 bg-stone-900 px-8 py-3.5 text-sm font-mono font-semibold text-white hover:bg-stone-800 transition"
+                className="rounded-lg border border-[#383838] bg-[#121212] px-8 py-3.5 text-sm font-mono font-semibold text-[#f4ecdd] hover:bg-[#262626] transition"
               >
-                Dokumentasi API
+                Integrasi API UMKM
               </Link>
             </div>
           </div>
@@ -519,19 +754,19 @@ function LandingPage() {
       </main>
 
       {/* FOOTER */}
-      <footer className="py-8 text-xs text-muted-foreground font-mono">
-        <div className="mx-auto max-w-7xl px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2 font-bold text-foreground">
-            <ShieldCheck className="h-4 w-4 text-[#cc4a1e]" />
-            <span>OZIKTAG PROTOCOL</span>
-            <span className="text-muted-foreground font-normal text-[11px]">// WERKSTATT-KILN-v3.0</span>
+      <footer className="border-t border-[#383838] bg-[#121212] py-10 text-xs text-[#bdbdbd] font-mono">
+        <div className="mx-auto max-w-7xl px-4 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5 font-bold text-[#f4ecdd]">
+            <ShieldCheck className="h-5 w-5 text-orange-600" />
+            <span>OZIKTAG</span>
+            <span className="text-[#bdbdbd] font-normal text-[11px]">// QR • QR SHIELD • ESCROW</span>
           </div>
           <div className="flex items-center gap-6 text-[11px]">
-            <Link to="/docs" className="hover:text-foreground transition">Dokumentasi</Link>
-            <Link to="/terms" className="hover:text-foreground transition">Ketentuan</Link>
-            <Link to="/privacy" className="hover:text-foreground transition">Privasi</Link>
+            <Link to="/docs" className="hover:text-[#f4ecdd] transition">Dokumentasi</Link>
+            <Link to="/terms" className="hover:text-[#f4ecdd] transition">Ketentuan</Link>
+            <Link to="/privacy" className="hover:text-[#f4ecdd] transition">Privasi</Link>
           </div>
-          <p className="text-[11px]">© {new Date().getFullYear()} Oziktag. Bandung Build Challenge 2026.</p>
+          <p className="text-[11px]">© {new Date().getFullYear()} Oziktag. Inovasi Budaya Digital Indonesia.</p>
         </div>
       </footer>
     </div>

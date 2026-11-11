@@ -259,45 +259,48 @@ function TrackingScan() {
   // ─── MODE 1: CHECKOUT (Belum Bayar) ───
   if (data.current_status === "PENDING_PAYMENT" && data.is_escrow) {
     return (
-      <div className="min-h-screen bg-zinc-50 text-foreground flex flex-col items-center justify-center p-4 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-72 bg-black rounded-b-[50px] -z-10" />
-        <div className="w-full max-w-sm rounded-3xl bg-white shadow-2xl p-8 relative text-center border border-zinc-200">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-zinc-100 mb-6 border border-zinc-200">
-            <Receipt className="h-8 w-8 text-black" />
+      <div className="min-h-screen bg-[#121212] text-[#f4ecdd] flex flex-col items-center justify-center p-4 relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none werkstatt-grid opacity-60 -z-10" />
+        <div className="w-full max-w-sm rounded-2xl bg-[#1c1c1c] shadow-[var(--shadow-werkstatt-lg)] p-8 relative text-center border border-[#383838]">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-orange-600/15 mb-6 border border-orange-600/30">
+            <Receipt className="h-7 w-7 text-[#ff792f]" />
           </div>
-          <h2 className="text-xl font-bold mb-1">Tagihan Pembayaran</h2>
-          <p className="text-sm text-muted-foreground mb-6">Silakan selesaikan pembayaran untuk pesanan Anda.</p>
-          <div className="bg-zinc-50 rounded-2xl p-5 mb-6 text-left border border-zinc-200">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Total Tagihan</p>
-            <p className="text-3xl font-bold text-black mb-4">Rp {data.price?.toLocaleString("id-ID") || 0}</p>
-            <div className="border-t border-zinc-200 pt-3 space-y-2">
+          <span className="kiln-stamp inline-block px-2 py-0.5 bg-[#fac603]/15 text-[#fac603] border border-[#fac603]/30 mb-3">
+            ESCROW PROTECTED
+          </span>
+          <h2 className="text-xl font-bold mb-1 text-[#f4ecdd]">Tagihan Pembayaran Escrow</h2>
+          <p className="text-xs sm:text-sm text-[#bdbdbd] mb-6">Selesaikan pembayaran melalui payment gateway mitra kami.</p>
+          <div className="bg-[#121212] rounded-xl p-5 mb-6 text-left border border-[#383838]">
+            <p className="text-[11px] font-mono text-[#bdbdbd] uppercase tracking-wider mb-1">Total Tagihan</p>
+            <p className="text-3xl font-extrabold text-[#fac603] mb-4 font-mono">Rp {data.price?.toLocaleString("id-ID") || 0}</p>
+            <div className="border-t border-[#383838] pt-3 space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Barang</span>
-                <span className="font-medium text-right line-clamp-1 max-w-[180px]">{data.name}</span>
+                <span className="text-[#bdbdbd]">Barang</span>
+                <span className="font-semibold text-[#f4ecdd] text-right line-clamp-1 max-w-[180px]">{data.name}</span>
               </div>
               {data.brand && (
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Toko</span>
-                  <span className="font-medium">{data.brand}</span>
+                  <span className="text-[#bdbdbd]">Studio / Toko</span>
+                  <span className="font-semibold text-[#f4ecdd]">{data.brand}</span>
                 </div>
               )}
             </div>
           </div>
-          <div className="text-xs text-muted-foreground mb-6 leading-relaxed px-2">
-            <ShieldCheck className="h-4 w-4 inline-block mr-1 -mt-0.5 text-black" />
-            Pembayaran dijamin aman oleh sistem Escrow Oziktag. Uang diteruskan ke penjual setelah barang diterima.
+          <div className="text-xs text-[#bdbdbd] mb-6 leading-relaxed px-1">
+            <ShieldCheck className="h-4 w-4 inline-block mr-1 -mt-0.5 text-[#2ea4a9]" />
+            Dana ditahan aman di Escrow (patuh OJK/BI) selama 1×24 jam setelah konfirmasi PIN penerima sebelum diteruskan ke penjual.
           </div>
           {data.payment_url ? (
-            <a href={data.payment_url} className="block w-full rounded-2xl bg-black py-4 font-bold text-white shadow-lg shadow-black/20 hover:shadow-black/40 transition-all hover:scale-[1.02] active:scale-[0.98]">
+            <a href={data.payment_url} className="block w-full rounded-xl bg-orange-600 py-3.5 font-bold text-white shadow-sm hover:bg-orange-700 transition-all">
               Bayar Sekarang
             </a>
           ) : (
-            <button disabled className="w-full rounded-2xl bg-muted py-4 font-bold text-muted-foreground cursor-not-allowed">
+            <button disabled className="w-full rounded-xl bg-[#262626] border border-[#383838] py-3.5 font-bold text-[#bdbdbd] cursor-not-allowed">
               Menunggu Link Pembayaran...
             </button>
           )}
         </div>
-        <p className="text-center text-xs text-white/70 mt-8 font-medium">Secure Payment by Oziktag</p>
+        <p className="text-center text-xs font-mono text-[#bdbdbd] mt-8">QR SHIELD &amp; ESCROW BY OZIKTAG</p>
       </div>
     );
   }
@@ -340,12 +343,12 @@ function TrackingScan() {
       )}
 
       {/* Header */}
-      <div className="bg-primary pt-12 pb-24 px-4 text-center">
-        <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-1.5 backdrop-blur-md text-white font-medium text-sm mb-4">
-          <ShieldCheck className="h-4 w-4" /> Oziktag Digital Tracking
+      <div className="bg-[#1c1c1c] border-b border-[#383838] pt-12 pb-24 px-4 text-center">
+        <div className="inline-flex items-center gap-2 rounded-full border border-[#2ea4a9]/40 bg-[#2ea4a9]/15 px-4 py-1.5 text-[#2ea4a9] font-mono font-bold text-xs mb-4 uppercase tracking-wider">
+          <ShieldCheck className="h-4 w-4" /> Oziktag QR Shield Logistik
         </div>
-        <h1 className="text-2xl font-bold text-white max-w-md mx-auto leading-tight">{data.name}</h1>
-        {data.brand && <p className="text-white/80 mt-2 text-sm">{data.brand}</p>}
+        <h1 className="text-2xl font-extrabold text-[#f4ecdd] max-w-md mx-auto leading-tight">{data.name}</h1>
+        {data.brand && <p className="text-[#bdbdbd] mt-2 text-sm">{data.brand}</p>}
       </div>
 
       <main className="mx-auto max-w-xl px-4 -mt-16 pb-12 space-y-5">
@@ -545,11 +548,11 @@ function TrackingScan() {
               )}
               
               {data.escrow_status === "DISPUTED" && (
-                <div className="rounded-2xl border border-red-500 bg-red-50 p-4 flex items-start gap-3">
-                  <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <div className="rounded-2xl border border-red-500/40 bg-red-500/10 p-4 flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm font-bold text-red-700">Pesanan Dalam Sengketa</p>
-                    <p className="text-xs text-red-600/80 mt-1">Anda telah mengajukan sengketa untuk pesanan ini. Dana dibekukan sementara, mohon tunggu email dari Admin Oziktag.</p>
+                    <p className="text-sm font-bold text-red-400">Pesanan Dalam Sengketa</p>
+                    <p className="text-xs text-[#bdbdbd] mt-1">Anda telah mengajukan sengketa untuk pesanan ini. Dana dibekukan sementara, mohon tunggu email dari Admin Oziktag.</p>
                   </div>
                 </div>
               )}

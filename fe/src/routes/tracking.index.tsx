@@ -12,7 +12,7 @@ import { TrackingList } from "@/components/tracking/TrackingList";
 import { TrackingDeleteModal, TrackingProductModal } from "@/components/tracking/TrackingModals";
 
 export const Route = createFileRoute("/tracking/")({
-  head: () => ({ meta: [{ title: "Tracking — Oziktag" }] }),
+  head: () => ({ meta: [{ title: "QR Shield & Tracking — Oziktag" }] }),
   component: TrackingPage,
 });
 
@@ -51,18 +51,23 @@ function TrackingPage() {
 
   return (
     <AppShell>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-end justify-between gap-4 pb-6 mb-6 border-b border-border">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Tracking Lite</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Lacak perjalanan produk dari gudang Anda ke tangan pembeli.
+          <p className="text-xs font-mono uppercase tracking-widest text-[#2ea4a9]">
+            02 / Pilar QR Shield Logistik
+          </p>
+          <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-[#f4ecdd]">
+            QR Shield &amp; Tracking Aman
+          </h1>
+          <p className="mt-1 text-sm text-[#bdbdbd]">
+            Segel anti-tukar barang berbasis GPS kurir, PIN 6-digit pembeli, dan jaminan Escrow 24 jam.
           </p>
         </div>
         <button
           onClick={() => { resetForm(); setShowForm(true); }}
-          className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity"
+          className="inline-flex items-center gap-2 rounded-lg bg-orange-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-orange-700 transition"
         >
-          <Plus className="h-4 w-4" /> Buat Tracking Baru
+          <Plus className="h-4 w-4" /> Buat QR Shield Baru
         </button>
       </div>
 

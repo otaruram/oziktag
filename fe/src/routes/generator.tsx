@@ -98,11 +98,16 @@ function Generator() {
   return (
     <AppShell>
       <div className="mb-8">
-        <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="flex flex-wrap items-end justify-between gap-3 pb-4 border-b border-border">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight">Generate Trusted Label</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Isi form, klik generate, lalu cetak QR untuk ditempel di produk.
+            <p className="text-xs font-mono uppercase tracking-widest text-[#ff792f]">
+              01 / Pilar QR Trust Seal
+            </p>
+            <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-[#f4ecdd]">
+              Generate QR Budaya &amp; Trust Seal
+            </h1>
+            <p className="mt-1 text-sm text-[#bdbdbd]">
+              Unggah foto riil karya budaya atau produk UMKM untuk dianalisis AI Vision dan dicetak menjadi segel QR terpercaya (1 QR = 1 Kredit).
             </p>
           </div>
         </div>

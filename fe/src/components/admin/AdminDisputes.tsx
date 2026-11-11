@@ -126,7 +126,7 @@ export function AdminDisputes() {
                           </button>
                           <button
                             onClick={() => handleResolve(t.id, "RELEASE")}
-                            className="rounded border border-red-500/20 bg-red-50 px-2 py-1 text-[11px] font-bold text-red-600 hover:bg-red-100 transition-colors"
+                            className="rounded border border-red-500/30 bg-red-500/10 px-2 py-1 text-[11px] font-bold text-red-400 hover:bg-red-500/20 transition-colors"
                             title="Penjual Benar (Release Dana)"
                           >
                             Tolak (Release)

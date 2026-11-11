@@ -86,15 +86,15 @@ export function TrackingProductModal({ product, qrDataUrl, paymentQrDataUrl, onC
             <div className="flex bg-muted p-1 rounded-lg max-w-sm mx-auto mb-4">
               <button
                 onClick={() => setActiveTab("payment")}
-                className={`flex-1 flex items-center justify-center py-2 text-sm font-medium rounded-md transition-colors ${activeTab === "payment" ? "bg-white shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                className={`flex-1 flex items-center justify-center py-2 text-sm font-semibold rounded-md transition-colors ${activeTab === "payment" ? "bg-orange-600 shadow-sm text-white" : "text-muted-foreground hover:text-foreground"}`}
               >
                 Link Pembayaran
               </button>
               <button
                 onClick={() => setActiveTab("tracking")}
-                className={`flex-1 flex items-center justify-center py-2 text-sm font-medium rounded-md transition-colors ${activeTab === "tracking" ? "bg-white shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                className={`flex-1 flex items-center justify-center py-2 text-sm font-semibold rounded-md transition-colors ${activeTab === "tracking" ? "bg-orange-600 shadow-sm text-white" : "text-muted-foreground hover:text-foreground"}`}
               >
-                Label Kardus
+                Label QR Shield
               </button>
             </div>
           )}
@@ -111,7 +111,9 @@ export function TrackingProductModal({ product, qrDataUrl, paymentQrDataUrl, onC
                   Cetak QR ini dan tempel di paket. Pembeli akan butuh ini untuk konfirmasi penerimaan (memasukkan PIN).
                 </p>
               )}
-              <img src={currentQr} alt="QR Code" className="mx-auto w-48 h-48 rounded-lg border border-border" />
+              <div className="mx-auto bg-white p-2 rounded-xl border border-border inline-block">
+                <img src={currentQr} alt="QR Code" className="w-48 h-48 rounded-lg" />
+              </div>
               <div className="mt-4 flex gap-2 w-full justify-center">
                 <button
                   onClick={downloadPng}

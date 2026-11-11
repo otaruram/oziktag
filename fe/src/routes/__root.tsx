@@ -74,16 +74,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Oziktag - Digital Trust Seal" },
-      { name: "description", content: "Oz-Tag Trust Seal is a QR code-based digital trust platform for MSMEs to validate product quality." },
+      { title: "Oziktag — QR Trust Seal, QR Shield & Escrow untuk Karya Budaya Nusantara" },
+      { name: "description", content: "Platform kepercayaan digital untuk pelaku budaya dan UMKM Nusantara: AI QR Trust Seal, QR Shield anti-penipuan logistik GPS+PIN, dan Escrow 24 jam." },
       { name: "author", content: "Oziktag" },
-      { property: "og:title", content: "Oziktag - Digital Trust Seal" },
-      { property: "og:description", content: "Oz-Tag Trust Seal is a QR code-based digital trust platform for MSMEs to validate product quality." },
+      { property: "og:title", content: "Oziktag — QR Trust Seal, QR Shield & Escrow Karya Budaya Nusantara" },
+      { property: "og:description", content: "Validasi keaslian produk budaya Nusantara dengan AI QR Trust Seal, QR Shield anti-tukar pengiriman, dan pembayaran Escrow 24 jam." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Oziktag" },
-      { name: "twitter:title", content: "Oziktag - Digital Trust Seal" },
-      { name: "twitter:description", content: "Oz-Tag Trust Seal is a QR code-based digital trust platform for MSMEs to validate product quality." },
+      { name: "twitter:title", content: "Oziktag — QR Trust Seal, QR Shield & Escrow" },
+      { name: "twitter:description", content: "Validasi keaslian produk budaya & UMKM Nusantara dengan QR Seal AI, QR Shield, dan Escrow 24 jam." },
       { property: "og:image", content: "/logo.png" },
       { name: "twitter:image", content: "/logo.png" },
     ],
@@ -92,6 +92,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "icon",
         type: "image/svg+xml",
         href: "/favicon.svg",
+      },
+      {
+        rel: "preconnect",
+        href: "https://fonts.googleapis.com",
+      },
+      {
+        rel: "preconnect",
+        href: "https://fonts.gstatic.com",
+        crossOrigin: "anonymous",
+      },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap",
       },
       {
         rel: "stylesheet",
@@ -107,7 +120,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="id" className="dark">
       <head>
         <HeadContent />
       </head>

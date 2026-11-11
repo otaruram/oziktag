@@ -79,7 +79,7 @@ export default function TrackingMap({
         
         {/* Draw Line connecting points */}
         {positions.length > 1 && (
-          <Polyline positions={positions} pathOptions={{ color: "#2563eb", weight: 4, opacity: 0.8 }} />
+          <Polyline positions={positions} pathOptions={{ color: "#ea580c", weight: 4, opacity: 0.9 }} />
         )}
 
         {/* Draw Markers */}

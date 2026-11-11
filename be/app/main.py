@@ -11,7 +11,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.routers import auth, qc, scan, topup, admin, apikeys, developer, elite, tracking, wallet, ticketing
+from app.routers import auth, qc, scan, topup, admin, apikeys, developer, elite, tracking, wallet
 from app.database import connect_db, disconnect_db
 from app.services.escrow_service import auto_release_escrow_funds
 
@@ -84,7 +84,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Oziktag API",
-    description="Digital Trust Seal & QC Backend for UMKM",
+    description="QR Digital Trust Seal, QR Shield & Escrow Backend untuk UMKM & Ekonomi Budaya Nusantara",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -108,6 +108,8 @@ app.add_middleware(
         "https://www.oziktag.my.id",
         "http://localhost:5173",
         "http://localhost:3000",
+        "http://localhost:5000",
+        "http://127.0.0.1:5000",
         "http://localhost:4173",
     ],
     allow_credentials=True,
@@ -128,8 +130,6 @@ app.include_router(developer.router)
 app.include_router(elite.router)
 app.include_router(tracking.router)
 app.include_router(wallet.router)
-app.include_router(ticketing.router)
-app.include_router(ticketing.gate_router)
 
 
 # ──────────────────────── Health Check ────────────────────────

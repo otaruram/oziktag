@@ -87,7 +87,7 @@ async def analyze_qc(
     """
     image_urls = image_urls or []
 
-    prompt = f"""Kamu adalah asisten Quality Control profesional untuk produk UMKM Indonesia.
+    prompt = f"""Kamu adalah kurator & analis Quality Control profesional untuk karya budaya Nusantara dan produk UMKM Indonesia.
 Analisis data QC (termasuk gambar jika ada) berikut dan berikan output dalam format yang diminta.
 
 === DATA PRODUK ===
@@ -97,18 +97,18 @@ Kategori: {kategori}
 === CHECKLIST QC PENJUAL ===
 {chr(10).join(f"✓ {item}" for item in checklist) if checklist else "Tidak ada checklist."}
 
-=== CATATAN PENJUAL ===
+=== CATATAN PENJUAL / KETERANGAN KARYA ===
 {catatan_penjual or "Tidak ada catatan khusus."}
 
 === INSTRUKSI ===
 Berdasarkan data di atas (serta gambar jika diberikan), berikan analisis:
 
-1. **INSIGHT**: Berikan insight umum tentang kondisi produk ini (2-3 kalimat). 
-   Fokus pada: apakah produk layak berdasarkan klaim di catatan penjual, apa yang sudah baik, dan apakah ada hal yang perlu diperhatikan pembeli.
-   Gunakan bahasa yang ramah dan meyakinkan untuk pembeli.
+1. **INSIGHT**: Berikan insight objektif tentang kualitas & autentisitas produk ini (2-3 kalimat). 
+   Fokus pada: kesesuaian kondisi fisik/teknik kriya berdasarkan klaim catatan penjual & foto, kekuatan pengerjaan, serta hal yang perlu diperhatikan pembeli agar transparan.
+   Gunakan bahasa yang ramah, tepercaya, dan meyakinkan untuk pembeli.
 
-2. **SOLUSI**: Berikan solusi dan tips perawatan spesifik untuk produk kategori "{kategori}" (2-3 kalimat).
-   Fokus pada: cara menyimpan, merawat, dan menjaga kualitas produk ini agar tetap optimal.
+2. **SOLUSI**: Berikan solusi & tips perawatan spesifik untuk produk kategori "{kategori}" (2-3 kalimat).
+   Jika produk merupakan karya budaya/kriya/wastra/kuliner Nusantara, sertakan tips perawatan tradisional atau penyimpanan autentik yang menjaga nilai warisan budayanya tetap awet.
 
 Format output (WAJIB ikuti persis):
 INSIGHT: [isi insight di sini]

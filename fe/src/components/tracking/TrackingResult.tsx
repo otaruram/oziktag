@@ -52,15 +52,15 @@ export function TrackingResult({ qrResult, onClose }: TrackingResultProps) {
         <div className="flex bg-muted p-1 rounded-lg max-w-sm mx-auto">
           <button
             onClick={() => setActiveTab("payment")}
-            className={cn("flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-colors", activeTab === "payment" ? "bg-white shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground")}
+            className={cn("flex-1 flex items-center justify-center gap-2 py-2 text-sm font-semibold rounded-md transition-colors", activeTab === "payment" ? "bg-orange-600 shadow-sm text-white" : "text-muted-foreground hover:text-foreground")}
           >
             <Receipt className="h-4 w-4" /> Link Pembayaran
           </button>
           <button
             onClick={() => setActiveTab("tracking")}
-            className={cn("flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-colors", activeTab === "tracking" ? "bg-white shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground")}
+            className={cn("flex-1 flex items-center justify-center gap-2 py-2 text-sm font-semibold rounded-md transition-colors", activeTab === "tracking" ? "bg-orange-600 shadow-sm text-white" : "text-muted-foreground hover:text-foreground")}
           >
-            <MapPin className="h-4 w-4" /> Label Kardus
+            <MapPin className="h-4 w-4" /> Label QR Shield
           </button>
         </div>
       )}
@@ -77,7 +77,9 @@ export function TrackingResult({ qrResult, onClose }: TrackingResultProps) {
           </p>
         )}
 
-        <img src={currentQr} alt="QR Code" className="w-48 h-48 rounded-lg border border-border shadow-sm" />
+        <div className="bg-white p-2 rounded-xl border border-border shadow-sm">
+          <img src={currentQr} alt="QR Code" className="w-48 h-48 rounded-lg" />
+        </div>
         <div className="mt-4 flex gap-2 w-full justify-center">
           <button
             onClick={downloadPng}
@@ -118,7 +120,7 @@ export function TrackingResult({ qrResult, onClose }: TrackingResultProps) {
           <span className="text-foreground font-medium truncate max-w-[200px]">{qrResult.url}</span>
           <button
             onClick={() => { navigator.clipboard.writeText(qrResult.url); toast.success("URL disalin!"); }}
-            className="text-primary hover:opacity-80 p-1 bg-white rounded shadow-sm border border-border"
+            className="text-primary hover:opacity-80 p-1.5 bg-card hover:bg-secondary rounded shadow-sm border border-border"
             title="Salin URL"
           >
             <Copy className="h-3.5 w-3.5" />

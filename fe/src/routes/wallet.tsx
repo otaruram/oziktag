@@ -66,9 +66,9 @@ function WalletPage() {
 
   const getStatusBadge = (status: string) => {
     switch(status) {
-      case "PENDING": return <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800"><Clock className="h-3 w-3"/> Diproses</span>;
-      case "COMPLETED": return <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800"><CheckCircle2 className="h-3 w-3"/> Selesai</span>;
-      case "REJECTED": return <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-800"><AlertCircle className="h-3 w-3"/> Ditolak</span>;
+      case "PENDING": return <span className="inline-flex items-center gap-1 rounded-full bg-[#fac603]/15 border border-[#fac603]/30 px-2.5 py-0.5 text-xs font-medium text-[#fac603]"><Clock className="h-3 w-3"/> Diproses</span>;
+      case "COMPLETED": return <span className="inline-flex items-center gap-1 rounded-full bg-[#2ea4a9]/15 border border-[#2ea4a9]/30 px-2.5 py-0.5 text-xs font-medium text-[#2ea4a9]"><CheckCircle2 className="h-3 w-3"/> Selesai</span>;
+      case "REJECTED": return <span className="inline-flex items-center gap-1 rounded-full bg-red-500/15 border border-red-500/30 px-2.5 py-0.5 text-xs font-medium text-red-400"><AlertCircle className="h-3 w-3"/> Ditolak</span>;
       default: return status;
     }
   };
@@ -97,7 +97,7 @@ function WalletPage() {
               </div>
             ) : me.escrow_request_status === "rejected" ? (
               <div className="space-y-6">
-                <div className="bg-red-50 text-red-800 p-4 rounded-lg flex gap-3 text-sm">
+                <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-4 rounded-lg flex gap-3 text-sm">
                   <AlertCircle className="h-5 w-5 shrink-0" />
                   <p>Pengajuan Anda sebelumnya <b>ditolak</b>. Silakan perbaiki data dan ajukan kembali.</p>
                 </div>
@@ -114,11 +114,14 @@ function WalletPage() {
 
   return (
     <AppShell>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-wrap items-end justify-between gap-4 mb-8 pb-6 border-b border-border">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Dompet Penghasilan</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Kelola dan tarik dana hasil penjualan Escrow Anda.
+          <p className="text-xs font-mono uppercase tracking-widest text-[#fac603]">
+            03 / Pilar Escrow 24 Jam
+          </p>
+          <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-[#f4ecdd]">Dompet Penghasilan</h1>
+          <p className="mt-1 text-sm text-[#bdbdbd]">
+            Dana ditahan 24 jam melalui mitra payment gateway (patuh OJK &amp; Bank Indonesia) sebelum cair ke saldo penjual.
           </p>
         </div>
       </div>

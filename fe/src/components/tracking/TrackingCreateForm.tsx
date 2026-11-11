@@ -337,9 +337,9 @@ export function TrackingCreateForm({ onSuccess, onCancel }: TrackingCreateFormPr
         <button
           type="submit"
           disabled={submitting}
-          className="flex-1 rounded-md bg-primary py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+          className="flex-1 rounded-md bg-orange-600 py-2.5 text-sm font-bold text-white hover:bg-orange-700 disabled:opacity-50 transition"
         >
-          {submitting ? "Membuat..." : "Buat & Generate QR"}
+          {submitting ? "Membuat..." : "Buat & Generate QR Shield"}
         </button>
         <button type="button" onClick={onCancel} className="rounded-md border border-border px-4 py-2.5 text-sm hover:bg-muted">
           Batal

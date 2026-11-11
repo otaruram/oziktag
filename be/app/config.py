@@ -43,10 +43,6 @@ class Settings(BaseSettings):
     # Admin
     admin_email: str = ""
 
-    # Event Ticketing (HMAC-SHA256 QR signing). Min 32 chars, no default on purpose.
-    # Generate: python -c "import secrets; print(secrets.token_urlsafe(48))"
-    ticket_hmac_secret: str = ""
-
     # Pricing
     exchange_rate: float = 17000.0
     price_buffer_percent: float = 25.0

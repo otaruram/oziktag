@@ -1,6 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState, useRef } from "react";
-import { Plus, Package, ScanLine, CalendarDays, Loader2, Trash2, QrCode, Eye, Ticket, MapPin, Wallet, ArrowRight, Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  Plus,
+  Package,
+  ScanLine,
+  CalendarDays,
+  Loader2,
+  Trash2,
+  QrCode,
+  Eye,
+  Shield,
+  Wallet,
+  Coins,
+  ArrowRight,
+} from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { getBrand } from "@/lib/oziktag-store";
 import { apiFetch } from "@/lib/api";
@@ -10,7 +23,7 @@ import { QrCodeModal } from "@/components/dashboard/QrCodeModal";
 import { PreviewModal } from "@/components/dashboard/PreviewModal";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { CreditScoreCard } from "@/components/dashboard/CreditScoreCard";
-import { EventTicketingHub } from "@/components/dashboard/EventTicketingHub";
+
 export const Route = createFileRoute("/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — Oziktag" }] }),
   component: Dashboard,
@@ -25,7 +38,6 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [logs, setLogs] = useState<any[]>([]);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
-  const [dashboardSection, setDashboardSection] = useState<"QC_OVERVIEW" | "EVENT_PASS">("QC_OVERVIEW");
 
   // Modal states
   const [qrModal, setQrModal] = useState<{ id: string; name: string } | null>(null);
@@ -106,118 +118,102 @@ function Dashboard() {
 
   return (
     <AppShell>
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="flex flex-wrap items-end justify-between gap-4 pb-6 border-b border-border">
         <div>
-          <p className="text-sm text-muted-foreground">Studio Bengkel Kerja Oziktag // Weimar & Kiln</p>
-          <h1 className="text-3xl font-semibold tracking-tight">{brand}</h1>
+          <p className="text-xs font-mono uppercase tracking-widest text-[#fac603]">
+            Studio Bengkel Kerja // QR • QR Shield • Escrow
+          </p>
+          <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-[#f4ecdd]">{brand}</h1>
         </div>
         <div className="flex flex-wrap items-center gap-2.5">
-          <button
-            type="button"
-            onClick={() => setDashboardSection(dashboardSection === "EVENT_PASS" ? "QC_OVERVIEW" : "EVENT_PASS")}
-            className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition shadow-xs ${
-              dashboardSection === "EVENT_PASS"
-                ? "bg-slate-900 text-white"
-                : "border border-emerald-500/40 bg-emerald-50 text-emerald-900 hover:bg-emerald-100"
-            }`}
+          <Link
+            to="/tracking"
+            className="inline-flex items-center gap-2 rounded-lg border border-[#383838] bg-[#1c1c1c] px-4 py-2.5 text-xs font-mono font-bold text-[#f4ecdd] hover:border-[#2ea4a9] hover:bg-[#262626] transition"
           >
-            <Ticket className="h-4 w-4 text-emerald-600" />
-            <span>{dashboardSection === "EVENT_PASS" ? "Kembali ke Produk QC" : "Tiket Event / Event Pass"}</span>
-            <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-extrabold text-white">
-              Summarecon 2026
-            </span>
-          </button>
+            <Shield className="h-4 w-4 text-[#2ea4a9]" />
+            <span>Buat QR Shield</span>
+          </Link>
           <Link
             to="/generator"
-            className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-xs font-bold text-primary-foreground shadow-[var(--shadow-elegant)] hover:opacity-90"
+            className="inline-flex items-center gap-2 rounded-lg bg-orange-600 px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-orange-700 transition"
           >
-            <Plus className="h-4 w-4" /> Cetak Segel Studio
+            <Plus className="h-4 w-4" /> Cetak QR Trust Seal
           </Link>
         </div>
       </div>
 
-      {/* Primary Ecosystem Feature Navigation Cards */}
-      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <button
-          type="button"
-          onClick={() => setDashboardSection("EVENT_PASS")}
-          className={`group flex flex-col justify-between rounded-2xl border p-4 text-left transition ${
-            dashboardSection === "EVENT_PASS"
-              ? "border-slate-900 bg-slate-900 text-white shadow-md"
-              : "border-emerald-200 bg-emerald-50/60 hover:bg-emerald-100/70 text-slate-900"
-          }`}
+      {/* 3 Pilar Fokus Utama + Kredit */}
+      <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Link
+          to="/generator"
+          className="budaya-card group flex flex-col justify-between rounded-xl p-4 text-left"
         >
           <div className="flex items-center justify-between w-full">
-            <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${dashboardSection === "EVENT_PASS" ? "bg-emerald-500/20 text-emerald-400" : "bg-emerald-600 text-white"}`}>
-              <Ticket className="h-4 w-4" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-600 text-white">
+              <QrCode className="h-4 w-4" />
             </div>
-            <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[9px] font-extrabold text-white uppercase">
-              Escrow Live
+            <span className="kiln-stamp px-2 py-0.5 bg-orange-600/15 text-[#ff792f] border border-orange-600/30 text-[9px]">
+              01 QR SEAL
             </span>
           </div>
           <div className="mt-3">
-            <p className="text-xs font-extrabold">Tiket Event / Event Pass</p>
-            <p className={`text-[11px] mt-0.5 ${dashboardSection === "EVENT_PASS" ? "text-slate-300" : "text-slate-500"}`}>
-              Seat Map Summarecon & Gate QR
-            </p>
-          </div>
-        </button>
-
-        <Link
-          to="/generator"
-          className="group flex flex-col justify-between rounded-2xl border border-border bg-card p-4 text-left hover:border-primary/40 transition"
-        >
-          <div className="flex items-center justify-between w-full">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <QrCode className="h-4 w-4" />
-            </div>
-            <ArrowRight className="h-3.5 w-3.5 text-muted-foreground group-hover:translate-x-0.5 transition" />
-          </div>
-          <div className="mt-3">
-            <p className="text-xs font-extrabold">Generate QR Produk</p>
-            <p className="text-[11px] text-muted-foreground mt-0.5">Buat segel digital AI QC</p>
+            <p className="text-sm font-bold text-[#f4ecdd]">Generate QR Budaya</p>
+            <p className="text-xs text-[#bdbdbd] mt-0.5">Sertifikasi AI Vision &amp; checklist kriya</p>
           </div>
         </Link>
 
         <Link
           to="/tracking"
-          className="group flex flex-col justify-between rounded-2xl border border-border bg-card p-4 text-left hover:border-primary/40 transition"
+          className="budaya-card group flex flex-col justify-between rounded-xl p-4 text-left"
         >
           <div className="flex items-center justify-between w-full">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <MapPin className="h-4 w-4" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#2ea4a9]/20 text-[#2ea4a9]">
+              <Shield className="h-4 w-4" />
             </div>
-            <ArrowRight className="h-3.5 w-3.5 text-muted-foreground group-hover:translate-x-0.5 transition" />
+            <span className="kiln-stamp px-2 py-0.5 bg-[#2ea4a9]/15 text-[#2ea4a9] border border-[#2ea4a9]/30 text-[9px]">
+              02 QR SHIELD
+            </span>
           </div>
           <div className="mt-3">
-            <p className="text-xs font-extrabold">Supply Chain Tracking</p>
-            <p className="text-[11px] text-muted-foreground mt-0.5">Lacak pengiriman & resi</p>
+            <p className="text-sm font-bold text-[#f4ecdd]">QR Shield &amp; Resi GPS</p>
+            <p className="text-xs text-[#bdbdbd] mt-0.5">Segel kardus, GPS kurir &amp; PIN pembeli</p>
           </div>
         </Link>
 
         <Link
           to="/wallet"
-          className="group flex flex-col justify-between rounded-2xl border border-border bg-card p-4 text-left hover:border-primary/40 transition"
+          className="budaya-card group flex flex-col justify-between rounded-xl p-4 text-left"
         >
           <div className="flex items-center justify-between w-full">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#fac603]/20 text-[#fac603]">
               <Wallet className="h-4 w-4" />
             </div>
-            <ArrowRight className="h-3.5 w-3.5 text-muted-foreground group-hover:translate-x-0.5 transition" />
+            <span className="kiln-stamp px-2 py-0.5 bg-[#fac603]/15 text-[#fac603] border border-[#fac603]/30 text-[9px]">
+              03 ESCROW 24H
+            </span>
           </div>
           <div className="mt-3">
-            <p className="text-xs font-extrabold">Dompet Escrow</p>
-            <p className="text-[11px] text-muted-foreground mt-0.5">Pencairan tiket & produk</p>
+            <p className="text-sm font-bold text-[#f4ecdd]">Dompet Escrow</p>
+            <p className="text-xs text-[#bdbdbd] mt-0.5">Dana aman 24 jam &amp; tarik saldo bank</p>
+          </div>
+        </Link>
+
+        <Link
+          to="/pricing"
+          className="budaya-card group flex flex-col justify-between rounded-xl p-4 text-left"
+        >
+          <div className="flex items-center justify-between w-full">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#262626] text-[#f4ecdd]">
+              <Coins className="h-4 w-4" />
+            </div>
+            <ArrowRight className="h-3.5 w-3.5 text-[#bdbdbd] group-hover:translate-x-0.5 transition" />
+          </div>
+          <div className="mt-3">
+            <p className="text-sm font-bold text-[#f4ecdd]">Top-Up Kredit</p>
+            <p className="text-xs text-[#bdbdbd] mt-0.5">Pay-As-You-Go: 1 QR = 1 Kredit</p>
           </div>
         </Link>
       </div>
-
-      {dashboardSection === "EVENT_PASS" ? (
-        <div className="mt-8">
-          <EventTicketingHub />
-        </div>
-      ) : (
-        <>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard icon={Package} label="Produk Terverifikasi" value={totalProducts.toString()} hint="Total label QC aktif" />
@@ -409,8 +405,6 @@ function Dashboard() {
           name={previewModal.name}
           onClose={() => setPreviewModal(null)}
         />
-      )}
-        </>
       )}
     </AppShell>
   );
