@@ -670,56 +670,62 @@ function LandingPage() {
             </h2>
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            <div className="budaya-card rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-6">
-              <div className="h-24 w-24 shrink-0 overflow-hidden rounded-xl border border-[#383838]">
-                <img src="/oki.png" alt="Oki Taruna Ramadhan" className="h-full w-full object-cover object-top" />
+          <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {[
+              {
+                code: "01 · TEKNOLOGI & SISTEM",
+                name: "Oki Taruna Ramadhan",
+                role: "Founder & Systems Architect",
+                photo: "/oki.png",
+                imgClass: "object-cover object-top",
+                bio: "Merancang infrastruktur FastAPI, integrasi AI Vision QC, sistem QR Shield GPS + PIN Pembeli, serta mekanisme auto-release Escrow 24 jam via Supabase.",
+                linkedin: "https://www.linkedin.com/in/otaruram/",
+              },
+              {
+                code: "02 · EKONOMI & BISNIS",
+                name: "Azdzikri Muhammad Hisyam Soleh",
+                role: "Co-Founder & Business Strategist",
+                photo: "/zikri.jpeg",
+                imgClass: "object-cover",
+                bio: "Merumuskan model bisnis Pay-As-You-Go ramah UMKM budaya (BEP ~26 pengrajin/bulan), struktur kepatuhan OJK/Bank Indonesia, dan kemitraan sanggar.",
+                linkedin: "https://www.linkedin.com/in/azdzikri-muhammad-hisyam-soleh-086b43281/",
+              },
+              {
+                code: "03 · QUALITY CONTROL & KURASI BUDAYA",
+                name: "Rika Amelia",
+                role: "Quality Control & Cultural Curator",
+                photo: "/Rika Amelya.jpeg",
+                imgClass: "object-cover object-top",
+                bio: "Memastikan setiap karya kriya, wastra Nusantara, dan produk UMKM memenuhi standar kurasi, keaslian bahan, serta kualitas tertinggi sebelum sampai ke pembeli.",
+                linkedin: "https://www.linkedin.com/in/rikaameliaz/",
+              },
+            ].map((member) => (
+              <div key={member.name} className="budaya-card rounded-2xl p-6 flex flex-col justify-between gap-5">
+                <div>
+                  <div className="flex items-center justify-between gap-3 mb-5">
+                    <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-[#383838]">
+                      <img src={member.photo} alt={member.name} className={`h-full w-full ${member.imgClass}`} />
+                    </div>
+                    <span className="kiln-stamp px-2 py-0.5 bg-[#121212] text-[#2ea4a9] border border-[#383838] text-[9px] text-right">
+                      {member.code}
+                    </span>
+                  </div>
+                  <h3 className="text-base font-bold text-[#f4ecdd]">{member.name}</h3>
+                  <p className="text-xs font-mono text-[#ff792f] font-bold uppercase mt-1">{member.role}</p>
+                  <p className="mt-3 text-xs text-[#bdbdbd] leading-relaxed">{member.bio}</p>
+                </div>
+                <div className="pt-4 border-t border-[#383838]">
+                  <a
+                    href={member.linkedin}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs font-mono font-semibold text-[#fac603] hover:underline"
+                  >
+                    LinkedIn Profile &rarr;
+                  </a>
+                </div>
               </div>
-              <div>
-                <h3 className="text-base font-bold text-[#f4ecdd]">Oki Taruna Ramadhan</h3>
-                <p className="text-xs font-mono text-[#ff792f] font-bold uppercase mt-0.5">
-                  Founder &amp; Systems Architect
-                </p>
-                <p className="mt-2 text-xs text-[#bdbdbd] leading-relaxed">
-                  Merancang infrastruktur FastAPI, integrasi AI Vision QC, sistem QR Shield GPS + PIN Pembeli, serta mekanisme auto-release Escrow 24 jam via Supabase.
-                </p>
-                <a
-                  href="https://www.linkedin.com/in/otaruram/"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-3 inline-flex items-center gap-1.5 text-xs font-mono font-semibold text-[#fac603] hover:underline"
-                >
-                  LinkedIn Profile &rarr;
-                </a>
-              </div>
-            </div>
-
-            <div className="budaya-card rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-6">
-              <div className="h-24 w-24 shrink-0 overflow-hidden rounded-xl border border-[#383838]">
-                <img
-                  src="/zikri.jpeg"
-                  alt="Azdzikri Muhammad Hisyam Soleh"
-                  className="h-full w-full object-cover"
-                />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-[#f4ecdd]">Azdzikri Muhammad Hisyam Soleh</h3>
-                <p className="text-xs font-mono text-[#ff792f] font-bold uppercase mt-0.5">
-                  Co-Founder &amp; Business Strategist
-                </p>
-                <p className="mt-2 text-xs text-[#bdbdbd] leading-relaxed">
-                  Merumuskan model bisnis Pay-As-You-Go ramah UMKM budaya (BEP ~26 pengrajin/bulan), struktur kepatuhan OJK/Bank Indonesia, dan kemitraan sanggar.
-                </p>
-                <a
-                  href="https://www.linkedin.com/in/azdzikri-muhammad-hisyam-soleh-086b43281/"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-3 inline-flex items-center gap-1.5 text-xs font-mono font-semibold text-[#fac603] hover:underline"
-                >
-                  LinkedIn Profile &rarr;
-                </a>
-              </div>
-            </div>
+            ))}
           </div>
         </section>
 
